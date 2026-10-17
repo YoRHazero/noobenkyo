@@ -12,6 +12,8 @@ export function RevealPanel({ reveal }: Props) {
   const { view, fragments } = reveal
   return (
     <div className="flex flex-col gap-3">
+      {fragments && <SentenceView fragments={fragments} />}
+      {view.translation && <p className="text-muted-foreground">{view.translation}</p>}
       <Separator />
       <div className="flex items-baseline gap-4">
         <span lang="ja" className="text-3xl">
@@ -22,8 +24,6 @@ export function RevealPanel({ reveal }: Props) {
         </span>
       </div>
       <GlossList glosses={view.glosses} />
-      {fragments && <SentenceView fragments={fragments} />}
-      {view.translation && <p className="text-muted-foreground">{view.translation}</p>}
       <AnswerComparison input={view.input} expected={view.expected} prediction={view.prediction} />
     </div>
   )

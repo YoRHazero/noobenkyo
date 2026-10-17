@@ -18,7 +18,7 @@ export function AnswerForm({ input, pending, onSubmit }: Props) {
       return <KanaInput maxLength={input.max_length} disabled={pending} onSubmit={onSubmit} />
     case 'none':
       return (
-        <Button autoFocus disabled={pending} onClick={() => onSubmit('')}>
+        <Button autoFocus className="self-start" disabled={pending} onClick={() => onSubmit('')}>
           显示答案
         </Button>
       )

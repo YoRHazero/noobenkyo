@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import type { LearningOrder, StudySettings } from '@/bindings'
-import { ErrorText } from '@/components/error-text'
 import { LabeledCheckbox } from '@/components/labeled-checkbox'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -8,20 +7,19 @@ import { learningOrderLabel } from '@/features/settings/labels'
 import { NumberField } from '@/features/settings/number-field'
 import { NumberListField } from '@/features/settings/number-list-field'
 import { QuestionOrderEditor } from '@/features/settings/question-order-editor'
-import { useResetStudySettings } from '@/features/settings/use-reset-study-settings'
-import { useSaveStudySettings } from '@/features/settings/use-save-study-settings'
 
 const learningOrders: LearningOrder[] = ['Creation', 'Random']
 
 type Props = {
   initial: StudySettings
+  pending: boolean
+  onSave: (settings: StudySettings) => void
+  onReset: () => void
 }
 
 /** Edits a draft of the study settings; saving replaces them as a whole. */
-export function StudySettingsEditor({ initial }: Props) {
+export function StudySettingsEditor({ initial, pending, onSave, onReset }: Props) {
   const [draft, setDraft] = useState(initial)
-  const save = useSaveStudySettings()
-  const reset = useResetStudySettings()
   const { quiz, workspace } = draft
   const setQuiz = (patch: Partial<StudySettings['quiz']>) =>
     setDraft({ ...draft, quiz: { ...quiz, ...patch } })
@@ -135,15 +133,13 @@ export function StudySettingsEditor({ initial }: Props) {
       </fieldset>
 
       <div className="flex items-center gap-3">
-        <Button disabled={save.isPending} onClick={() => save.mutate(draft)}>
+        <Button disabled={pending} onClick={() => onSave(draft)}>
           保存
         </Button>
-        <Button variant="outline" disabled={reset.isPending} onClick={() => reset.mutate()}>
+        <Button variant="outline" disabled={pending} onClick={onReset}>
           恢复默认
         </Button>
-        {save.isSuccess && <span className="text-sm text-muted-foreground">已保存</span>}
       </div>
-      <ErrorText error={save.error ?? reset.error} />
     </div>
   )
 }

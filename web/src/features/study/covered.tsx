@@ -5,7 +5,7 @@ type Props = {
   children: ReactNode
 }
 
-/** Content that stays covered until clicked, or until `shown` turns true. */
+/** Content that stays covered until clicked, unless `shown`. */
 export function Covered({ shown, children }: Props) {
   const [opened, setOpened] = useState(false)
   if (shown || opened) {

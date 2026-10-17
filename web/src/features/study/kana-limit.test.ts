@@ -9,7 +9,8 @@ describe('kana limit', () => {
 
   it('checks the limit', () => {
     expect(fitsKanaLimit('あした', 3)).toBe(true)
-    expect(fitsKanaLimit('あしたs', 3)).toBe(true)
+    expect(fitsKanaLimit('あしs', 3)).toBe(true)
+    expect(fitsKanaLimit('あしたs', 3)).toBe(false)
     expect(fitsKanaLimit('あしたに', 3)).toBe(false)
     expect(fitsKanaLimit('あしたに', null)).toBe(true)
   })

@@ -33,5 +33,5 @@ function message(status: ZoneStatus): string {
       ? '今天的新词数已经到上限了。'
       : '词库里没有待学的新词。导入带例句的词条后再来。'
   }
-  return status.group_finished ? '这一组复习完了。' : '没有可以复习的义项。'
+  return status.group_finished ? '当前没有进行中的一组。' : '没有可以复习的义项。'
 }

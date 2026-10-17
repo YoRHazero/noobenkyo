@@ -18,7 +18,7 @@ type Props = {
   onEnded: () => void
 }
 
-/** One question: prompt, answer, reveal, rating. */
+/** One question: the prompt and answer box, then the revealed answer and rating. */
 export function QuestionCard({ zone, question, onEnded }: Props) {
   const { view, fragments } = question
   const submit = useSubmitAnswer(zone)
@@ -31,11 +31,11 @@ export function QuestionCard({ zone, question, onEnded }: Props) {
         <StepDots remaining={view.remaining} steps={view.steps} />
       </CardHeader>
       <CardContent className="flex flex-col gap-5">
-        {fragments && <SentenceView fragments={fragments} />}
-        {view.glosses && <GlossList glosses={view.glosses} />}
-        {view.card && <ComprehensiveCard card={view.card} revealed={reveal !== undefined} />}
         {reveal === undefined ? (
           <>
+            {fragments && <SentenceView fragments={fragments} />}
+            {view.glosses && <GlossList glosses={view.glosses} />}
+            {view.card && <ComprehensiveCard card={view.card} />}
             <AnswerForm
               input={view.answer_input}
               pending={submit.isPending}
