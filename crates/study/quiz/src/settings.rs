@@ -3,9 +3,8 @@ use thiserror::Error;
 
 use crate::{ComprehensiveVisibility, QuestionType};
 
-/// Question settings. Missing fields in the file take their defaults.
+/// Question settings.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, specta::Type)]
-#[serde(default)]
 pub struct QuizSettings {
     /// Question order for words with kanji.
     pub kanji_order: Vec<QuestionType>,

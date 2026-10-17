@@ -1,0 +1,12 @@
+{"writing": "諦める", "stratum": "和语", "kana": "あきらめる", "glosses": ["放弃", "死心"], "labels": ["N3", "动词"], "sentences": [{"marked": "{何度|なんど}{失敗|しっぱい}しても、[[{諦|あきら}めない]]でね。", "translation": "不管失败多少次，都别放弃哦。"}, {"marked": "{夢|ゆめ}を[[{諦|あきら}めた]]。", "translation": "放弃了梦想。"}]}
+{"writing": "明日", "kana": "あした", "glosses": ["明天"], "labels": ["N5"], "sentences": [{"marked": "[[{明日|あした}]]は{雨|あめ}が{降|ふ}るそうだ。", "translation": "听说明天会下雨。"}]}
+{"writing": "明日", "kana": "あす", "glosses": ["明天"], "labels": ["N5"], "sentences": [{"marked": "[[{明日|あす}]]の{会議|かいぎ}は{十時|じゅうじ}からです。", "translation": "明天的会议十点开始。"}]}
+{"writing": "きれい", "glosses": ["干净", "漂亮"], "labels": ["N5"], "sentences": [{"marked": "この{部屋|へや}はとても[[きれい]]だ。", "translation": "这个房间非常干净。"}, {"marked": "[[きれいな]]{花|はな}が{咲|さ}いている。", "translation": "开着漂亮的花。"}]}
+{"writing": "食べる", "kana": "たべる", "glosses": ["吃"], "labels": ["N5", "动词"], "sentences": [{"marked": "{朝|あさ}ごはんを[[{食|た}べた]]。", "translation": "吃了早饭。"}, {"marked": "{野菜|やさい}をもっと[[{食|た}べなさい]]。", "translation": "多吃点蔬菜。"}]}
+{"writing": "分かる", "kana": "わかる", "glosses": ["明白", "懂"], "labels": ["N5", "动词"], "sentences": [{"marked": "{説明|せつめい}がよく[[{分|わ}かった]]。", "translation": "说明听明白了。"}]}
+{"writing": "静か", "kana": "しずか", "glosses": ["安静"], "labels": ["N5"], "sentences": [{"marked": "{図書館|としょかん}では[[{静|しず}かに]]してください。", "translation": "在图书馆请保持安静。"}]}
+{"writing": "行く", "kana": "いく", "glosses": ["去"], "labels": ["N5", "动词"], "sentences": [{"marked": "{明日|あした}、{学校|がっこう}に[[{行|い}く]]。", "translation": "明天去学校。"}]}
+{"writing": "消しゴム", "kana": "けしごむ", "glosses": ["橡皮"], "sentences": [{"marked": "[[{消|け}しゴム]]を{貸|か}してください。", "translation": "请借我橡皮。"}]}
+{"writing": "コーヒー", "origin": "coffee", "stratum": "外来语", "glosses": ["咖啡"], "sentences": [{"marked": "{毎朝|まいあさ}[[コーヒー]]を{飲|の}みます。", "translation": "每天早上喝咖啡。"}]}
+{"writing": "パソコン", "origin": "personal computer", "stratum": "外来语"}
+{"writing": "上", "kana": "うえ", "glosses": ["上面"]}

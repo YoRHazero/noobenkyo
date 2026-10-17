@@ -51,8 +51,8 @@ mod tests {
     fn fills_quotas_per_stage() {
         let settings = WorkspaceSettings {
             fixed_group_size: 4,
-            stage_intervals: vec![1.0, 2.0],
-            group_stage_ratios: vec![1.0, 1.0],
+            stage_intervals: vec![1, 2],
+            group_stage_ratios: vec![1, 1],
             ..WorkspaceSettings::default()
         };
         let all = [

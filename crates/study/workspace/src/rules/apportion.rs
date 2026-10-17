@@ -1,11 +1,14 @@
 /// Splits `total` seats in proportion to `ratios` by largest remainder;
 /// ties go to the lower index. All-zero ratios get nothing.
-pub fn apportion(total: u32, ratios: &[f64]) -> Vec<u32> {
-    let sum: f64 = ratios.iter().sum();
+pub fn apportion(total: u32, ratios: &[u32]) -> Vec<u32> {
+    let sum: f64 = ratios.iter().map(|r| f64::from(*r)).sum();
     if sum <= 0.0 {
         return vec![0; ratios.len()];
     }
-    let exact: Vec<f64> = ratios.iter().map(|r| f64::from(total) * r / sum).collect();
+    let exact: Vec<f64> = ratios
+        .iter()
+        .map(|r| f64::from(total) * f64::from(*r) / sum)
+        .collect();
     let mut seats: Vec<u32> = exact.iter().map(|e| e.floor() as u32).collect();
     let given: u32 = seats.iter().sum();
     let mut by_remainder: Vec<usize> = (0..ratios.len()).collect();
@@ -28,10 +31,10 @@ mod tests {
 
     #[test]
     fn splits_proportionally() {
-        assert_eq!(apportion(10, &[1.0, 1.0]), [5, 5]);
-        assert_eq!(apportion(10, &[3.0, 1.0]), [8, 2]);
-        assert_eq!(apportion(5, &[1.0, 1.0, 1.0]), [2, 2, 1]);
-        assert_eq!(apportion(4, &[0.0, 1.0]), [0, 4]);
-        assert_eq!(apportion(4, &[0.0, 0.0]), [0, 0]);
+        assert_eq!(apportion(10, &[1, 1]), [5, 5]);
+        assert_eq!(apportion(10, &[3, 1]), [8, 2]);
+        assert_eq!(apportion(5, &[1, 1, 1]), [2, 2, 1]);
+        assert_eq!(apportion(4, &[0, 1]), [0, 4]);
+        assert_eq!(apportion(4, &[0, 0]), [0, 0]);
     }
 }

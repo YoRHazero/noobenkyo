@@ -7,13 +7,15 @@ use crate::{Progress, WorkspaceSettings};
 const MIN_WEIGHT: f64 = 1e-6;
 
 pub fn review_weight(days: f64, progress: &Progress, settings: &WorkspaceSettings) -> f64 {
-    let interval = settings.interval_for(progress.stage)
-        * (1.0 + settings.pass_bonus * f64::from(progress.passes));
+    let pass_bonus = f64::from(settings.pass_bonus_percent) / 100.0;
+    let interval = f64::from(settings.interval_for(progress.stage))
+        * (1.0 + pass_bonus * f64::from(progress.passes));
+    let due_weight = f64::from(settings.due_weight_percent) / 100.0;
     let ratio = days / interval;
     let weight = if ratio < 1.0 {
-        settings.early_growth * ratio
+        due_weight * ratio
     } else {
-        settings.early_growth + (ratio - 1.0)
+        due_weight + (ratio - 1.0)
     };
     weight.max(MIN_WEIGHT)
 }

@@ -4,10 +4,9 @@ use study_workspace::WorkspaceSettings;
 
 use crate::StudyError;
 
-/// Study settings: the configuration parameters of the design. Missing
-/// fields in the file take their defaults.
+/// Study settings: the configuration parameters of the design.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, specta::Type)]
-#[serde(default, rename = "StudySettings")]
+#[serde(rename = "StudySettings")]
 pub struct Settings {
     pub quiz: QuizSettings,
     pub workspace: WorkspaceSettings,
