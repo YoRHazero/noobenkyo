@@ -6,5 +6,6 @@ pub mod inflection;
 pub mod katakana_word;
 pub mod progress_merge;
 pub mod sense_match;
+pub mod tally;
 pub mod text_list;
 pub mod validate;

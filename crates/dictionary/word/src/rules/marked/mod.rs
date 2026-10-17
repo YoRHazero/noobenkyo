@@ -23,3 +23,21 @@ pub fn parse_checked(marked: &str) -> Result<Vec<Segment>, MarkedError> {
     check(&segments)?;
     Ok(segments)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parses_and_checks() {
+        assert_eq!(parse_checked("[[{明日|あした}]]").unwrap().len(), 1);
+        assert_eq!(
+            parse_checked("明日").unwrap_err(),
+            MarkedError::TargetCount(0)
+        );
+        assert_eq!(
+            parse_checked("[[明日").unwrap_err(),
+            MarkedError::UnclosedTarget
+        );
+    }
+}

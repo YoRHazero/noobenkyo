@@ -7,11 +7,11 @@ use sea_orm::{DatabaseConnection, DbErr, TransactionTrait};
 use thiserror::Error;
 
 use super::merge::merge_entry;
-use super::merge_outcome::{SenseOutcome, tally};
 use crate::rules::inflection::looks_inflected;
 use crate::rules::katakana_word::is_pure_katakana;
+use crate::rules::tally::tally;
 use crate::rules::validate::validate;
-use crate::{Entry, ImportOptions, ImportProgress, ImportReport, ImportWarning};
+use crate::{Entry, ImportOptions, ImportProgress, ImportReport, ImportWarning, SenseOutcome};
 
 /// How often progress is reported, in entries.
 const PROGRESS_STEP: u32 = 100;

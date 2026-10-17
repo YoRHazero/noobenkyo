@@ -10,11 +10,10 @@ use dictionary_word::store::{
 };
 use sea_orm::{ConnectionTrait, DbErr};
 
-use super::merge_outcome::{MergeOutcome, SenseOutcome};
 use crate::rules::gloss_merge::merge_secondary;
 use crate::rules::progress_merge::{later_progress, new_sense_progress};
 use crate::rules::sense_match::{SenseMatch, match_sense};
-use crate::{EntryProgress, ValidEntry, ValidSense, ValidSentence};
+use crate::{EntryProgress, MergeOutcome, SenseOutcome, ValidEntry, ValidSense, ValidSentence};
 
 pub async fn merge_entry(
     db: &impl ConnectionTrait,

@@ -23,3 +23,23 @@ pub async fn export_file(db: &impl ConnectionTrait, path: &Path) -> Result<u32, 
     file.flush()?;
     Ok(written)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::store::append::append;
+    use crate::store::test_db::{memory_db, record};
+
+    #[tokio::test]
+    async fn exported_line_matches_design_format() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("log.jsonl");
+        let db = memory_db().await;
+        append(&db, &record(0)).await.unwrap();
+        export_file(&db, &path).await.unwrap();
+        assert_eq!(
+            std::fs::read_to_string(&path).unwrap(),
+            "{\"时间\":\"2026-10-17T21:05:02.117+08:00\",\"义项\":{\"写法\":\"諦める\",\"词源\":\"\",\"读音\":\"あきらめる\",\"主释义\":\"放弃\"},\"题型\":\"翻译题\",\"例句\":\"[[{諦|あきら}めない]]でね。\",\"原始答案\":\"やめる\",\"预判\":\"不会\",\"自评\":\"模糊\"}\n"
+        );
+    }
+}
