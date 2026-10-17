@@ -1,0 +1,20 @@
+[package]
+name = "study"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+study-quiz.workspace = true
+study-answer.workspace = true
+study-workspace.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+chrono.workspace = true
+thiserror.workspace = true
+specta.workspace = true
+rand.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true

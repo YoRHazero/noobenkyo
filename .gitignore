@@ -1,0 +1,8 @@
+dev_docs/
+.DS_Store
+target/
+node_modules/
+web/dist/
+*.db
+*.db-shm
+*.db-wal
