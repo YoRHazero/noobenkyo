@@ -1,5 +1,4 @@
 import { Page } from '@/components/page'
-import { AnswerLogPanel } from '@/features/dictionary/answer-log-panel'
 import { DictionaryOverview } from '@/features/dictionary/dictionary-overview'
 import { ExportPanel } from '@/features/dictionary/export-panel'
 import { ImportPanel } from '@/features/dictionary/import-panel'
@@ -12,7 +11,6 @@ export function DictionaryPage() {
       <ImportPanel />
       <ExportPanel />
       <SenseBrowser />
-      <AnswerLogPanel />
     </Page>
   )
 }

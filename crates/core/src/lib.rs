@@ -6,9 +6,9 @@ pub mod bindings;
 mod command_error;
 mod commands;
 mod convert;
-mod events;
 mod flows;
 mod payloads;
+mod user_files;
 
 use tauri::Manager;
 
@@ -21,7 +21,6 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .invoke_handler(builder.invoke_handler())
         .setup(move |app| {
-            builder.mount_events(app);
             let data_dir = app.path().app_data_dir()?;
             let state = tauri::async_runtime::block_on(app_state::AppState::open(&data_dir))?;
             app.manage(state);

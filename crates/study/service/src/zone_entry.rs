@@ -70,7 +70,6 @@ mod tests {
             sentences: vec![Sentence {
                 marked: format!("[[{writing}]]"),
                 translation: None,
-                target_kana: "かな".into(),
             }],
             progress: Progress::default(),
         }

@@ -4,7 +4,6 @@
 pub mod admit;
 pub mod fill_zone;
 pub mod question;
-pub mod record_answer;
 pub mod render;
 pub mod settle;
 pub mod start_group;

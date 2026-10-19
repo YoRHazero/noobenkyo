@@ -16,6 +16,4 @@ pub struct Snapshot {
 pub struct Sentence {
     pub marked: String,
     pub translation: Option<String>,
-    /// Kana of the target as it appears in the sentence.
-    pub target_kana: String,
 }

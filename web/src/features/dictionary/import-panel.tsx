@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button'
 import { ImportReportView } from '@/features/dictionary/import-report-view'
 import { LabeledCheckbox } from '@/components/labeled-checkbox'
 import { useImportEntries } from '@/features/dictionary/use-import-entries'
-import { useImportProgress } from '@/features/dictionary/use-import-progress'
 
 const defaultOptions: ImportOptions = {
   drop_pure_katakana: true,
@@ -18,7 +17,6 @@ const defaultOptions: ImportOptions = {
 export function ImportPanel() {
   const [options, setOptions] = useState(defaultOptions)
   const importEntries = useImportEntries()
-  const progress = useImportProgress(importEntries.isPending)
   const set = (key: keyof ImportOptions) => (value: boolean) =>
     setOptions({ ...options, [key]: value })
 
@@ -45,11 +43,7 @@ export function ImportPanel() {
         <Button disabled={importEntries.isPending} onClick={() => importEntries.mutate(options)}>
           选择文件并导入
         </Button>
-        {progress && (
-          <span className="text-sm text-muted-foreground tabular-nums">
-            {progress.done} / {progress.total}
-          </span>
-        )}
+        {importEntries.isPending && <span className="text-sm text-muted-foreground">导入中…</span>}
       </div>
       <ErrorText error={importEntries.error} />
       {importEntries.data && <ImportReportView report={importEntries.data} />}

@@ -6,7 +6,7 @@ pub enum QuestionType {
     Sentence,
     /// 翻译题: the sentence with the target blank and the glosses; answer the dictionary-form kana.
     Translation,
-    /// 读音题: the sentence with the target in kanji and the glosses; answer its kana.
+    /// 读音题: the sentence with the target in kanji and the glosses; answer the dictionary-form kana.
     Reading,
     /// 综合题: glosses, writing and kana, some covered; self-rating only.
     Comprehensive,

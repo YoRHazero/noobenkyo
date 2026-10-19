@@ -5,7 +5,6 @@ use crate::app_state::AppState;
 use crate::command_error::CommandError;
 use crate::convert::sense_key;
 use crate::flows::fill_zone::fill_zone;
-use crate::flows::record_answer::record_answer;
 use crate::flows::settle::settle_and_remove;
 
 #[tauri::command]
@@ -16,10 +15,8 @@ pub async fn rate_answer(
     rating: Rating,
 ) -> Result<(), CommandError> {
     let mut study = state.study.lock().await;
+    // Answer records are dropped: no feature keeps them.
     let outcome = study.rate(zone, rating)?;
-    if let Some(record) = outcome.record {
-        record_answer(&state.dictionary, record).await?;
-    }
     if let Some(settlement) = outcome.settlement {
         settle_and_remove(&state.dictionary, &mut study, zone, settlement).await?;
     }

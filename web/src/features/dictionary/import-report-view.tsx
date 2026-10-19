@@ -1,13 +1,14 @@
 import type { ImportReport } from '@/bindings'
+import { ImportProblemList } from '@/features/dictionary/import-problem-list'
 
 type Props = {
   report: ImportReport
 }
 
-/** Counts of an import and the entries left for the user to handle. */
+/** Counts of an import, what it took out, and the fields it ignored. */
 export function ImportReportView({ report }: Props) {
   const counts = [
-    { label: '条目', value: report.entries },
+    { label: '条目', value: report.lines },
     { label: '新单词', value: report.words_added },
     { label: '新读音', value: report.readings_added },
     { label: '新义项', value: report.senses_added },
@@ -29,25 +30,12 @@ export function ImportReportView({ report }: Props) {
           </div>
         ))}
       </dl>
-      {report.warnings.length > 0 && (
-        <div className="flex flex-col gap-1">
-          <p className="text-sm font-medium">
-            警告（{report.warnings.length}）：这些条目没有导入，请处理后重新导入
-          </p>
-          <ul className="max-h-64 overflow-auto rounded-md border text-sm">
-            {report.warnings.map((warning) => (
-              <li key={warning.line} className="flex gap-3 border-b px-3 py-1.5 last:border-b-0">
-                <span className="w-16 shrink-0 text-muted-foreground tabular-nums">
-                  第 {warning.line} 行
-                </span>
-                <span lang="ja" className="w-28 shrink-0">
-                  {warning.writing}
-                </span>
-                <span>{warning.message}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+      {report.problems.length > 0 && <ImportProblemList problems={report.problems} />}
+      {report.ignored_fields.length > 0 && (
+        <p className="text-sm text-muted-foreground">
+          忽略了不认识的字段：
+          {report.ignored_fields.map((field) => `${field.name}（${field.lines} 行）`).join('、')}
+        </p>
       )}
     </div>
   )

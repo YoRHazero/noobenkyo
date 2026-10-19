@@ -1,11 +1,10 @@
 //! End-to-end flows over real services in a temporary directory: import,
-//! learning, settling, review and logging.
+//! learning, settling and review.
 
-use dictionary::{DictionaryService, ImportOptions, Settings as DictionarySettings};
+use dictionary::{DictionaryService, ImportOptions};
 use study::{AnswerInput, QuestionType, Rating, ReviewMode, StudyService, Zone};
 
 use super::question::current_question;
-use super::record_answer::record_answer;
 use super::settle::settle_and_remove;
 use super::start_group::start_group;
 use crate::app_state::AppState;
@@ -14,14 +13,13 @@ const SAMPLE: &str = include_str!("../../../../samples/basic.jsonl");
 
 async fn imported_state(dir: &std::path::Path) -> AppState {
     let state = AppState::open(dir).await.unwrap();
-    let file = dir.join("sample.jsonl");
-    std::fs::write(&file, SAMPLE).unwrap();
     let report = state
         .dictionary
-        .import_entries(&file, ImportOptions::default(), &mut |_| {})
+        .import(SAMPLE, ImportOptions::default())
         .await
         .unwrap();
-    assert!(report.warnings.is_empty(), "{:?}", report.warnings);
+    assert!(report.problems.is_empty(), "{:?}", report.problems);
+    assert!(report.ignored_fields.is_empty());
     assert_eq!(report.skipped_katakana, 2);
     state
 }
@@ -42,9 +40,6 @@ async fn answer(
     };
     study.submit(zone, input).unwrap();
     let outcome = study.rate(zone, rating).unwrap();
-    if let Some(record) = outcome.record {
-        record_answer(dictionary, record).await.unwrap();
-    }
     if let Some(settlement) = outcome.settlement {
         settle_and_remove(dictionary, study, zone, settlement)
             .await
@@ -86,15 +81,11 @@ async fn learning_fills_asks_in_order_and_settles_full_senses() {
 }
 
 #[tokio::test]
-async fn review_counts_lapses_logs_and_settles() {
+async fn review_counts_lapses_and_settles() {
     let dir = tempfile::tempdir().unwrap();
     let state = imported_state(dir.path()).await;
     let mut study = state.study.lock().await;
     while answer(&state.dictionary, &mut study, Zone::Learning, Rating::Known).await {}
-    state
-        .dictionary
-        .update_settings(DictionarySettings { log_enabled: true })
-        .unwrap();
 
     let question = current_question(&state.dictionary, &mut study, Zone::Review)
         .await
@@ -104,7 +95,6 @@ async fn review_counts_lapses_logs_and_settles() {
     assert_eq!(study.status(Zone::Review).items, 9);
 
     assert!(answer(&state.dictionary, &mut study, Zone::Review, Rating::Unknown).await);
-    assert_eq!(state.dictionary.log_count().await.unwrap(), 1);
     while answer(&state.dictionary, &mut study, Zone::Review, Rating::Known).await {
         if study.status(Zone::Review).items < 9 {
             break;
@@ -161,13 +151,11 @@ async fn reported_sentence_is_deleted_and_sense_leaves_without_settling() {
 
     let reported = study.report_sentence(Zone::Learning).unwrap();
     let key = crate::convert::sense_key::to_dictionary(reported.key.clone());
-    assert!(
-        state
-            .dictionary
-            .remove_sentence(&key, &reported.marked)
-            .await
-            .unwrap()
-    );
+    state
+        .dictionary
+        .remove_sentence(&key, &reported.marked)
+        .await
+        .unwrap();
     study.remove(Zone::Learning, &reported.key).unwrap();
     assert_eq!(study.status(Zone::Learning).items, 8);
 }

@@ -10,7 +10,6 @@ pub fn to_study(snapshot: dictionary::SenseSnapshot) -> study::Snapshot {
             .map(|s| study::Sentence {
                 marked: s.marked,
                 translation: s.translation,
-                target_kana: s.target_kana,
             })
             .collect(),
         progress: study::Progress {

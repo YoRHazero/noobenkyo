@@ -19,10 +19,8 @@ export function ExportPanel() {
         >
           导出…
         </Button>
-        {exportEntries.data && (
-          <span className="text-sm text-muted-foreground">
-            已导出 {exportEntries.data.entries} 行
-          </span>
+        {exportEntries.data != null && (
+          <span className="text-sm text-muted-foreground">已导出 {exportEntries.data} 行</span>
         )}
       </div>
       <ErrorText error={exportEntries.error} />

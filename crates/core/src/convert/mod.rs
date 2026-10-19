@@ -2,6 +2,5 @@
 
 pub mod candidate;
 pub mod display;
-pub mod log_record;
 pub mod sense_key;
 pub mod snapshot;

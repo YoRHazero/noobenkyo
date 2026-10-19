@@ -1,40 +1,31 @@
-use std::path::PathBuf;
-
-use dictionary::{ExportReport, ImportOptions, ImportReport};
-use tauri::{AppHandle, State};
-use tauri_specta::Event;
+use dictionary::{ImportOptions, ImportReport};
+use tauri::State;
 
 use crate::app_state::AppState;
 use crate::command_error::CommandError;
-use crate::events::ImportProgressEvent;
+use crate::user_files;
 
-/// Imports an entry file, pushing progress events while it runs.
+/// Imports the entry file at `path`.
 #[tauri::command]
 #[specta::specta]
 pub async fn import_entries(
-    app: AppHandle,
     state: State<'_, AppState>,
     path: String,
     options: ImportOptions,
 ) -> Result<ImportReport, CommandError> {
-    let mut on_progress = |progress| {
-        let _ = ImportProgressEvent(progress).emit(&app);
-    };
-    Ok(state
-        .dictionary
-        .import_entries(&PathBuf::from(path), options, &mut on_progress)
-        .await?)
+    let text = user_files::read_text(&path)?;
+    Ok(state.dictionary.import(&text, options).await?)
 }
 
+/// Writes the dictionary to `path` as entries; returns how many were written.
 #[tauri::command]
 #[specta::specta]
 pub async fn export_entries(
     state: State<'_, AppState>,
     path: String,
     keep_progress: bool,
-) -> Result<ExportReport, CommandError> {
-    Ok(state
-        .dictionary
-        .export_entries(&PathBuf::from(path), keep_progress)
-        .await?)
+) -> Result<u32, CommandError> {
+    let exported = state.dictionary.export(keep_progress).await?;
+    user_files::write_text(&path, &exported.text)?;
+    Ok(exported.entries)
 }

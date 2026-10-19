@@ -17,7 +17,6 @@ pub fn snapshot(writing: &str, progress: Progress) -> Snapshot {
         sentences: vec![Sentence {
             marked: format!("[[{writing}]]だ"),
             translation: Some("译文".into()),
-            target_kana: "かな".into(),
         }],
         progress,
     }

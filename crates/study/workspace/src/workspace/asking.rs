@@ -50,8 +50,7 @@ impl Workspace {
             .ok_or(WorkspaceError::NoQuestion)?;
         let item = &self.state.items[index];
         let sentence = current.sentence.and_then(|i| item.sentences.get(i));
-        let target_kana = sentence.map(|s| s.target_kana.as_str()).unwrap_or_default();
-        let expected = expected_answer(current.question_type, &item.key.kana, target_kana);
+        let expected = expected_answer(current.question_type, &item.key.kana);
         let prediction = predict(&input, expected.as_deref());
         let reveal = Reveal {
             view: RevealView {
