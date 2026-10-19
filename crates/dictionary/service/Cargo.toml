@@ -7,16 +7,11 @@ publish.workspace = true
 
 [dependencies]
 dictionary-word.workspace = true
-dictionary-import.workspace = true
-dictionary-export.workspace = true
-dictionary-log.workspace = true
+dictionary-entry.workspace = true
 sea-orm.workspace = true
 sea-orm-migration.workspace = true
-serde.workspace = true
-serde_json.workspace = true
 chrono.workspace = true
 thiserror.workspace = true
-specta.workspace = true
 
 [dev-dependencies]
 tokio.workspace = true

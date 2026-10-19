@@ -1,19 +1,28 @@
-//! Kana classification and katakana-to-hiragana conversion.
+//! Kana classification, readings, and katakana-to-hiragana conversion.
 
 use thiserror::Error;
 
 const KATAKANA_TO_HIRAGANA_OFFSET: u32 = 0x60;
 
+/// Hiragana as it may appear in a writing.
 pub fn is_hiragana(c: char) -> bool {
     matches!(c, '\u{3041}'..='\u{3096}' | 'ゝ' | 'ゞ' | 'ー')
 }
 
+/// Katakana as it may appear in a writing.
 pub fn is_katakana(c: char) -> bool {
     matches!(c, '\u{30A1}'..='\u{30FA}' | 'ヽ' | 'ヾ' | 'ー')
 }
 
+/// Kana as it may appear in a writing.
 pub fn is_kana(c: char) -> bool {
     is_hiragana(c) || is_katakana(c)
+}
+
+/// Kana a reading may consist of: hiragana from ぁ to ゔ, their katakana
+/// counterparts from ァ to ヴ, and the long vowel mark.
+pub fn is_reading_kana(c: char) -> bool {
+    matches!(c, '\u{3041}'..='\u{3094}' | '\u{30A1}'..='\u{30F4}' | 'ー')
 }
 
 /// Converts katakana to hiragana, leaving every other character unchanged.
@@ -34,23 +43,20 @@ fn char_to_hiragana(c: char) -> char {
 pub enum KanaError {
     #[error("读音为空")]
     Empty,
-    #[error("读音含有假名以外的字符：{0}")]
+    #[error("读音只能包含假名和 ー，不能有 {0}")]
     NotKana(char),
 }
 
-/// Normalizes a reading: removes whitespace and converts it to hiragana.
+/// Normalizes a reading: removes whitespace, checks every character is
+/// reading kana, and converts katakana to hiragana.
 pub fn normalize_reading(raw: &str) -> Result<String, KanaError> {
-    let kana = to_hiragana(
-        &raw.chars()
-            .filter(|c| !c.is_whitespace())
-            .collect::<String>(),
-    );
+    let kana: String = raw.chars().filter(|c| !c.is_whitespace()).collect();
     if kana.is_empty() {
         return Err(KanaError::Empty);
     }
-    match kana.chars().find(|c| !is_hiragana(*c)) {
+    match kana.chars().find(|c| !is_reading_kana(*c)) {
         Some(c) => Err(KanaError::NotKana(c)),
-        None => Ok(kana),
+        None => Ok(to_hiragana(&kana)),
     }
 }
 
@@ -68,14 +74,27 @@ mod tests {
     #[test]
     fn normalizes_reading() {
         assert_eq!(normalize_reading(" アス ").unwrap(), "あす");
+        assert_eq!(normalize_reading("ヴァイオリン").unwrap(), "ゔぁいおりん");
+        assert_eq!(normalize_reading("がっこう").unwrap(), "がっこう");
+    }
+
+    #[test]
+    fn rejects_other_characters() {
         assert_eq!(normalize_reading("").unwrap_err(), KanaError::Empty);
-        assert_eq!(
-            normalize_reading("あa").unwrap_err(),
-            KanaError::NotKana('a')
-        );
-        assert_eq!(
-            normalize_reading("明日").unwrap_err(),
-            KanaError::NotKana('明')
-        );
+        for (raw, c) in [
+            ("あa", 'a'),
+            ("明日", '明'),
+            ("いすゞ", 'ゞ'),
+            ("こゝろ", 'ゝ'),
+            ("こか・こーら", '・'),
+            ("ヶ", 'ヶ'),
+            ("ｱｽ", 'ｱ'),
+        ] {
+            assert_eq!(
+                normalize_reading(raw).unwrap_err(),
+                KanaError::NotKana(c),
+                "{raw}"
+            );
+        }
     }
 }

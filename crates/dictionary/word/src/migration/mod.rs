@@ -1,11 +1,13 @@
-//! Schema migrations for the word tables. The service composes these with
-//! the log migrations into the dictionary's migrator.
+//! Schema migrations: the only source of the dictionary's tables.
 
 mod m20261018_000001_create_word_tables;
 
-use sea_orm_migration::MigrationTrait;
+use sea_orm_migration::{MigrationTrait, MigratorTrait};
 
-/// Migrations owned by this crate, in time order.
-pub fn migrations() -> Vec<Box<dyn MigrationTrait>> {
-    vec![Box::new(m20261018_000001_create_word_tables::Migration)]
+pub struct Migrator;
+
+impl MigratorTrait for Migrator {
+    fn migrations() -> Vec<Box<dyn MigrationTrait>> {
+        vec![Box::new(m20261018_000001_create_word_tables::Migration)]
+    }
 }

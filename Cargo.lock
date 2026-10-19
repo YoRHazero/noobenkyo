@@ -1085,66 +1085,25 @@ name = "dictionary"
 version = "0.1.0"
 dependencies = [
  "chrono",
- "dictionary-export",
- "dictionary-import",
- "dictionary-log",
+ "dictionary-entry",
  "dictionary-word",
  "sea-orm",
  "sea-orm-migration",
- "serde",
- "serde_json",
- "specta",
  "tempfile",
  "thiserror 2.0.21",
  "tokio",
 ]
 
 [[package]]
-name = "dictionary-export"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "dictionary-import",
- "dictionary-word",
- "sea-orm",
- "sea-orm-migration",
- "serde",
- "serde_json",
- "specta",
- "tempfile",
- "thiserror 2.0.21",
- "tokio",
-]
-
-[[package]]
-name = "dictionary-import"
+name = "dictionary-entry"
 version = "0.1.0"
 dependencies = [
  "chrono",
  "dictionary-word",
- "sea-orm",
- "sea-orm-migration",
  "serde",
  "serde_json",
  "specta",
- "tempfile",
  "thiserror 2.0.21",
- "tokio",
-]
-
-[[package]]
-name = "dictionary-log"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "sea-orm",
- "sea-orm-migration",
- "serde",
- "serde_json",
- "specta",
- "tempfile",
- "thiserror 2.0.21",
- "tokio",
 ]
 
 [[package]]
@@ -4243,6 +4202,7 @@ version = "2.0.0-rc.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "38f9a30cbcbb7011f1da7d73483983bf838af123883e45f2b36ed76328df9c50"
 dependencies = [
+ "chrono",
  "paste",
  "rustc_version",
  "specta-macros",

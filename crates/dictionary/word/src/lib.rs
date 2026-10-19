@@ -1,5 +1,6 @@
-//! Words, readings, senses, labels and sentences: the schema, the generated
-//! entities, storage, and the marked-text format of sentences.
+//! The dictionary itself: words, readings, senses, labels and sentences.
+//! The schema, the generated entities, the rules of text and of merging, and
+//! every read and write of the tables.
 
 #[rustfmt::skip]
 pub mod entity;
@@ -7,17 +8,23 @@ mod migration;
 pub mod rules;
 pub mod store;
 
-mod candidate;
-mod fragment;
+mod content;
 mod progress;
+mod reading_key;
 mod sense_key;
-mod snapshot;
+mod word_key;
 
-pub use candidate::SenseCandidate;
-pub use fragment::{Fragment, SentenceDisplay};
-pub use migration::migrations;
+pub use content::{Content, ContentProgress, ReadingContent, SenseContent, SentenceContent};
+pub use migration::Migrator;
 pub use progress::Progress;
+pub use reading_key::ReadingKey;
+pub use rules::sentence::{Fragment, SentenceDisplay, TargetPiece};
 pub use sense_key::SenseKey;
-pub use snapshot::{SenseSnapshot, SentenceSnapshot};
-pub use store::browse::{SensePage, SenseSummary};
-pub use store::stats::DictionaryStats;
+pub use store::edit::{Replaced, SensePatch};
+pub use store::merge::{MergeOutcome, SenseOutcome};
+pub use store::query::filter_senses::SenseProgress;
+pub use store::query::search::{SearchPage, SearchRow, SenseSummary};
+pub use store::query::sense_detail::SenseDetail;
+pub use store::query::stats::DictionaryStats;
+pub use store::query::{Completeness, ContentFilter, ProgressState, SenseOrder};
+pub use word_key::WordKey;

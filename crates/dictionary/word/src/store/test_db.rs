@@ -2,10 +2,10 @@
 
 use chrono::{DateTime, FixedOffset};
 use sea_orm::{ConnectOptions, ConnectionTrait, Database, DatabaseConnection};
-use sea_orm_migration::SchemaManager;
+use sea_orm_migration::MigratorTrait;
 
 use crate::Progress;
-use crate::store::{reading, sense, word};
+use crate::store::tables::{reading, sense, word};
 
 pub async fn memory_db() -> DatabaseConnection {
     let mut options = ConnectOptions::new("sqlite::memory:");
@@ -17,10 +17,7 @@ pub async fn memory_db() -> DatabaseConnection {
         .sqlx_logging(false)
         .map_sqlx_sqlite_opts(|opts| opts.foreign_keys(true));
     let db = Database::connect(options).await.unwrap();
-    let manager = SchemaManager::new(&db);
-    for migration in crate::migrations() {
-        migration.up(&manager).await.unwrap();
-    }
+    crate::Migrator::up(&db, None).await.unwrap();
     db
 }
 

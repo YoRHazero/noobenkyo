@@ -2,9 +2,7 @@
 resolver = "3"
 members = [
     "crates/dictionary/word",
-    "crates/dictionary/import",
-    "crates/dictionary/export",
-    "crates/dictionary/log",
+    "crates/dictionary/entry",
     "crates/dictionary/service",
     "crates/study/quiz",
     "crates/study/answer",
@@ -22,9 +20,7 @@ publish = false
 [workspace.dependencies]
 # dictionary group
 dictionary-word = { path = "crates/dictionary/word" }
-dictionary-import = { path = "crates/dictionary/import" }
-dictionary-export = { path = "crates/dictionary/export" }
-dictionary-log = { path = "crates/dictionary/log" }
+dictionary-entry = { path = "crates/dictionary/entry" }
 dictionary = { path = "crates/dictionary/service" }
 # study group
 study-quiz = { path = "crates/study/quiz" }
@@ -39,7 +35,7 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 chrono = { version = "0.4", features = ["serde"] }
 thiserror = "2"
-specta = { version = "=2.0.0-rc.25", features = ["derive"] }
+specta = { version = "=2.0.0-rc.25", features = ["derive", "chrono"] }
 rand = "0.9"
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "sync"] }
 tempfile = "3"

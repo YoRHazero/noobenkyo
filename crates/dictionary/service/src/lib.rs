@@ -1,30 +1,26 @@
-//! The dictionary group's public face: `DictionaryService` and `Settings`,
-//! plus the sub-crate types that leave the group.
+//! The dictionary group's public face: `DictionaryService`, the pure
+//! functions `check_entries` and `render_sentence`, and the sub-crate types
+//! that leave the group. Every input and output is a value; files the user
+//! picks are read and written by the caller.
 
-mod browse;
 mod clock;
 mod connection;
+mod delete;
+mod edit;
+mod entries;
 mod error;
-mod log_access;
-mod migrator;
+mod query;
 mod render;
-mod sense_access;
 mod service;
-mod settings;
-mod settings_file;
-mod transfer;
 
+pub use entries::check_entries;
 pub use error::DictionaryError;
 pub use render::render_sentence;
 pub use service::DictionaryService;
-pub use settings::Settings;
 
-pub use dictionary_export::ExportReport;
-pub use dictionary_import::{ImportOptions, ImportProgress, ImportReport, ImportWarning};
-pub use dictionary_log::{
-    LogImportReport, LogPrediction, LogQuestionType, LogRating, LogRecord, LogSense,
-};
+pub use dictionary_entry::{Dropped, Exported, IgnoredField, ImportOptions, ImportReport, Problem};
 pub use dictionary_word::{
-    DictionaryStats, Fragment, SenseCandidate, SenseKey, SensePage, SenseSnapshot, SenseSummary,
-    SentenceDisplay, SentenceSnapshot,
+    Completeness, ContentFilter, DictionaryStats, Fragment, Progress, ProgressState, ReadingKey,
+    Replaced, SearchPage, SearchRow, SenseDetail, SenseKey, SenseOrder, SensePatch, SenseProgress,
+    SenseSummary, SentenceContent, SentenceDisplay, TargetPiece, WordKey,
 };
