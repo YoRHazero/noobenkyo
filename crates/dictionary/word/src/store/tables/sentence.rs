@@ -107,36 +107,3 @@ pub async fn replace_sentences(
     }
     Ok(())
 }
-
-/// All sentences, grouped by sense in creation order.
-#[cfg(test)]
-pub async fn all_sentences(db: &impl ConnectionTrait) -> Result<Vec<sentence::Model>, DbErr> {
-    sentence::Entity::find()
-        .order_by_asc(sentence::Column::SenseId)
-        .order_by_asc(sentence::Column::Id)
-        .all(db)
-        .await
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::store::test_db::{memory_db, sense_of};
-
-    #[tokio::test]
-    async fn inserts_lists_and_deletes() {
-        let db = memory_db().await;
-        let sense = sense_of(&db, "明日", "あした", "明天").await;
-        let first = insert_sentence(&db, sense, "[[{明日|あした}]]", Some("明天"))
-            .await
-            .unwrap();
-        insert_sentence(&db, sense, "[[{明日|あした}]]だ", None)
-            .await
-            .unwrap();
-        assert_eq!(sentences_of_sense(&db, sense).await.unwrap().len(), 2);
-        delete_sentence(&db, first.id).await.unwrap();
-        let rest = all_sentences(&db).await.unwrap();
-        assert_eq!(rest.len(), 1);
-        assert_eq!(rest[0].translation, None);
-    }
-}

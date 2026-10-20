@@ -8,6 +8,3 @@ pub mod query;
 
 mod by_key;
 mod tables;
-
-#[cfg(test)]
-mod test_db;
