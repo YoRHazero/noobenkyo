@@ -22,5 +22,5 @@ pub use dictionary_entry::{Dropped, Exported, IgnoredField, ImportOptions, Impor
 pub use dictionary_word::{
     Completeness, ContentFilter, DictionaryStats, Fragment, Progress, ProgressState, ReadingKey,
     Replaced, SearchPage, SearchRow, SenseDetail, SenseKey, SenseOrder, SensePatch, SenseProgress,
-    SenseSummary, SentenceContent, SentenceDisplay, TargetPiece, WordKey,
+    SenseSummary, SentenceContent, SentenceDisplay, StageCount, TargetPiece, WordKey,
 };

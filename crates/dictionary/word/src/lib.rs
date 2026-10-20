@@ -25,6 +25,6 @@ pub use store::merge::{MergeOutcome, SenseOutcome};
 pub use store::query::filter_senses::SenseProgress;
 pub use store::query::search::{SearchPage, SearchRow, SenseSummary};
 pub use store::query::sense_detail::SenseDetail;
-pub use store::query::stats::DictionaryStats;
+pub use store::query::stats::{DictionaryStats, StageCount};
 pub use store::query::{Completeness, ContentFilter, ProgressState, SenseOrder};
 pub use word_key::WordKey;
