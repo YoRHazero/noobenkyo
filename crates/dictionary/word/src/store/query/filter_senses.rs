@@ -8,6 +8,7 @@ use sea_orm::{
     ConnectionTrait, DbErr, EntityTrait, FromQueryResult, JoinType, Order, QueryFilter, QueryOrder,
     QuerySelect, RelationTrait,
 };
+use serde::Serialize;
 
 use super::sense_condition::sense_condition;
 use super::{ContentFilter, SenseOrder};
@@ -15,7 +16,7 @@ use crate::entity::{reading, sense, word};
 use crate::{Progress, SenseKey};
 
 /// A sense and its progress.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, specta::Type)]
 pub struct SenseProgress {
     pub key: SenseKey,
     pub progress: Progress,

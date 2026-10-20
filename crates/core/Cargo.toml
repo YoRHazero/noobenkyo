@@ -29,5 +29,6 @@ thiserror.workspace = true
 tokio.workspace = true
 
 [dev-dependencies]
+tauri = { workspace = true, features = ["test"] }
 cargo_metadata.workspace = true
 tempfile.workspace = true

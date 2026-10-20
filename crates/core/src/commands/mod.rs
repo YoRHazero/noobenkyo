@@ -1,8 +1,7 @@
-//! Every command the frontend uses, grouped by page concern.
+//! Every command the frontend uses, by the part of the app it belongs to.
 
-pub mod answer;
-pub mod dictionary_browse;
-pub mod dictionary_transfer;
-pub mod question;
-pub mod study_settings;
-pub mod zone;
+pub mod dictionary;
+pub mod learn;
+pub mod review;
+pub mod settings;
+pub mod stats;

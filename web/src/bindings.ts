@@ -7,33 +7,71 @@ import { invoke as __TAURI_INVOKE } from "@tauri-apps/api/core";
 /** Commands */
 export const commands = {
 	dictionaryStats: () => typedError<DictionaryStats, CommandError>(__TAURI_INVOKE("dictionary_stats")),
-	searchSenses: (query: string, offset: number, limit: number) => typedError<SensePage, CommandError>(__TAURI_INVOKE("search_senses", { query, offset, limit })),
-	deleteSense: (key: SenseKey) => typedError<boolean, CommandError>(__TAURI_INVOKE("delete_sense", { key })),
-	/**  Imports the entry file at `path`. */
-	importEntries: (path: string, options: ImportOptions) => typedError<ImportReport, CommandError>(__TAURI_INVOKE("import_entries", { path, options })),
-	/**  Writes the dictionary to `path` as entries; returns how many were written. */
-	exportEntries: (path: string, keepProgress: boolean) => typedError<number, CommandError>(__TAURI_INVOKE("export_entries", { path, keepProgress })),
+	dictionarySearch: (filter: ContentFilter, offset: number, limit: number) => typedError<SearchPage, CommandError>(__TAURI_INVOKE("dictionary_search", { filter, offset, limit })),
+	/**  One sense in full, its sentences rendered; `None` if it is gone. */
+	dictionarySenseDetail: (key: SenseKey) => typedError<{
+	detail: SenseDetail,
+	/**  In the order of `detail.sentences`. */
+	sentences: Fragment[][],
+} | null, CommandError>(__TAURI_INVOKE("dictionary_sense_detail", { key })),
+	dictionaryFilterSenses: (filter: ContentFilter, exclude: SenseKey[], order: SenseOrder, limit: number | null) => typedError<SenseProgress[], CommandError>(__TAURI_INVOKE("dictionary_filter_senses", { filter, exclude, order, limit })),
+	dictionaryRenderSentence: (marked: string, display: SentenceDisplay) => typedError<Fragment[], CommandError>(__TAURI_INVOKE("dictionary_render_sentence", { marked, display })),
+	/**  What importing the file would drop or ignore, one line of Chinese each. */
+	dictionaryCheckEntries: (path: string) => typedError<string[], CommandError>(__TAURI_INVOKE("dictionary_check_entries", { path })),
+	dictionaryImport: (path: string, options: ImportOptions) => typedError<ImportReport, CommandError>(__TAURI_INVOKE("dictionary_import", { path, options })),
+	/**  The options the import dialog opens with. */
+	dictionaryDefaultImportOptions: () => __TAURI_INVOKE<ImportOptions>("dictionary_default_import_options"),
+	/**  Writes the matching rows to the file; returns how many lines were written. */
+	dictionaryExport: (path: string, filter: ContentFilter, limit: number | null, keepProgress: boolean) => typedError<number, CommandError>(__TAURI_INVOKE("dictionary_export", { path, filter, limit, keepProgress })),
+	dictionaryReplaceSense: (key: SenseKey, patch: SensePatch) => typedError<Replaced, CommandError>(__TAURI_INVOKE("dictionary_replace_sense", { key, patch })),
+	dictionaryUpdateProgress: (key: SenseKey, stage: number, passes: number, lapses: number) => typedError<boolean, CommandError>(__TAURI_INVOKE("dictionary_update_progress", { key, stage, passes, lapses })),
+	dictionaryDeleteWord: (key: WordKey) => typedError<boolean, CommandError>(__TAURI_INVOKE("dictionary_delete_word", { key })),
+	dictionaryDeleteReading: (key: ReadingKey) => typedError<boolean, CommandError>(__TAURI_INVOKE("dictionary_delete_reading", { key })),
+	dictionaryDeleteSense: (key: SenseKey) => typedError<boolean, CommandError>(__TAURI_INVOKE("dictionary_delete_sense", { key })),
+	dictionaryDeleteSentence: (key: SenseKey, marked: string) => typedError<boolean, CommandError>(__TAURI_INVOKE("dictionary_delete_sentence", { key, marked })),
+	/**
+	 *  The quiz in progress, or else a new one; `None` when there is nothing left
+	 *  to learn. A sense whose content is gone leaves the zone, and the next one
+	 *  is asked instead.
+	 */
+	learnNext: () => typedError<{
+	view: QuizView,
+	/**  `None` for comprehensive questions, which show no sentence. */
+	sentence: Fragment[] | null,
+} | null, CommandError>(__TAURI_INVOKE("learn_next")),
+	learnSubmitAnswer: (input: string) => typedError<RevealPayload, CommandError>(__TAURI_INVOKE("learn_submit_answer", { input })),
+	learnConfirmAnswer: (rating: Rating) => typedError<null, CommandError>(__TAURI_INVOKE("learn_confirm_answer", { rating })),
+	learnSkip: () => typedError<null, CommandError>(__TAURI_INVOKE("learn_skip")),
+	learnReportSentence: () => typedError<null, CommandError>(__TAURI_INVOKE("learn_report_sentence")),
+	/**
+	 *  Starts a session over every touched sense with sentences, replacing any
+	 *  session there is; study leaves the mastered ones out.
+	 */
+	reviewStart: (options: SessionOptions) => typedError<null, CommandError>(__TAURI_INVOKE("review_start", { options })),
+	/**  Ends the session; whatever was not written back is dropped. */
+	reviewEnd: () => typedError<null, CommandError>(__TAURI_INVOKE("review_end")),
+	/**
+	 *  The quiz in progress, or else a new one; `None` when the pool and the
+	 *  queue are both empty. A sense whose content is gone leaves the session,
+	 *  and the next one is asked instead.
+	 */
+	reviewNext: () => typedError<{
+	view: QuizView,
+	/**  `None` for comprehensive questions, which show no sentence. */
+	sentence: Fragment[] | null,
+} | null, CommandError>(__TAURI_INVOKE("review_next")),
+	reviewSubmitAnswer: (input: string) => typedError<RevealPayload, CommandError>(__TAURI_INVOKE("review_submit_answer", { input })),
+	reviewConfirmAnswer: (rating: Rating) => typedError<null, CommandError>(__TAURI_INVOKE("review_confirm_answer", { rating })),
+	reviewSkip: () => typedError<null, CommandError>(__TAURI_INVOKE("review_skip")),
+	reviewReportSentence: () => typedError<null, CommandError>(__TAURI_INVOKE("review_report_sentence")),
 	studySettings: () => typedError<StudySettings, CommandError>(__TAURI_INVOKE("study_settings")),
+	/**  Invalid settings are rejected and the old ones kept. */
 	updateStudySettings: (settings: StudySettings) => typedError<null, CommandError>(__TAURI_INVOKE("update_study_settings", { settings })),
-	resetStudySettings: () => typedError<StudySettings, CommandError>(__TAURI_INVOKE("reset_study_settings")),
-	zoneStatus: (zone: Zone) => typedError<ZoneStatus, CommandError>(__TAURI_INVOKE("zone_status", { zone })),
-	/**  Settles every review sense, then switches the mode, which empties the review zone. */
-	setReviewMode: (mode: ReviewMode) => typedError<ZoneStatus, CommandError>(__TAURI_INVOKE("set_review_mode", { mode })),
-	startReviewGroup: () => typedError<ZoneStatus, CommandError>(__TAURI_INVOKE("start_review_group")),
-	/**  The zone's current question; the same one until it is answered. `None` when the zone is empty. */
-	currentQuestion: (zone: Zone) => typedError<{
-	view: QuestionView,
-	fragments: Fragment[] | null,
-} | null, CommandError>(__TAURI_INVOKE("current_question", { zone })),
-	submitAnswer: (zone: Zone, input: string) => typedError<RevealPayload, CommandError>(__TAURI_INVOKE("submit_answer", { zone, input })),
-	rateAnswer: (zone: Zone, rating: Rating) => typedError<null, CommandError>(__TAURI_INVOKE("rate_answer", { zone, rating })),
-	skipSense: (zone: Zone) => typedError<null, CommandError>(__TAURI_INVOKE("skip_sense", { zone })),
-	/**  Deletes the shown sentence and lets the sense leave without settling. */
-	reportSentence: (zone: Zone) => typedError<null, CommandError>(__TAURI_INVOKE("report_sentence", { zone })),
+	studyDefaultSettings: () => __TAURI_INVOKE<StudySettings>("study_default_settings"),
 };
 
 /* Types */
-/**  The input a question asks for. */
+/**  The input a quiz asks for. */
 export type AnswerInput = 
 /**  No input: self-rating only. */
 { kind: "none" } | { kind: "chinese" } | 
@@ -48,10 +86,24 @@ export type Card = {
 	visible: ComprehensiveVisibility,
 };
 
-/**  An error shown to the user. */
+/**
+ *  The one error the frontend sees: a message in Chinese, as the feature it
+ *  came from wrote it.
+ */
 export type CommandError = {
 	message: string,
 };
+
+/**  How far a row is written. Every row is at exactly one level. */
+export type Completeness = 
+/**  Only the writing. */
+"WordOnly" | 
+/**  Down to the reading. */
+"ReadingOnly" | 
+/**  A sense without sentences. */
+"NoSentence" | 
+/**  A sense with sentences: it can enter a zone. */
+"WithSentence";
 
 /**
  *  Which parts of a comprehensive question are shown before answering.
@@ -63,12 +115,39 @@ export type ComprehensiveVisibility = {
 	kana: boolean,
 };
 
+/**
+ *  Conditions on the rows of the dictionary. A row is one piece of content:
+ *  a sense, or a reading or word with nothing below it.
+ */
+export type ContentFilter = {
+	/**  Contained in the writing, origin, kana or any gloss. Blank means no condition. */
+	text: string | null,
+	/**  The levels a row may be at; empty means any. */
+	completeness: Completeness[],
+	progress: ProgressState,
+};
+
+/**
+ *  Counts of the dictionary: rows by how far they are written, and senses
+ *  with sentences by their progress.
+ */
 export type DictionaryStats = {
 	words: number,
-	senses: number,
-	senses_with_sentences: number,
-	/**  Senses with zero passes and zero lapses. */
-	unlearned_senses: number,
+	/**  Words without readings. */
+	word_only: number,
+	/**  Readings without senses. */
+	reading_only: number,
+	/**  Senses without sentences. */
+	no_sentence: number,
+	/**  Senses with sentences. */
+	with_sentence: number,
+	/**  Senses with sentences that are untouched, as the progress filter means it. */
+	untouched: number,
+	/**
+	 *  Senses with sentences that are touched, by stage in ascending order;
+	 *  stages without senses are absent.
+	 */
+	stages: StageCount[],
 };
 
 export type Dropped = 
@@ -83,7 +162,9 @@ export type Dropped =
 { kind: "sense" };
 
 /**  One piece of a rendered sentence, handed to the frontend as is. */
-export type Fragment = { kind: "text"; text: string } | { kind: "ruby"; base: string; ruby: string } | { kind: "target"; text: string } | { kind: "blank" };
+export type Fragment = { kind: "text"; text: string } | { kind: "ruby"; base: string; ruby: string } | 
+/**  The target as one unit, made of pieces with or without ruby. */
+{ kind: "target"; pieces: TargetPiece[] } | { kind: "blank" };
 
 /**  A field the format does not know, ignored wherever it appeared. */
 export type IgnoredField = {
@@ -119,10 +200,32 @@ export type ImportReport = {
 	ignored_fields: IgnoredField[],
 };
 
-/**  The order in which new senses enter the learning zone. */
-export type LearningOrder = 
+/**  Whether a submitted answer is right, as far as a fixed rule can tell. */
+export type Judgement = "Correct" | "Wrong" | 
+/**  The rule can tell neither; a model may judge it instead. */
+"Unsure";
+
+/**  The order new senses enter the learning zone in. */
+export type LearnOrder = 
 /**  Creation (rowid) order. */
 "Creation" | "Random";
+
+/**  Settings of the learning line only; the shared ones are in `QuizSettings`. */
+export type LearnSettings = {
+	/**  How many senses the learning zone holds. */
+	capacity: number,
+	/**  The order new senses enter in. */
+	order: LearnOrder,
+	/**  Upper bound of k: senses asked in the last k quizzes are left out. */
+	recent_limit: number,
+};
+
+/**  How the pool is ordered. */
+export type PickOrder = 
+/**  The most overdue first. */
+"Urgent" | 
+/**  At random, more likely the more overdue. */
+"Weighted";
 
 /**  Something taken out of an entry text, and why. */
 export type Problem = {
@@ -135,36 +238,43 @@ export type Problem = {
 	reason: string,
 };
 
-export type QuestionPayload = {
-	view: QuestionView,
-	fragments: Fragment[] | null,
+/**  Learning progress of a sense. Any change to it updates `modified_at`. */
+export type Progress = {
+	stage: number,
+	passes: number,
+	lapses: number,
+	modified_at: string,
 };
 
+/**
+ *  Progress of a sense. Only senses have progress, so anything but `Any`
+ *  keeps sense rows only.
+ */
+export type ProgressState = "Any" | 
+/**  Zero passes and stage 0. */
+"Untouched" | "Touched";
+
 export type QuestionType = 
-/**  例句题: the sentence with the target in kana; answer in Chinese. */
+/**  例句题: the sentence with the target in kana; answer its meaning in Chinese. */
 "Sentence" | 
-/**  翻译题: the sentence with the target blank and the glosses; answer the dictionary-form kana. */
+/**  翻译题: the sentence with the target blank and the glosses; answer the reading. */
 "Translation" | 
-/**  读音题: the sentence with the target in kanji and the glosses; answer the dictionary-form kana. */
+/**  读音题: the sentence with the target in kanji and the glosses; answer the reading. */
 "Reading" | 
 /**  综合题: glosses, writing and kana, some covered; self-rating only. */
 "Comprehensive";
 
-/**  What the frontend shows for a question, apart from the rendered sentence. */
-export type QuestionView = {
-	zone: Zone,
-	question_type: QuestionType,
-	/**  Glosses shown below the sentence. */
-	glosses: string[] | null,
-	/**  The face of a comprehensive question. */
-	card: Card | null,
-	answer_input: AnswerInput,
-	remaining: number,
-	steps: number,
+/**  A quiz: study's view and the dictionary's rendering of its sentence. */
+export type QuizPayload = {
+	view: QuizView,
+	/**  `None` for comprehensive questions, which show no sentence. */
+	sentence: Fragment[] | null,
 };
 
-/**  Question settings. */
+/**  Settings both lines use. */
 export type QuizSettings = {
+	/**  N: the highest stage. A sense at stage N is mastered. */
+	max_stage: number,
 	/**  Question order for words with kanji. */
 	kanji_order: QuestionType[],
 	/**  Question order for words without kanji. */
@@ -172,7 +282,19 @@ export type QuizSettings = {
 	comprehensive: ComprehensiveVisibility,
 };
 
-/**  A self-rating, or a prediction of one. */
+export type QuizView = {
+	question_type: QuestionType,
+	/**  Steps left, and steps in the whole question order. */
+	remaining: number,
+	steps: number,
+	/**  Glosses shown below the sentence. */
+	glosses: string[] | null,
+	/**  The face of a comprehensive question. */
+	card: Card | null,
+	answer: AnswerInput,
+};
+
+/**  A self-rating. */
 export type Rating = 
 /**  会 */
 "Known" | 
@@ -181,28 +303,93 @@ export type Rating =
 /**  不会 */
 "Unknown";
 
-export type RevealPayload = {
-	view: RevealView,
-	fragments: Fragment[] | null,
+/**  Natural key of a reading. */
+export type ReadingKey = {
+	writing: string,
+	origin: string,
+	kana: string,
 };
 
-/**  The answer shown after submitting. */
-export type RevealView = {
+export type ReferenceView = {
+	/**  `None` for comprehensive questions, which take no input. */
+	judgement: Judgement | null,
+	input: string,
 	writing: string,
 	kana: string,
 	glosses: string[],
 	translation: string | null,
-	/**  The kana the question expected, if it can be checked. */
-	expected: string | null,
-	input: string,
-	prediction: Rating | null,
 };
 
-export type ReviewMode = 
-/**  Fixed capacity; every exit is refilled at once. */
-"Endless" | 
-/**  A group chosen at the start; no refills until the user starts a new group. */
-"FixedGroup";
+/**  What replacing a sense's content did. */
+export type Replaced = 
+/**  Replaced; the key changes when the primary gloss does. */
+{ kind: "done"; key: SenseKey } | 
+/**  Nothing was changed, for these reasons (in Chinese). */
+{ kind: "rejected"; problems: string[] } | { kind: "notFound" };
+
+/**  What is revealed after submitting: study's view and the sentence in full. */
+export type RevealPayload = {
+	view: ReferenceView,
+	sentence: Fragment[],
+};
+
+/**  Settings of the review line only; the shared ones are in `QuizSettings`. */
+export type ReviewSettings = {
+	/**  k: days the expected interval grows by per stage. */
+	interval_per_stage: number,
+	/**  b: the expected interval at stage 0, in days. */
+	interval_base: number,
+	/**
+	 *  The queue holds at most this many senses. More than `recent_limit`, so
+	 *  a full queue always has a sense not asked lately.
+	 */
+	queue_limit: number,
+	/**  Upper bound of k: senses asked in the last k quizzes are left out. */
+	recent_limit: number,
+	/**  What the start dialog offers. */
+	defaults: SessionOptions,
+};
+
+export type SearchPage = {
+	rows: SearchRow[],
+	/**  Rows matching the filter, over all pages. */
+	total: number,
+};
+
+/**  One row, as an exported line would have it. */
+export type SearchRow = {
+	word: WordKey,
+	/**  `None` for a word with no readings. */
+	kana: string | null,
+	/**  `None` for a word or reading with nothing below it. */
+	sense: SenseSummary | null,
+};
+
+export type SenseDetail = {
+	key: SenseKey,
+	/**  All glosses, the primary gloss first. */
+	glosses: string[],
+	labels: string[],
+	progress: Progress,
+	/**  Marked text and translation, in creation order. */
+	sentences: SentenceContent[],
+	/**  Senses under the same reading, this one included. */
+	reading_senses: number,
+	/**  Readings under the same word. */
+	word_readings: number,
+	/**  Senses under the same word. */
+	word_senses: number,
+};
+
+/**
+ *  One sense in full, with each sentence rendered in full. The marked texts
+ *  stay in `detail`, for editing.
+ */
+export type SenseDetailPayload = {
+	detail: SenseDetail,
+	/**  In the order of `detail.sentences`. */
+	sentences: Fragment[][],
+};
 
 /**
  *  Natural key of a sense. Outside the dictionary a sense is only ever
@@ -215,13 +402,31 @@ export type SenseKey = {
 	primary_gloss: string,
 };
 
-export type SensePage = {
-	rows: SenseSummary[],
-	total: number,
+/**  The order senses come out in. */
+export type SenseOrder = 
+/**  Creation order. */
+"Creation" | "Random";
+
+/**
+ *  Changes to the content of one sense. A field left `None` keeps its
+ *  current value; a given field replaces it as a whole. The layers above the
+ *  sense and its progress cannot be changed here.
+ */
+export type SensePatch = {
+	/**  The new glosses, the primary gloss first. */
+	glosses: string[] | null,
+	labels: string[] | null,
+	sentences: SentenceContent[] | null,
+};
+
+/**  A sense and its progress. */
+export type SenseProgress = {
+	key: SenseKey,
+	progress: Progress,
 };
 
 export type SenseSummary = {
-	key: SenseKey,
+	primary_gloss: string,
 	secondary_glosses: string[],
 	labels: string[],
 	stage: number,
@@ -230,42 +435,58 @@ export type SenseSummary = {
 	sentence_count: number,
 };
 
-/**  Study settings: the configuration parameters of the design. */
+export type SentenceContent = {
+	/**  A valid marked sentence. */
+	marked: string,
+	translation: string | null,
+};
+
+/**  How the target of a sentence is shown. Ruby outside the target is always shown. */
+export type SentenceDisplay = 
+/**  The target shows only its kana. */
+"KanaOnly" | 
+/**  The target is left blank. */
+"Blank" | 
+/**  The target shows only its written form, without ruby. */
+"KanjiOnly" | 
+/**  The target shows its written form with its ruby. */
+"Full";
+
+/**
+ *  How a session starts: chosen by the user when starting, with defaults
+ *  from the settings.
+ */
+export type SessionOptions = {
+	/**  Senses in a group; `None` for an endless session. */
+	size: number | null,
+	/**
+	 *  Steps a sense from the pool starts with, counted from the end of its
+	 *  question order.
+	 */
+	start_steps: number,
+	order: PickOrder,
+};
+
+/**  How many senses are at a stage. */
+export type StageCount = {
+	stage: number,
+	senses: number,
+};
+
+/**  Study settings: the shared part and each line's own part. */
 export type StudySettings = {
 	quiz: QuizSettings,
-	workspace: WorkspaceSettings,
+	learn: LearnSettings,
+	review: ReviewSettings,
 };
 
-/**  Zone settings. */
-export type WorkspaceSettings = {
-	learning_capacity: number,
-	review_capacity: number,
-	fixed_group_size: number,
-	daily_new_limit: number,
-	learning_order: LearningOrder,
-	/**  Upper bound of k: senses asked in the last k questions are not picked. */
-	recent_limit: number,
-	/**  Expected review interval in days for stages 0..=N; N is the last index. */
-	stage_intervals: number[],
-	/**  Weight at the expected interval, in percent; before it the weight grows linearly up to this. */
-	due_weight_percent: number,
-	/**  How much each pass lengthens the expected interval, in percent. */
-	pass_bonus_percent: number,
-	/**  Share of each stage 0..=N in a fixed group. */
-	group_stage_ratios: number[],
-};
+/**  A piece of a rendered target. */
+export type TargetPiece = { kind: "text"; text: string } | { kind: "ruby"; base: string; ruby: string };
 
-export type Zone = "Learning" | "Review";
-
-export type ZoneStatus = {
-	zone: Zone,
-	items: number,
-	capacity: number,
-	new_today: number,
-	daily_new_limit: number,
-	review_mode: ReviewMode,
-	/**  Fixed-group mode with every sense of the group gone. */
-	group_finished: boolean,
+/**  Natural key of a word. */
+export type WordKey = {
+	writing: string,
+	origin: string,
 };
 
 /* Tauri Specta runtime */

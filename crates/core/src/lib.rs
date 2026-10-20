@@ -1,16 +1,20 @@
-//! The Tauri app: cross-feature flows and every command the frontend uses.
-//! Core only calls features, passes values and converts types one-to-one.
+//! The Tauri app: every command the frontend uses. Core calls the features,
+//! passes values on, converts types one-to-one, and makes read-only
+//! statistics across features; the business rules stay in the features.
 
-mod app_state;
+pub mod app_state;
 pub mod bindings;
-mod command_error;
-mod commands;
+pub mod command_error;
+pub mod commands;
 mod convert;
-mod flows;
-mod payloads;
+pub mod payloads;
+mod startup_failure;
+mod steps;
 mod user_files;
 
 use tauri::Manager;
+
+use crate::app_state::AppState;
 
 pub fn run() {
     let builder = bindings::builder();
@@ -20,10 +24,14 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .invoke_handler(builder.invoke_handler())
-        .setup(move |app| {
+        .setup(|app| {
             let data_dir = app.path().app_data_dir()?;
-            let state = tauri::async_runtime::block_on(app_state::AppState::open(&data_dir))?;
-            app.manage(state);
+            match tauri::async_runtime::block_on(AppState::open(&data_dir)) {
+                Ok(state) => {
+                    app.manage(state);
+                }
+                Err(error) => startup_failure::report(app.handle(), &error, &data_dir),
+            }
             Ok(())
         })
         .run(tauri::generate_context!())
