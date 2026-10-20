@@ -5,8 +5,8 @@ members = [
     "crates/dictionary/entry",
     "crates/dictionary/service",
     "crates/study/quiz",
-    "crates/study/answer",
-    "crates/study/workspace",
+    "crates/study/learn",
+    "crates/study/review",
     "crates/study/service",
     "crates/core",
 ]
@@ -24,8 +24,8 @@ dictionary-entry = { path = "crates/dictionary/entry" }
 dictionary = { path = "crates/dictionary/service" }
 # study group
 study-quiz = { path = "crates/study/quiz" }
-study-answer = { path = "crates/study/answer" }
-study-workspace = { path = "crates/study/workspace" }
+study-learn = { path = "crates/study/learn" }
+study-review = { path = "crates/study/review" }
 study = { path = "crates/study/service" }
 
 # external

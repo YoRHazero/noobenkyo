@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-/// The input a question asks for.
+/// The input a quiz asks for.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, specta::Type)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum AnswerInput {

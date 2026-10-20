@@ -4516,21 +4516,23 @@ dependencies = [
  "serde",
  "serde_json",
  "specta",
- "study-answer",
+ "study-learn",
  "study-quiz",
- "study-workspace",
+ "study-review",
  "tempfile",
  "thiserror 2.0.21",
 ]
 
 [[package]]
-name = "study-answer"
+name = "study-learn"
 version = "0.1.0"
 dependencies = [
- "chrono",
+ "rand 0.9.5",
  "serde",
+ "serde_json",
  "specta",
  "study-quiz",
+ "tempfile",
  "thiserror 2.0.21",
 ]
 
@@ -4538,23 +4540,21 @@ dependencies = [
 name = "study-quiz"
 version = "0.1.0"
 dependencies = [
+ "rand 0.9.5",
  "serde",
  "specta",
  "thiserror 2.0.21",
 ]
 
 [[package]]
-name = "study-workspace"
+name = "study-review"
 version = "0.1.0"
 dependencies = [
  "chrono",
  "rand 0.9.5",
  "serde",
- "serde_json",
  "specta",
- "study-answer",
  "study-quiz",
- "tempfile",
  "thiserror 2.0.21",
 ]
 

@@ -7,8 +7,8 @@ publish.workspace = true
 
 [dependencies]
 study-quiz.workspace = true
-study-answer.workspace = true
-study-workspace.workspace = true
+study-learn.workspace = true
+study-review.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 chrono.workspace = true

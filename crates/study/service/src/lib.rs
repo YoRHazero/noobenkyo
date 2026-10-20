@@ -1,26 +1,21 @@
-//! The study group's public face: `StudyService` and `Settings`, plus the
-//! sub-crate types that leave the group.
+//! The study group's public face: `StudyService` and `StudySettings`, plus
+//! the sub-crate types that leave the group.
 
-mod answers;
 mod clock;
 mod error;
-mod exits;
-mod questions;
+mod review_session;
 mod service;
 mod settings;
 mod settings_file;
-mod zone_entry;
 
 pub use error::StudyError;
 pub use service::StudyService;
-pub use settings::Settings;
+pub use settings::StudySettings;
 
-pub use study_answer::Rating;
+pub use study_learn::{LearnError, LearnOrder, LearnService, LearnSettings};
 pub use study_quiz::{
-    AnswerInput, Card, ComprehensiveVisibility, QuestionType, QuizSettings, SentenceDisplay,
+    AnswerError, AnswerInput, BadSentence, Card, ComprehensiveVisibility, Content, Judgement, Next,
+    Progress, QuestionType, Quiz, QuizSettings, QuizView, Rating, Reference, ReferenceView,
+    SenseKey, Sentence, SentenceDisplay, SentenceToRender, WriteBack,
 };
-pub use study_workspace::{
-    AnswerRecord, Candidate, LearningOrder, Progress, Question, QuestionView, RateOutcome,
-    ReportedSentence, Reveal, RevealView, ReviewMode, SenseKey, Sentence, SentenceToRender,
-    Settlement, Snapshot, WorkspaceSettings, Zone, ZoneStatus,
-};
+pub use study_review::{Candidate, PickOrder, ReviewService, ReviewSettings, SessionOptions};

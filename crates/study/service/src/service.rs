@@ -2,64 +2,57 @@ use std::path::{Path, PathBuf};
 
 use rand::SeedableRng;
 use rand::rngs::StdRng;
-use study_workspace::Workspace;
-use study_workspace::store::workspace_file;
+use study_learn::LearnService;
+use study_review::ReviewService;
 
-use crate::{Settings, StudyError, settings_file};
+use crate::{StudyError, StudySettings, settings_file};
 
-/// Study: the two zones, questions and answers. Touches only its own data
-/// directory; senses come in and go out through the caller.
+/// Study: the settings, the learning line and the current review session.
+/// Touches only its own data directory; senses come in and go out through
+/// the caller.
 pub struct StudyService {
     pub(crate) dir: PathBuf,
-    pub(crate) settings: Settings,
-    pub(crate) workspace: Workspace,
-    pub(crate) rng: StdRng,
+    pub(crate) settings: StudySettings,
+    pub(crate) learn: LearnService,
+    pub(crate) review: Option<ReviewService>,
 }
 
 impl StudyService {
+    /// Reads the settings and the learning zone back; no review session.
     pub fn open(dir: &Path) -> Result<Self, StudyError> {
         std::fs::create_dir_all(dir)?;
+        let settings = settings_file::load(dir);
+        let learn = LearnService::open(
+            dir,
+            settings.quiz.clone(),
+            settings.learn.clone(),
+            StdRng::from_os_rng(),
+        );
         Ok(Self {
             dir: dir.to_owned(),
-            settings: settings_file::load(dir),
-            workspace: Workspace::new(workspace_file::load(dir)),
-            rng: StdRng::from_os_rng(),
+            settings,
+            learn,
+            review: None,
         })
     }
 
-    pub fn settings(&self) -> Settings {
+    pub fn settings(&self) -> StudySettings {
         self.settings.clone()
     }
 
-    /// Replaces the settings as a whole; invalid settings are rejected and the old ones kept.
-    pub fn update_settings(&mut self, new: Settings) -> Result<(), StudyError> {
+    /// Replaces the settings as a whole; invalid ones are rejected and the old
+    /// ones kept. The learning line takes them at once; a review session goes
+    /// on with the settings it started with.
+    pub fn update_settings(&mut self, new: StudySettings) -> Result<(), StudyError> {
         new.validate()?;
         settings_file::save(&self.dir, &new)?;
+        self.learn
+            .apply_settings(new.quiz.clone(), new.learn.clone())?;
         self.settings = new;
         Ok(())
     }
 
-    pub(crate) fn persist(&self) -> Result<(), StudyError> {
-        Ok(workspace_file::save(&self.dir, self.workspace.state())?)
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn rejects_invalid_settings_and_keeps_old() {
-        let dir = tempfile::tempdir().unwrap();
-        let mut service = StudyService::open(dir.path()).unwrap();
-        let mut invalid = Settings::default();
-        invalid.quiz.kanji_order.clear();
-        assert!(service.update_settings(invalid).is_err());
-        assert_eq!(service.settings(), Settings::default());
-
-        let mut valid = Settings::default();
-        valid.workspace.review_capacity = 3;
-        service.update_settings(valid.clone()).unwrap();
-        assert_eq!(StudyService::open(dir.path()).unwrap().settings(), valid);
+    pub fn learn(&mut self) -> &mut LearnService {
+        &mut self.learn
     }
 }

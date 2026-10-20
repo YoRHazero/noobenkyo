@@ -1,24 +1,40 @@
 use serde::{Deserialize, Serialize};
+use study_learn::LearnSettings;
 use study_quiz::QuizSettings;
-use study_workspace::WorkspaceSettings;
+use study_review::ReviewSettings;
 
 use crate::StudyError;
 
-/// Study settings: the configuration parameters of the design.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, specta::Type)]
-#[serde(rename = "StudySettings")]
-pub struct Settings {
+/// Study settings: the shared part and each line's own part.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, specta::Type)]
+pub struct StudySettings {
     pub quiz: QuizSettings,
-    pub workspace: WorkspaceSettings,
+    pub learn: LearnSettings,
+    pub review: ReviewSettings,
 }
 
-impl Settings {
+impl StudySettings {
     pub fn validate(&self) -> Result<(), StudyError> {
-        self.quiz
-            .validate()
-            .map_err(|e| StudyError::InvalidSettings(e.to_string()))?;
-        self.workspace
-            .validate()
-            .map_err(|e| StudyError::InvalidSettings(e.to_string()))
+        let invalid =
+            |error: &dyn std::fmt::Display| StudyError::InvalidSettings(error.to_string());
+        self.quiz.validate().map_err(|e| invalid(&e))?;
+        self.learn.validate().map_err(|e| invalid(&e))?;
+        self.review.validate().map_err(|e| invalid(&e))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn checks_every_part() {
+        assert!(StudySettings::default().validate().is_ok());
+        let mut settings = StudySettings::default();
+        settings.review.queue_limit = 0;
+        assert!(matches!(
+            settings.validate(),
+            Err(StudyError::InvalidSettings(_))
+        ));
     }
 }

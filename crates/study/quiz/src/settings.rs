@@ -3,9 +3,11 @@ use thiserror::Error;
 
 use crate::{ComprehensiveVisibility, QuestionType};
 
-/// Question settings.
+/// Settings both lines use.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, specta::Type)]
 pub struct QuizSettings {
+    /// N: the highest stage. A sense at stage N is mastered.
+    pub max_stage: u32,
     /// Question order for words with kanji.
     pub kanji_order: Vec<QuestionType>,
     /// Question order for words without kanji.
@@ -17,6 +19,7 @@ impl Default for QuizSettings {
     fn default() -> Self {
         use QuestionType::*;
         Self {
+            max_stage: 7,
             kanji_order: vec![Sentence, Translation, Reading, Comprehensive],
             kana_order: vec![Sentence, Translation, Comprehensive],
             comprehensive: ComprehensiveVisibility::default(),
@@ -26,6 +29,8 @@ impl Default for QuizSettings {
 
 #[derive(Debug, Error, PartialEq, Eq)]
 pub enum QuizSettingsError {
+    #[error("最高档位至少为 1")]
+    MaxStage,
     #[error("题型顺序不能为空")]
     EmptyOrder,
     #[error("题型顺序里有重复的题型")]
@@ -36,6 +41,9 @@ pub enum QuizSettingsError {
 
 impl QuizSettings {
     pub fn validate(&self) -> Result<(), QuizSettingsError> {
+        if self.max_stage == 0 {
+            return Err(QuizSettingsError::MaxStage);
+        }
         for order in [&self.kanji_order, &self.kana_order] {
             if order.is_empty() {
                 return Err(QuizSettingsError::EmptyOrder);
@@ -66,21 +74,39 @@ mod tests {
     }
 
     #[test]
-    fn rejects_bad_orders() {
-        let empty = QuizSettings {
-            kana_order: vec![],
-            ..QuizSettings::default()
-        };
-        assert_eq!(empty.validate(), Err(QuizSettingsError::EmptyOrder));
-        let duplicate = QuizSettings {
-            kanji_order: vec![Sentence, Sentence],
-            ..QuizSettings::default()
-        };
-        assert_eq!(duplicate.validate(), Err(QuizSettingsError::DuplicateType));
-        let reading = QuizSettings {
-            kana_order: vec![Reading],
-            ..QuizSettings::default()
-        };
-        assert_eq!(reading.validate(), Err(QuizSettingsError::ReadingForKana));
+    fn rejects_bad_settings() {
+        let cases = [
+            (
+                QuizSettings {
+                    max_stage: 0,
+                    ..QuizSettings::default()
+                },
+                QuizSettingsError::MaxStage,
+            ),
+            (
+                QuizSettings {
+                    kana_order: vec![],
+                    ..QuizSettings::default()
+                },
+                QuizSettingsError::EmptyOrder,
+            ),
+            (
+                QuizSettings {
+                    kanji_order: vec![Sentence, Sentence],
+                    ..QuizSettings::default()
+                },
+                QuizSettingsError::DuplicateType,
+            ),
+            (
+                QuizSettings {
+                    kana_order: vec![Reading],
+                    ..QuizSettings::default()
+                },
+                QuizSettingsError::ReadingForKana,
+            ),
+        ];
+        for (settings, error) in cases {
+            assert_eq!(settings.validate(), Err(error));
+        }
     }
 }

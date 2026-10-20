@@ -1,10 +1,6 @@
-use chrono::{DateTime, FixedOffset, Local, NaiveDate, SubsecRound};
+use chrono::{DateTime, FixedOffset, Local};
 
-/// The current local time, to the millisecond.
+/// The current local time.
 pub fn now() -> DateTime<FixedOffset> {
-    Local::now().fixed_offset().trunc_subsecs(3)
-}
-
-pub fn today() -> NaiveDate {
-    Local::now().date_naive()
+    Local::now().fixed_offset()
 }

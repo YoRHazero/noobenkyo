@@ -21,6 +21,7 @@ mod tests {
     #[test]
     fn detects_kanji() {
         assert!(has_kanji("諦める"));
+        assert!(has_kanji("々"));
         assert!(!has_kanji("コーヒー"));
     }
 }
