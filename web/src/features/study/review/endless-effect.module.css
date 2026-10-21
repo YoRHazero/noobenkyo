@@ -1,0 +1,183 @@
+/* The hover effect of the endless entrance. Everything eases back when the
+   pointer leaves; with reduced motion only the dimming and the glow stay. */
+
+@property --endless-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+/* Covers the whole window under the card: darkens and blurs what is behind. */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 300ms ease;
+  background: radial-gradient(ellipse at 50% 40%, rgb(30 27 75 / 0.9), rgb(2 6 23 / 0.97) 70%);
+  backdrop-filter: blur(3px);
+}
+
+.backdrop[data-active='true'] {
+  opacity: 1;
+}
+
+/* Slowly drifting light, like an aurora. */
+.aurora {
+  position: absolute;
+  inset: -20%;
+  opacity: 0.55;
+  filter: blur(60px);
+  background:
+    radial-gradient(closest-side at 30% 35%, rgb(99 102 241 / 0.9), transparent),
+    radial-gradient(closest-side at 70% 60%, rgb(168 85 247 / 0.8), transparent),
+    radial-gradient(closest-side at 50% 85%, rgb(34 211 238 / 0.6), transparent);
+  animation: endless-aurora 14s ease-in-out infinite alternate;
+}
+
+@keyframes endless-aurora {
+  from {
+    transform: translate3d(-4%, -2%, 0) rotate(0deg) scale(1);
+  }
+  to {
+    transform: translate3d(4%, 3%, 0) rotate(25deg) scale(1.15);
+  }
+}
+
+.stars {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* The card rises above the backdrop. */
+.card {
+  z-index: 50;
+  isolation: isolate;
+  transition:
+    transform 300ms ease,
+    background-color 300ms ease,
+    color 300ms ease,
+    box-shadow 300ms ease,
+    border-color 300ms ease;
+}
+
+.card[data-active='true'] {
+  transform: translateY(-4px) scale(1.03);
+  border-color: transparent;
+  background-color: rgb(15 23 42 / 0.85);
+  color: white;
+  box-shadow:
+    0 0 40px rgb(129 140 248 / 0.45),
+    0 0 120px rgb(168 85 247 / 0.25);
+}
+
+/* A ring of colored light around the card, turning. */
+.ring {
+  position: absolute;
+  inset: -2px;
+  z-index: -1;
+  border-radius: inherit;
+  padding: 2px;
+  opacity: 0;
+  transition: opacity 300ms ease;
+  background: conic-gradient(
+    from var(--endless-angle),
+    #22d3ee,
+    #818cf8,
+    #e879f9,
+    #f472b6,
+    #22d3ee
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+  animation: endless-spin 3s linear infinite;
+}
+
+.card[data-active='true'] .ring {
+  opacity: 1;
+}
+
+@keyframes endless-spin {
+  to {
+    --endless-angle: 360deg;
+  }
+}
+
+/* Light sweeping across the title. */
+.card[data-active='true'] .title {
+  background: linear-gradient(90deg, #fff 0%, #a5b4fc 30%, #f0abfc 50%, #fff 70%);
+  background-size: 200% 100%;
+  background-clip: text;
+  color: transparent;
+  animation: endless-shimmer 2.4s linear infinite;
+}
+
+@keyframes endless-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* The infinity sign, traced over and over while active. */
+.infinity {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.5rem;
+  width: 4rem;
+  height: 3rem;
+  fill: none;
+  stroke-linecap: round;
+}
+
+.infinityBase {
+  stroke: currentColor;
+  stroke-width: 2.5;
+  opacity: 0.25;
+}
+
+.infinityTrace {
+  stroke: url(#endless-trace-gradient);
+  stroke-width: 3.5;
+  stroke-dasharray: 22 78;
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
+
+.card[data-active='true'] .infinityTrace {
+  opacity: 1;
+  animation: endless-trace 1.8s linear infinite;
+}
+
+@keyframes endless-trace {
+  from {
+    stroke-dashoffset: 100;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora,
+  .ring,
+  .card[data-active='true'] .title,
+  .card[data-active='true'] .infinityTrace {
+    animation: none;
+  }
+
+  .card[data-active='true'] {
+    transform: none;
+  }
+}
