@@ -10,7 +10,6 @@ mod convert;
 pub mod payloads;
 mod startup_failure;
 mod steps;
-mod user_files;
 
 use tauri::Manager;
 
@@ -23,6 +22,7 @@ pub fn run() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_fs::init())
         .invoke_handler(builder.invoke_handler())
         .setup(|app| {
             let data_dir = app.path().app_data_dir()?;

@@ -14,6 +14,7 @@ pub fn builder() -> Builder<tauri::Wry> {
         dictionary::query::dictionary_sense_detail,
         dictionary::query::dictionary_filter_senses,
         dictionary::render::dictionary_render_sentence,
+        dictionary::entries::dictionary_preview_entries,
         dictionary::entries::dictionary_check_entries,
         dictionary::entries::dictionary_import,
         dictionary::entries::dictionary_default_import_options,

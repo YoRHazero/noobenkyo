@@ -3,7 +3,7 @@
 use dictionary_word::{MergeOutcome, SenseOutcome};
 use serde::Serialize;
 
-use crate::{Dropped, IgnoredField, Problem, Selected};
+use crate::{Dropped, IgnoredField, ImportPreview, Problem};
 
 /// Summary of one import, shown to the user.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, specta::Type)]
@@ -22,17 +22,17 @@ pub struct ImportReport {
     pub ignored_fields: Vec<IgnoredField>,
 }
 
-/// Combines the selected entries with what merging them changed; `outcomes`
-/// are in the order of `selected.entries`.
-pub fn report(selected: Selected, outcomes: &[MergeOutcome]) -> ImportReport {
+/// Combines the preview with what merging its entries changed; `outcomes`
+/// are in the order of `preview.entries`.
+pub fn report(preview: ImportPreview, outcomes: &[MergeOutcome]) -> ImportReport {
     let mut report = ImportReport {
-        lines: selected.lines,
-        skipped_katakana: selected.skipped_katakana,
-        problems: selected.problems,
-        ignored_fields: selected.ignored_fields,
+        lines: preview.lines,
+        skipped_katakana: u32::try_from(preview.skipped_katakana.len()).unwrap_or(u32::MAX),
+        problems: preview.problems,
+        ignored_fields: preview.ignored_fields,
         ..ImportReport::default()
     };
-    for (entry, outcome) in selected.entries.iter().zip(outcomes) {
+    for (entry, outcome) in preview.entries.iter().zip(outcomes) {
         tally(&mut report, outcome);
         if let SenseOutcome::Conflict(primaries) = &outcome.sense {
             report.problems.push(Problem {
@@ -59,7 +59,7 @@ fn tally(report: &mut ImportReport, outcome: &MergeOutcome) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{ImportOptions, convert, select};
+    use crate::{ImportOptions, preview};
 
     #[test]
     fn adds_up_outcomes_and_reports_conflicts_by_line() {
@@ -68,7 +68,7 @@ mod tests {
             "\n",
             r#"{"writing": "上", "kana": "うえ", "glosses": ["上面", "上级"]}"#,
         );
-        let selected = select(convert(text), ImportOptions::default());
+        let preview = preview(text, ImportOptions::default());
         let outcomes = [
             MergeOutcome {
                 word_added: true,
@@ -82,7 +82,7 @@ mod tests {
                 ..MergeOutcome::default()
             },
         ];
-        let report = report(selected, &outcomes);
+        let report = report(preview, &outcomes);
         assert_eq!(report.lines, 2);
         assert_eq!(
             (

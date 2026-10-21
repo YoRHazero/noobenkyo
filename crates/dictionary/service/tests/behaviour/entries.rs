@@ -1,6 +1,9 @@
-//! Entries in and out: checking, importing and exporting text.
+//! Entries in and out: previewing, checking, importing and exporting text.
 
-use dictionary::{Completeness, ContentFilter, DictionaryService, ImportOptions, check_entries};
+use dictionary::{
+    Completeness, ContentFilter, DictionaryService, Dropped, ImportOptions, check_entries,
+    preview_entries,
+};
 
 const TEXT: &str = concat!(
     r#"{"writing":"諦める","stratum":"和语","kana":"あきらめる","glosses":["放弃","死心"],"labels":["N3"],"sentences":[{"marked":"[[{諦|あきら}めない]]で","translation":"别放弃"}],"stage":2,"passes":3,"lapses":1,"modified_at":"2026-10-17T21:05:02.117+08:00"}"#,
@@ -71,5 +74,64 @@ async fn import_reports_what_check_reports() {
         .unwrap();
     assert_eq!(report.senses_added, 1);
     assert_eq!(report.problems.len(), 1);
-    assert_eq!(check_entries(text).len(), 1);
+    assert_eq!(check_entries(text, ImportOptions::default()).len(), 1);
+}
+
+#[tokio::test]
+async fn import_merges_exactly_the_preview_entries() {
+    let dir = tempfile::tempdir().unwrap();
+    let dictionary = service(&dir).await;
+    let options = ImportOptions {
+        detect_inflections: true,
+        ..ImportOptions::default()
+    };
+    let preview = preview_entries(TEXT, options);
+    let writings: Vec<&str> = preview
+        .entries
+        .iter()
+        .map(|entry| entry.content.writing.as_str())
+        .collect();
+    assert_eq!(writings, ["諦める", "上"]);
+    assert_eq!(preview.skipped_katakana.len(), 1);
+
+    let report = dictionary.import(TEXT, options).await.unwrap();
+    assert_eq!(report.skipped_katakana, 1);
+    let exported = dictionary
+        .export(&ContentFilter::default(), None, false)
+        .await
+        .unwrap();
+    assert_eq!(exported.entries, 2);
+}
+
+#[tokio::test]
+async fn the_report_adds_only_merge_problems_to_the_preview() {
+    let dir = tempfile::tempdir().unwrap();
+    let dictionary = service(&dir).await;
+    let existing = concat!(
+        r#"{"writing": "上", "kana": "うえ", "glosses": ["上面"]}"#,
+        "\n",
+        r#"{"writing": "上", "kana": "うえ", "glosses": ["上级"]}"#,
+    );
+    dictionary
+        .import(existing, ImportOptions::default())
+        .await
+        .unwrap();
+
+    let text = concat!(
+        r#"{"writing": "上", "kana": "うえ", "glosses": ["上面", "上级"]}"#,
+        "\n",
+        r#"{"writing": "明日", "kana": "あした", "glosses": ["明天"], "sentences": [{"marked": "[[明日]]"}]}"#,
+    );
+    let preview = preview_entries(text, ImportOptions::default());
+    let report = dictionary
+        .import(text, ImportOptions::default())
+        .await
+        .unwrap();
+    let (merging, converting): (Vec<_>, Vec<_>) = report
+        .problems
+        .into_iter()
+        .partition(|problem| problem.dropped == Dropped::Sense);
+    assert_eq!(converting, preview.problems);
+    assert_eq!(merging.len(), 1);
+    assert_eq!(merging[0].line, 1);
 }

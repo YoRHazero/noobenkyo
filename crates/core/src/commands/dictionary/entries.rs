@@ -1,26 +1,34 @@
-use dictionary::{ContentFilter, ImportOptions, ImportReport};
+//! Entry texts in and out. The frontend reads and writes the files the user
+//! picks; these commands only take and give text.
+
+use dictionary::{ContentFilter, Exported, ImportOptions, ImportPreview, ImportReport};
 use tauri::State;
 
 use crate::app_state::AppState;
 use crate::command_error::CommandError;
-use crate::user_files;
 
-/// What importing the file would drop or ignore, one line of Chinese each.
+/// What importing the text would bring in, line by line. Asynchronous,
+/// although pure, because its time grows with the text.
 #[tauri::command]
 #[specta::specta]
-pub async fn dictionary_check_entries(path: String) -> Result<Vec<String>, CommandError> {
-    let text = user_files::read_text(&path)?;
-    Ok(dictionary::check_entries(&text))
+pub async fn dictionary_preview_entries(text: String, options: ImportOptions) -> ImportPreview {
+    dictionary::preview_entries(&text, options)
+}
+
+/// The preview's problems, one line of Chinese each.
+#[tauri::command]
+#[specta::specta]
+pub async fn dictionary_check_entries(text: String, options: ImportOptions) -> Vec<String> {
+    dictionary::check_entries(&text, options)
 }
 
 #[tauri::command]
 #[specta::specta]
 pub async fn dictionary_import(
     state: State<'_, AppState>,
-    path: String,
+    text: String,
     options: ImportOptions,
 ) -> Result<ImportReport, CommandError> {
-    let text = user_files::read_text(&path)?;
     Ok(state.dictionary.import(&text, options).await?)
 }
 
@@ -31,20 +39,18 @@ pub fn dictionary_default_import_options() -> ImportOptions {
     ImportOptions::default()
 }
 
-/// Writes the matching rows to the file; returns how many lines were written.
+/// The matching rows as an entry text, for the frontend to write to the file
+/// the user picks.
 #[tauri::command]
 #[specta::specta]
 pub async fn dictionary_export(
     state: State<'_, AppState>,
-    path: String,
     filter: ContentFilter,
     limit: Option<u32>,
     keep_progress: bool,
-) -> Result<u32, CommandError> {
-    let exported = state
+) -> Result<Exported, CommandError> {
+    Ok(state
         .dictionary
         .export(&filter, limit, keep_progress)
-        .await?;
-    user_files::write_text(&path, &exported.text)?;
-    Ok(exported.entries)
+        .await?)
 }

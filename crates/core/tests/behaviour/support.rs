@@ -14,11 +14,13 @@ use study::Rating;
 use tauri::test::{MockRuntime, mock_app};
 use tauri::{App, Manager, State};
 
-const SAMPLE: &str = include_str!("../../../../samples/basic.jsonl");
+/// The sample word list, as the user would paste it.
+pub const SAMPLE: &str = include_str!("../../../../samples/basic.jsonl");
 
 /// The app over its own temporary data directory.
 pub struct TestApp {
-    dir: tempfile::TempDir,
+    /// Kept so the directory lives as long as the app.
+    _dir: tempfile::TempDir,
     app: App<MockRuntime>,
 }
 
@@ -28,7 +30,7 @@ impl TestApp {
         let dir = tempfile::tempdir().unwrap();
         let app = mock_app();
         app.manage(AppState::open(&dir.path().join("data")).await.unwrap());
-        Self { dir, app }
+        Self { _dir: dir, app }
     }
 
     /// A fresh app with the sample word list imported with the default
@@ -45,18 +47,14 @@ impl TestApp {
         self.app.state()
     }
 
-    /// A file the user could pick in a dialog, holding `text`.
-    pub fn user_file(&self, name: &str, text: &str) -> String {
-        let path = self.dir.path().join(name);
-        std::fs::write(&path, text).unwrap();
-        path.display().to_string()
-    }
-
     pub async fn import_sample(&self) -> ImportReport {
-        let path = self.user_file("basic.jsonl", SAMPLE);
-        dictionary_import(self.state(), path, dictionary_default_import_options())
-            .await
-            .unwrap()
+        dictionary_import(
+            self.state(),
+            SAMPLE.to_owned(),
+            dictionary_default_import_options(),
+        )
+        .await
+        .unwrap()
     }
 }
 

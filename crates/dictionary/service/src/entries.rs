@@ -1,23 +1,25 @@
 //! Entry texts in and out. The caller reads and writes the files.
 
-use dictionary_entry::{convert, report, select, to_text};
+use dictionary_entry::{preview, report, to_text};
 use dictionary_word::store::merge;
 use dictionary_word::store::query::dump;
 
 use crate::{
-    ContentFilter, DictionaryError, DictionaryService, Exported, ImportOptions, ImportReport, clock,
+    ContentFilter, DictionaryError, DictionaryService, Exported, ImportOptions, ImportPreview,
+    ImportReport, clock,
 };
 
 impl DictionaryService {
-    /// Imports an entry text in one transaction.
+    /// Imports an entry text in one transaction: merges the entries of its
+    /// preview, and reports them with what merging changed.
     pub async fn import(
         &self,
         text: &str,
         options: ImportOptions,
     ) -> Result<ImportReport, DictionaryError> {
-        let selected = select(convert(text), options);
-        let outcomes = merge::merge_contents(&self.db, &selected.contents(), clock::now()).await?;
-        Ok(report(selected, &outcomes))
+        let preview = preview(text, options);
+        let outcomes = merge::merge_contents(&self.db, &preview.contents(), clock::now()).await?;
+        Ok(report(preview, &outcomes))
     }
 
     /// Rows matching the filter as an entry text, one line per row, at most
@@ -33,9 +35,17 @@ impl DictionaryService {
     }
 }
 
-/// What importing `text` would drop or ignore, one line of Chinese each.
-/// Empty means it can be imported as written. Needs no dictionary, so it can
-/// be handed to the model as a plain function.
-pub fn check_entries(text: &str) -> Vec<String> {
-    dictionary_entry::check(text)
+/// What importing `text` with `options` would bring in, line by line, before
+/// it meets the dictionary. Merging may still find that a sense matches
+/// several existing ones; only the import report can say that.
+pub fn preview_entries(text: &str, options: ImportOptions) -> ImportPreview {
+    preview(text, options)
+}
+
+/// The preview's problems, skipped words and ignored fields, one line of
+/// Chinese each. Empty means every entry would be merged as written. Needs no
+/// dictionary and only plain values, so it can be handed to the model as a
+/// plain function.
+pub fn check_entries(text: &str, options: ImportOptions) -> Vec<String> {
+    dictionary_entry::check(text, options)
 }

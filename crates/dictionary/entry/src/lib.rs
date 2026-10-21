@@ -8,16 +8,16 @@ mod export;
 mod filter;
 mod line;
 mod options;
+mod preview;
 mod problem;
 mod read;
 mod report;
-mod select;
 
 pub use check::check;
 pub use convert::{Converted, ConvertedEntry, convert};
 pub use export::{Exported, to_text};
 pub use line::{Entry, EntrySentence};
 pub use options::ImportOptions;
+pub use preview::{ImportPreview, preview};
 pub use problem::{Dropped, IgnoredField, Problem};
 pub use report::{ImportReport, report};
-pub use select::{Selected, select};

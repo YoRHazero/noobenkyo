@@ -1,19 +1,19 @@
-//! The dictionary's commands: files in and out, and sentences rendered for
-//! the frontend.
+//! The dictionary's commands: entry texts in and out, and sentences
+//! rendered for the frontend.
 
 use dictionary::{ContentFilter, Fragment, ImportOptions, SenseKey, SentenceDisplay, TargetPiece};
 use noobenkyo_lib::commands::dictionary::entries::{
     dictionary_check_entries, dictionary_default_import_options, dictionary_export,
-    dictionary_import,
+    dictionary_preview_entries,
 };
 use noobenkyo_lib::commands::dictionary::query::dictionary_sense_detail;
 use noobenkyo_lib::commands::dictionary::render::dictionary_render_sentence;
 use noobenkyo_lib::commands::stats::dictionary::dictionary_stats;
 
-use crate::support::TestApp;
+use crate::support::{SAMPLE, TestApp};
 
 #[tokio::test]
-async fn importing_reads_the_picked_file() {
+async fn importing_takes_the_text() {
     let app = TestApp::fresh().await;
     assert_eq!(
         dictionary_default_import_options(),
@@ -27,44 +27,59 @@ async fn importing_reads_the_picked_file() {
 }
 
 #[tokio::test]
-async fn a_file_that_cannot_be_read_is_an_error() {
+async fn the_preview_shows_what_importing_merges() {
     let app = TestApp::fresh().await;
-    let missing = app.user_file("missing.jsonl", "");
-    std::fs::remove_file(&missing).unwrap();
-    let error = dictionary_import(app.state(), missing, ImportOptions::default())
-        .await
-        .unwrap_err();
+    let options = dictionary_default_import_options();
+    let preview = dictionary_preview_entries(SAMPLE.to_owned(), options).await;
+    assert_eq!(
+        (
+            preview.lines,
+            preview.entries.len(),
+            preview.skipped_katakana.len()
+        ),
+        (12, 10, 2)
+    );
+    assert!(preview.problems.is_empty());
+    let report = app.import_sample().await;
+    assert_eq!(report.senses_added, 10);
+}
+
+#[tokio::test]
+async fn checking_follows_the_options() {
+    let inflected = r#"{"writing": "食べた", "kana": "たべた", "glosses": ["吃了"]}"#;
+    let lenient = ImportOptions {
+        detect_inflections: false,
+        ..ImportOptions::default()
+    };
+    let strict = ImportOptions {
+        detect_inflections: true,
+        ..ImportOptions::default()
+    };
     assert!(
-        error.message.starts_with("读取文件失败："),
-        "{}",
-        error.message
+        dictionary_check_entries(inflected.to_owned(), lenient)
+            .await
+            .is_empty()
+    );
+    assert_eq!(
+        dictionary_check_entries(inflected.to_owned(), strict).await,
+        ["第 1 行 食べた：疑似活用形"]
+    );
+    // A skipped line is not a warning.
+    assert!(
+        dictionary_check_entries("not json".to_owned(), lenient)
+            .await
+            .is_empty()
     );
 }
 
 #[tokio::test]
-async fn checking_reads_the_picked_file() {
-    let app = TestApp::fresh().await;
-    let good = app.user_file("good.jsonl", r#"{"writing": "上", "kana": "うえ"}"#);
-    let bad = app.user_file("bad.jsonl", "not json");
-    assert!(dictionary_check_entries(good).await.unwrap().is_empty());
-    assert_eq!(dictionary_check_entries(bad).await.unwrap().len(), 1);
-}
-
-#[tokio::test]
-async fn exporting_writes_the_picked_file() {
+async fn exporting_gives_the_text() {
     let app = TestApp::with_sample().await;
-    let path = app.user_file("export.jsonl", "");
-    let entries = dictionary_export(
-        app.state(),
-        path.clone(),
-        ContentFilter::default(),
-        None,
-        true,
-    )
-    .await
-    .unwrap();
-    assert_eq!(entries, 10);
-    assert_eq!(std::fs::read_to_string(path).unwrap().lines().count(), 10);
+    let exported = dictionary_export(app.state(), ContentFilter::default(), None, true)
+        .await
+        .unwrap();
+    assert_eq!(exported.entries, 10);
+    assert_eq!(exported.text.lines().count(), 10);
 }
 
 #[tokio::test]

@@ -1,13 +1,15 @@
 //! Content → entry text, one line per piece of content.
 
 use dictionary_word::Content;
+use serde::Serialize;
 
 use crate::{Entry, EntrySentence};
 
 /// An exported entry text.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, specta::Type)]
 pub struct Exported {
     pub text: String,
+    /// Lines in `text`, one per piece of content.
     pub entries: u32,
 }
 

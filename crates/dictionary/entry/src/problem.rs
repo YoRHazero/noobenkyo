@@ -29,6 +29,6 @@ pub enum Dropped {
 pub struct IgnoredField {
     /// Field path, e.g. "pos", or "sentences.note" for a field of a sentence.
     pub name: String,
-    /// Number of lines it appeared in.
-    pub lines: u32,
+    /// The 1-based lines it appeared on, ascending.
+    pub lines: Vec<u32>,
 }

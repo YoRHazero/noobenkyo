@@ -12,11 +12,11 @@ pub fn convert(text: &str) -> Converted {
     let read = read(text);
     let mut problems = read.problems;
     let mut entries = Vec::new();
-    let mut ignored: BTreeMap<String, u32> = BTreeMap::new();
+    let mut ignored: BTreeMap<String, Vec<u32>> = BTreeMap::new();
 
     for ReadLine { line, entry } in read.entries {
         for name in entry.unknown_fields() {
-            *ignored.entry(name).or_default() += 1;
+            ignored.entry(name).or_default().push(line);
         }
         let writing = entry.writing.clone();
         match entry_content(entry) {
@@ -128,7 +128,7 @@ mod tests {
             converted.ignored_fields,
             [IgnoredField {
                 name: "pos".into(),
-                lines: 2
+                lines: vec![1, 6]
             }]
         );
     }
