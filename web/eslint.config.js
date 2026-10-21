@@ -9,48 +9,59 @@ const features = ['dictionary', 'study', 'settings']
 /** Imports outside the current directory go through `@/`, so paths can be checked. */
 const noParentImports = { regex: '^\\.\\./', message: '跨目录引用请用 @/ 路径' }
 
-/** Path rules: features never import each other or the app shell; components hold no business concepts. */
-const pathRules = [
-  {
-    files: ['src/**/*.{ts,tsx}'],
-    rules: { 'no-restricted-imports': ['error', { patterns: [noParentImports] }] },
-  },
+/** Commands are called only through backend; elsewhere bindings gives types only. */
+const bindingsTypesOnly = {
+  regex: '^@/bindings$',
+  allowTypeImports: true,
+  message: '命令只能通过 backend 调用，这里只能引用 bindings 里的类型',
+}
+
+/**
+ * The one direction of dependency: app → features → backend → bindings;
+ * app and features may use components; components see bindings' types only.
+ */
+const layers = [
+  { files: ['src/**/*.{ts,tsx}'], patterns: [] },
+  { files: ['src/app/**/*.{ts,tsx}'], patterns: [bindingsTypesOnly] },
   ...features.map((feature) => ({
     files: [`src/features/${feature}/**/*.{ts,tsx}`],
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        {
-          patterns: [
-            noParentImports,
-            {
-              regex: `^@/features/(?!${feature}/)`,
-              message: 'features 之间互不引用，共用的放进 components',
-            },
-            { regex: '^@/app/', message: 'features 不能引用 app' },
-          ],
-        },
-      ],
-    },
+    patterns: [
+      bindingsTypesOnly,
+      {
+        regex: `^@/features/(?!${feature}/)`,
+        message: 'features 之间互不引用，共用的放进 components',
+      },
+      { regex: '^@/app/', message: 'features 不能引用 app' },
+    ],
   })),
   {
-    files: ['src/components/**/*.{ts,tsx}'],
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        {
-          patterns: [
-            noParentImports,
-            {
-              regex: '^@/(features|app)/',
-              message: 'components 不含业务概念，不能引用 features 或 app',
-            },
-          ],
-        },
-      ],
-    },
+    files: ['src/backend/**/*.{ts,tsx}'],
+    patterns: [
+      {
+        regex: '^@/(app|features|components)/',
+        message: 'backend 只包装 bindings 里的命令，不能引用 app、features、components',
+      },
+    ],
   },
-]
+  {
+    files: ['src/components/**/*.{ts,tsx}'],
+    patterns: [
+      bindingsTypesOnly,
+      {
+        regex: '^@/(app|features|backend)/',
+        message: 'components 不含业务概念，数据从参数传进来，不能引用 app、features、backend',
+      },
+    ],
+  },
+].map(({ files, patterns }) => ({
+  files,
+  rules: {
+    '@typescript-eslint/no-restricted-imports': [
+      'error',
+      { patterns: [noParentImports, ...patterns] },
+    ],
+  },
+}))
 
 export default tseslint.config(
   { ignores: ['dist', 'src/bindings.ts'] },
@@ -68,5 +79,5 @@ export default tseslint.config(
     files: ['src/components/ui/**/*.tsx'],
     rules: { 'react-refresh/only-export-components': 'off' },
   },
-  ...pathRules,
+  ...layers,
 )

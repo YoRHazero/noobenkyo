@@ -24,6 +24,7 @@
   --input: oklch(0.91 0.008 85);
   --ring: oklch(0.7 0.01 60);
   --target: oklch(0.55 0.2 25);
+  --warning: oklch(0.7 0.17 55);
   --known: oklch(0.6 0.15 150);
   --vague: oklch(0.7 0.15 75);
   --unknown: oklch(0.6 0.2 25);
@@ -53,6 +54,7 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-target: var(--target);
+  --color-warning: var(--warning);
   --color-known: var(--known);
   --color-vague: var(--vague);
   --color-unknown: var(--unknown);

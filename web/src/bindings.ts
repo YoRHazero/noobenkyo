@@ -16,13 +16,21 @@ export const commands = {
 } | null, CommandError>(__TAURI_INVOKE("dictionary_sense_detail", { key })),
 	dictionaryFilterSenses: (filter: ContentFilter, exclude: SenseKey[], order: SenseOrder, limit: number | null) => typedError<SenseProgress[], CommandError>(__TAURI_INVOKE("dictionary_filter_senses", { filter, exclude, order, limit })),
 	dictionaryRenderSentence: (marked: string, display: SentenceDisplay) => typedError<Fragment[], CommandError>(__TAURI_INVOKE("dictionary_render_sentence", { marked, display })),
-	/**  What importing the file would drop or ignore, one line of Chinese each. */
-	dictionaryCheckEntries: (path: string) => typedError<string[], CommandError>(__TAURI_INVOKE("dictionary_check_entries", { path })),
-	dictionaryImport: (path: string, options: ImportOptions) => typedError<ImportReport, CommandError>(__TAURI_INVOKE("dictionary_import", { path, options })),
+	/**
+	 *  What importing the text would bring in, line by line. Asynchronous,
+	 *  although pure, because its time grows with the text.
+	 */
+	dictionaryPreviewEntries: (text: string, options: ImportOptions) => __TAURI_INVOKE<ImportPreview>("dictionary_preview_entries", { text, options }),
+	/**  The preview's problems, one line of Chinese each. */
+	dictionaryCheckEntries: (text: string, options: ImportOptions) => __TAURI_INVOKE<string[]>("dictionary_check_entries", { text, options }),
+	dictionaryImport: (text: string, options: ImportOptions) => typedError<ImportReport, CommandError>(__TAURI_INVOKE("dictionary_import", { text, options })),
 	/**  The options the import dialog opens with. */
 	dictionaryDefaultImportOptions: () => __TAURI_INVOKE<ImportOptions>("dictionary_default_import_options"),
-	/**  Writes the matching rows to the file; returns how many lines were written. */
-	dictionaryExport: (path: string, filter: ContentFilter, limit: number | null, keepProgress: boolean) => typedError<number, CommandError>(__TAURI_INVOKE("dictionary_export", { path, filter, limit, keepProgress })),
+	/**
+	 *  The matching rows as an entry text, for the frontend to write to the file
+	 *  the user picks.
+	 */
+	dictionaryExport: (filter: ContentFilter, limit: number | null, keepProgress: boolean) => typedError<Exported, CommandError>(__TAURI_INVOKE("dictionary_export", { filter, limit, keepProgress })),
 	dictionaryReplaceSense: (key: SenseKey, patch: SensePatch) => typedError<Replaced, CommandError>(__TAURI_INVOKE("dictionary_replace_sense", { key, patch })),
 	dictionaryUpdateProgress: (key: SenseKey, stage: number, passes: number, lapses: number) => typedError<boolean, CommandError>(__TAURI_INVOKE("dictionary_update_progress", { key, stage, passes, lapses })),
 	dictionaryDeleteWord: (key: WordKey) => typedError<boolean, CommandError>(__TAURI_INVOKE("dictionary_delete_word", { key })),
@@ -115,6 +123,17 @@ export type ComprehensiveVisibility = {
 	kana: boolean,
 };
 
+/**  A word, with at most one reading and one sense below it. */
+export type Content = {
+	writing: string,
+	/**  Empty for native words. */
+	origin: string,
+	/**  Empty when unknown. */
+	stratum: string,
+	/**  `None` when the content stops at the word layer. */
+	reading: ReadingContent | null,
+};
+
 /**
  *  Conditions on the rows of the dictionary. A row is one piece of content:
  *  a sense, or a reading or word with nothing below it.
@@ -125,6 +144,26 @@ export type ContentFilter = {
 	/**  The levels a row may be at; empty means any. */
 	completeness: Completeness[],
 	progress: ProgressState,
+};
+
+/**
+ *  Progress carried by content. Without `modified_at` it cannot prove it is
+ *  newer than the progress already in the dictionary.
+ */
+export type ContentProgress = {
+	stage: number,
+	passes: number,
+	lapses: number,
+	modified_at: string | null,
+};
+
+/**  One entry and the content it converts to. */
+export type ConvertedEntry = {
+	/**  1-based line number in the text. */
+	line: number,
+	/**  The writing as given, for problems found later. */
+	writing: string,
+	content: Content,
 };
 
 /**
@@ -161,6 +200,13 @@ export type Dropped =
  */
 { kind: "sense" };
 
+/**  An exported entry text. */
+export type Exported = {
+	text: string,
+	/**  Lines in `text`, one per piece of content. */
+	entries: number,
+};
+
 /**  One piece of a rendered sentence, handed to the frontend as is. */
 export type Fragment = { kind: "text"; text: string } | { kind: "ruby"; base: string; ruby: string } | 
 /**  The target as one unit, made of pieces with or without ruby. */
@@ -170,8 +216,8 @@ export type Fragment = { kind: "text"; text: string } | { kind: "ruby"; base: st
 export type IgnoredField = {
 	/**  Field path, e.g. "pos", or "sentences.note" for a field of a sentence. */
 	name: string,
-	/**  Number of lines it appeared in. */
-	lines: number,
+	/**  The 1-based lines it appeared on, ascending. */
+	lines: number[],
 };
 
 /**  Choices made in the import dialog for one import. */
@@ -182,6 +228,25 @@ export type ImportOptions = {
 	detect_inflections: boolean,
 	/**  Take progress from the text; when false, progress fields are ignored. */
 	keep_progress: boolean,
+};
+
+/**  Converted entries after the import options. */
+export type ImportPreview = {
+	/**  Non-empty lines in the text. */
+	lines: number,
+	/**  What would be merged, in text order. */
+	entries: ConvertedEntry[],
+	/**  Pure katakana words the options skip, in text order. */
+	skipped_katakana: ConvertedEntry[],
+	/**
+	 *  Lines of entries that look inflected. They are merged like the
+	 *  others; the options only flag them.
+	 */
+	inflections: number[],
+	/**  What was dropped, by line. */
+	problems: Problem[],
+	/**  Unknown fields, by name. */
+	ignored_fields: IgnoredField[],
 };
 
 /**  Summary of one import, shown to the user. */
@@ -303,6 +368,13 @@ export type Rating =
 /**  不会 */
 "Unknown";
 
+export type ReadingContent = {
+	/**  Hiragana. */
+	kana: string,
+	/**  `None` when the content stops at the reading layer. */
+	sense: SenseContent | null,
+};
+
 /**  Natural key of a reading. */
 export type ReadingKey = {
 	writing: string,
@@ -363,6 +435,14 @@ export type SearchRow = {
 	kana: string | null,
 	/**  `None` for a word or reading with nothing below it. */
 	sense: SenseSummary | null,
+};
+
+export type SenseContent = {
+	/**  Non-empty and without duplicates; the first is the primary gloss. */
+	glosses: string[],
+	labels: string[],
+	sentences: SentenceContent[],
+	progress: ContentProgress | null,
 };
 
 export type SenseDetail = {
