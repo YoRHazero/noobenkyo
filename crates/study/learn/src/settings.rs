@@ -24,9 +24,9 @@ pub enum LearnOrder {
 impl Default for LearnSettings {
     fn default() -> Self {
         Self {
-            capacity: 10,
+            capacity: 40,
             order: LearnOrder::Creation,
-            recent_limit: 2,
+            recent_limit: 8,
         }
     }
 }

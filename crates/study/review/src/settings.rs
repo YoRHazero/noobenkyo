@@ -24,8 +24,8 @@ impl Default for ReviewSettings {
         Self {
             interval_per_stage: 3,
             interval_base: 1,
-            queue_limit: 10,
-            recent_limit: 2,
+            queue_limit: 20,
+            recent_limit: 8,
             defaults: SessionOptions::default(),
         }
     }

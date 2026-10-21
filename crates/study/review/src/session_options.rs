@@ -26,7 +26,7 @@ pub enum PickOrder {
 impl Default for SessionOptions {
     fn default() -> Self {
         Self {
-            size: Some(30),
+            size: Some(20),
             start_steps: 1,
             order: PickOrder::Urgent,
         }
