@@ -6,6 +6,7 @@ import { useStudySettings } from '@/backend/study/use-study-settings'
 import { ErrorText } from '@/components/error-text'
 import { Page } from '@/components/page'
 import { ReviewEntrances } from '@/features/study/review/review-entrances'
+import { ReviewFocus } from '@/features/study/review/review-focus'
 import { sessionOptions, type ReviewMode } from '@/features/study/review/review-mode'
 import { ReviewSession } from '@/features/study/review/review-session'
 
@@ -15,8 +16,8 @@ type Phase =
   | { kind: 'session'; mode: ReviewMode; run: number }
 
 /**
- * Review: the two entrances, then one session at a time. The options come
- * from the settings; leaving the page ends the session.
+ * Review: the two entrances, then one session at a time, taking the whole
+ * window. The options come from the settings; leaving the page ends the session.
  */
 export function ReviewPage() {
   const settings = useStudySettings()
@@ -56,13 +57,16 @@ export function ReviewPage() {
           onStart={begin}
         />
       ) : (
-        <ReviewSession
-          key={phase.run}
-          mode={phase.mode}
-          starting={start.isPending}
-          onAgain={() => begin(phase.mode)}
-          onBack={back}
-        />
+        <ReviewFocus>
+          <ReviewSession
+            key={phase.run}
+            mode={phase.mode}
+            starting={start.isPending}
+            onAgain={() => begin(phase.mode)}
+            onBack={back}
+          />
+          <ErrorText error={start.error} />
+        </ReviewFocus>
       )}
       <ErrorText error={start.error ?? settings.error ?? stats.error} />
     </Page>
