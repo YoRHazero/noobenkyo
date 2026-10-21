@@ -1,5 +1,5 @@
 import type { ProgressState } from '@/bindings'
-import { ChoiceButton } from '@/features/dictionary/browse/choice-button'
+import { ChoiceButton } from '@/components/choice-button'
 
 const states: { state: ProgressState; label: string }[] = [
   { state: 'Any', label: '不限' },

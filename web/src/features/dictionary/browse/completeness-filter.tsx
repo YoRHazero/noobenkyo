@@ -1,5 +1,5 @@
 import type { Completeness } from '@/bindings'
-import { ChoiceButton } from '@/features/dictionary/browse/choice-button'
+import { ChoiceButton } from '@/components/choice-button'
 
 const layers: { layer: Completeness; label: string; onlyWithoutProgress: boolean }[] = [
   { layer: 'WordOnly', label: '只有写法', onlyWithoutProgress: true },
