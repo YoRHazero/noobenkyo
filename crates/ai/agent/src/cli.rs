@@ -166,7 +166,16 @@ mod tests {
 
     #[test]
     fn every_command_in_the_dictionary_guide_parses() {
-        let lines = command_lines(ai_tools::dictionary_guide());
+        assert_every_command_parses(ai_tools::dictionary_guide());
+    }
+
+    #[test]
+    fn every_command_in_the_listening_guide_parses() {
+        assert_every_command_parses(ai_tools::listening_guide());
+    }
+
+    fn assert_every_command_parses(guide: &str) {
+        let lines = command_lines(guide);
         assert!(!lines.is_empty());
         for args in lines {
             if let Err(error) = Cli::try_parse_from(&args) {
