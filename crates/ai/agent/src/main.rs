@@ -8,6 +8,7 @@
 
 mod cli;
 mod data;
+mod delivery_name;
 mod dictionary_commands;
 mod listening_commands;
 mod outcome;

@@ -7,6 +7,7 @@ use dictionary::WordKey;
 
 use crate::cli::DictionaryCommand;
 use crate::data::{inbox, open_dictionary};
+use crate::delivery_name::delivery_name;
 use crate::outcome::{Failure, Outcome};
 use crate::text_input::read_text;
 
@@ -31,9 +32,10 @@ pub async fn run(command: DictionaryCommand, data_dir: &Path) -> Result<Outcome,
             return Ok(Outcome::from_problems(check_entries(&read_text(&file)?)));
         }
         DictionaryCommand::Send { file } => {
+            let name = delivery_name(&file)?;
             let text = read_text(&file)?;
-            send_entries(&inbox(data_dir)?, &text)?;
-            println!("已送进 inbox");
+            send_entries(&inbox(data_dir)?, &name, &text)?;
+            println!("已送进 inbox：{name}");
         }
     }
     Ok(Outcome::Done)

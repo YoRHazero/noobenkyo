@@ -3,7 +3,7 @@
 use ai_tools::{Delivery, Inbox, ScriptTarget};
 use serde_json::Value;
 
-use crate::support::{SAMPLE_SCRIPT, noobenkyo, sample_episode, seeded_listening};
+use crate::support::{SAMPLE_SCRIPT, file, noobenkyo, sample_episode, seeded_listening};
 
 fn json(text: &str) -> Value {
     serde_json::from_str(text).unwrap()
@@ -74,23 +74,29 @@ async fn send_checks_first_and_then_fills_the_inbox() {
     let dir = tempfile::tempdir().unwrap();
     seeded_listening(dir.path()).await;
     let inbox = Inbox::in_data_dir(dir.path());
+    let ep = file(dir.path(), "ep.json", SAMPLE_SCRIPT);
 
     let run = noobenkyo(
         dir.path(),
-        &["listening", "send", "-", "--world", "火星"],
-        Some(SAMPLE_SCRIPT),
+        &["listening", "send", &ep, "--world", "火星"],
+        None,
     );
     assert_eq!((run.code, run.stdout.as_str()), (1, "世界 火星 不存在\n"));
-    assert_eq!(inbox.take().unwrap(), None);
+    assert!(inbox.names().unwrap().is_empty());
 
     let run = noobenkyo(
         dir.path(),
-        &["listening", "send", "-", "--world", "星见町"],
-        Some(SAMPLE_SCRIPT),
+        &["listening", "send", &ep, "--world", "星见町"],
+        None,
     );
-    assert_eq!(run.code, 0, "{}", run.stderr);
     assert_eq!(
-        inbox.take().unwrap(),
+        (run.code, run.stdout.as_str()),
+        (0, "已送进 inbox：ep\n"),
+        "{}",
+        run.stderr
+    );
+    assert_eq!(
+        inbox.read("ep").unwrap(),
         Some(Delivery::Script {
             target: ScriptTarget::NewEpisode {
                 world: "星见町".into()
@@ -105,4 +111,86 @@ fn send_needs_exactly_one_target() {
     let dir = tempfile::tempdir().unwrap();
     let run = noobenkyo(dir.path(), &["listening", "send", "-"], Some(SAMPLE_SCRIPT));
     assert_eq!(run.code, 2);
+}
+
+/// The agent reads back the script with the user's edits, changes it, and
+/// replaces the same delivery.
+#[tokio::test]
+async fn show_and_replace_work_on_the_same_delivery() {
+    let dir = tempfile::tempdir().unwrap();
+    seeded_listening(dir.path()).await;
+    let inbox = Inbox::in_data_dir(dir.path());
+    let ep = file(dir.path(), "ep.json", SAMPLE_SCRIPT);
+    let send = |extra: &[&str]| {
+        let mut args = vec!["listening", "send", ep.as_str(), "--world", "星见町"];
+        args.extend_from_slice(extra);
+        noobenkyo(dir.path(), &args, None)
+    };
+
+    let replaced_too_early = send(&["--replace"]);
+    assert_eq!(
+        (replaced_too_early.code, replaced_too_early.stderr.as_str()),
+        (2, "inbox 里没有 ep\n")
+    );
+    assert_eq!(send(&[]).code, 0);
+    let again = send(&[]);
+    assert_eq!(
+        (again.code, again.stderr.as_str()),
+        (2, "inbox 里已经有 ep\n")
+    );
+
+    // The user edits the title in the preview.
+    let edited = SAMPLE_SCRIPT.replace("海边的早晨", "下雨的早晨");
+    inbox
+        .replace(
+            "ep",
+            &Delivery::Script {
+                target: ScriptTarget::NewEpisode {
+                    world: "星见町".into(),
+                },
+                text: edited.clone(),
+            },
+        )
+        .unwrap();
+    let shown = noobenkyo(dir.path(), &["listening", "show", "ep"], None);
+    assert_eq!(
+        (shown.code, shown.stdout.as_str()),
+        (0, format!("{}\n", edited.trim_end()).as_str())
+    );
+
+    std::fs::write(&ep, shown.stdout.replace("约好", "说好")).unwrap();
+    let replaced = send(&["--replace"]);
+    assert_eq!(
+        (replaced.code, replaced.stdout.as_str()),
+        (0, "已覆写 inbox 里的 ep\n"),
+        "{}",
+        replaced.stderr
+    );
+    let Some(Delivery::Script { text, .. }) = inbox.read("ep").unwrap() else {
+        panic!("ep is still a script");
+    };
+    assert!(
+        text.contains("下雨的早晨") && text.contains("说好"),
+        "{text}"
+    );
+}
+
+#[test]
+fn show_needs_a_waiting_script() {
+    let dir = tempfile::tempdir().unwrap();
+    let inbox = Inbox::in_data_dir(dir.path());
+    let missing = noobenkyo(dir.path(), &["listening", "show", "ep"], None);
+    assert_eq!(
+        (missing.code, missing.stderr.as_str()),
+        (2, "inbox 里没有 ep\n")
+    );
+
+    inbox
+        .put("words", &Delivery::Entries { text: "{}".into() })
+        .unwrap();
+    let entries = noobenkyo(dir.path(), &["listening", "show", "words"], None);
+    assert_eq!(
+        (entries.code, entries.stderr.as_str()),
+        (2, "inbox 里的 words 不是剧本\n")
+    );
 }

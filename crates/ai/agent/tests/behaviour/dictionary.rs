@@ -58,12 +58,26 @@ async fn existing_names_the_lines_already_in_the_dictionary() {
 async fn send_leaves_the_entries_in_the_inbox() {
     let dir = tempfile::tempdir().unwrap();
     dictionary_with(dir.path(), SENSE).await;
-    let run = noobenkyo(dir.path(), &["dictionary", "send", "-"], Some(SENSE));
-    assert_eq!(run.code, 0, "{}", run.stderr);
+    let words = file(dir.path(), "words.jsonl", SENSE);
+    let run = noobenkyo(dir.path(), &["dictionary", "send", &words], None);
     assert_eq!(
-        Inbox::in_data_dir(dir.path()).take().unwrap(),
+        (run.code, run.stdout.as_str()),
+        (0, "已送进 inbox：words\n"),
+        "{}",
+        run.stderr
+    );
+    assert_eq!(
+        Inbox::in_data_dir(dir.path()).read("words").unwrap(),
         Some(Delivery::Entries { text: SENSE.into() })
     );
+
+    let again = noobenkyo(dir.path(), &["dictionary", "send", &words], None);
+    assert_eq!(
+        (again.code, again.stderr.as_str()),
+        (2, "inbox 里已经有 words\n")
+    );
+    let stdin = noobenkyo(dir.path(), &["dictionary", "send", "-"], Some(SENSE));
+    assert_eq!(stdin.code, 2);
 }
 
 #[test]

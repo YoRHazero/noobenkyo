@@ -11,6 +11,8 @@ noobenkyo listening context 星见町 --append 5d2c9a14-7e3b-4c8f-b1a6-9f0e2d4c8
 noobenkyo listening check ep.json
 noobenkyo listening send ep.json --world 星见町
 noobenkyo listening send ep.json --append 5d2c9a14-7e3b-4c8f-b1a6-9f0e2d4c8a37
+noobenkyo listening show ep > ep.json
+noobenkyo listening send ep.json --world 星见町 --replace
 ```
 
 - **guide**：打印这份说明。
@@ -28,9 +30,13 @@ noobenkyo listening send ep.json --append 5d2c9a14-7e3b-4c8f-b1a6-9f0e2d4c8a37
   - `第 1 行 ja：读音标记 {上手|うわて 没有闭合`
 
   行号就是 lines 里的第几行，从 1 开始。用户在预览里说"第 12 行"，也是这个行号。
-- **send 文件**：送进 app 的剧本预览，用户确认以后才存。`--world 世界` 存成这个世界的新一集，`--append 集的uuid` 续写这一集，两个只能写一个。送之前先检查剧本，再查世界在不在、旁白和主要角色齐不齐、续写的那一集在不在；有问题就不送，问题和 check 一样列出来。命令拿不到 app 的回答。成功时输出"已送进 inbox"。
+- **send 文件**：送进 app 的剧本预览，用户确认以后才存。`--world 世界` 存成这个世界的新一集，`--append 集的uuid` 续写这一集，两个只能写一个。送之前先检查剧本，再查世界在不在、旁白和主要角色齐不齐、续写的那一集在不在；有问题就不送，问题和 check 一样列出来。命令拿不到 app 的回答。
+  - 送进去的这一份用文件名去掉扩展名当名字（ep.json 叫 ep），所以要从文件送，不能用 `-`。成功时输出"已送进 inbox：名字"。
+  - 这一份会一直留在 inbox 里，直到用户在 app 里保存或丢弃。用户可以在预览里改它。
+  - inbox 里已经有同名的一份时，命令失败。要改它，加 `--replace`：按同样的检查覆写同名的那一份，成功时输出"已覆写 inbox 里的 名字"；没有同名的一份时失败（用户已经保存或丢弃了），这时去掉 `--replace` 重新送。
+- **show 名字**：打印 inbox 里这一份剧本的当前版本，格式和送进去时一样，带着用户在预览里的修改。用户已经保存或丢弃时，命令失败。用户让你改一份还在 inbox 里的剧本时，先 show 到文件，在这个版本上改，再 `send --replace`，不要在自己原来的文件上改，否则会盖掉用户的修改。
 
-文件写成 `-` 时读标准输入。退出码：0 是完成；1 是内容有问题，问题打在标准输出；2 是命令没能运行（例如找不到数据、世界不存在），原因打在标准错误。
+文件写成 `-` 时读标准输入（send 除外）。退出码：0 是完成；1 是内容有问题，问题打在标准输出；2 是命令没能运行（例如找不到数据、世界不存在），原因打在标准错误。
 
 ## 格式
 

@@ -15,4 +15,4 @@ mod send;
 pub use entries::{ExistingWord, check_entries, existing_entries};
 pub use guide::{dictionary_guide, listening_guide};
 pub use inbox::{Delivery, Inbox, InboxError, ScriptTarget};
-pub use send::{SendError, send_entries, send_script};
+pub use send::{SendError, replace_script, send_entries, send_script};

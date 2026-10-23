@@ -1,7 +1,7 @@
 use std::fs;
 use std::io::ErrorKind;
 use std::path::{Path, PathBuf};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::SystemTime;
 
 use thiserror::Error;
 use uuid::Uuid;
@@ -18,10 +18,16 @@ pub enum InboxError {
     Io(#[from] std::io::Error),
     #[error("inbox 里的 {file} 读不出来，已经删掉：{reason}")]
     Unreadable { file: String, reason: String },
+    #[error("{0} 不能当名字：不能为空，不能以点开头，也不能含有路径分隔符")]
+    BadName(String),
+    #[error("inbox 里已经有 {0}")]
+    Taken(String),
+    #[error("inbox 里没有 {0}")]
+    Missing(String),
 }
 
-/// The inbox folder. Each delivery is one file named after the moment it was
-/// put, so names sort oldest first.
+/// The inbox folder. Each delivery is one file, `<name>.json`, named after
+/// the file it was sent from.
 pub struct Inbox {
     dir: PathBuf,
 }
@@ -40,58 +46,98 @@ impl Inbox {
         &self.dir
     }
 
-    /// Leaves a delivery in the inbox. The file appears whole: it is written
-    /// under a temporary name first, which taking ignores, then renamed.
-    pub fn put(&self, delivery: &Delivery) -> Result<(), InboxError> {
-        fs::create_dir_all(&self.dir)?;
-        let stem = format!("{:020}-{}", millis_now(), Uuid::new_v4());
-        let temporary = self.dir.join(format!(".{stem}.tmp"));
-        let json = serde_json::to_string(delivery).expect("a delivery always serializes");
-        fs::write(&temporary, json)?;
-        fs::rename(&temporary, self.dir.join(format!("{stem}.json")))?;
-        Ok(())
+    /// Leaves a new delivery under `name`. Fails when one by that name is
+    /// still waiting.
+    pub fn put(&self, name: &str, delivery: &Delivery) -> Result<(), InboxError> {
+        let path = self.path_of(name)?;
+        if path.exists() {
+            return Err(InboxError::Taken(name.to_owned()));
+        }
+        self.write(name, &path, delivery)
     }
 
-    /// Takes the oldest delivery out of the inbox, removing its file; `None`
-    /// when the inbox is empty. A file that cannot be understood is removed
-    /// too, so it does not block the ones after it.
-    pub fn take(&self) -> Result<Option<Delivery>, InboxError> {
-        let Some(name) = self.oldest()? else {
-            return Ok(None);
-        };
-        let path = self.dir.join(&name);
-        let json = fs::read_to_string(&path)?;
-        fs::remove_file(&path)?;
-        serde_json::from_str(&json)
-            .map(Some)
-            .map_err(|error| InboxError::Unreadable {
-                file: name,
-                reason: error.to_string(),
-            })
+    /// Replaces the delivery under `name` as a whole. Fails when there is
+    /// none.
+    pub fn replace(&self, name: &str, delivery: &Delivery) -> Result<(), InboxError> {
+        let path = self.path_of(name)?;
+        if !path.exists() {
+            return Err(InboxError::Missing(name.to_owned()));
+        }
+        self.write(name, &path, delivery)
     }
 
-    /// The name of the oldest delivery file, if any.
-    fn oldest(&self) -> Result<Option<String>, InboxError> {
+    /// Names of the deliveries waiting, by when they were last written,
+    /// oldest first. Files still being written are left out.
+    pub fn names(&self) -> Result<Vec<String>, InboxError> {
         let entries = match fs::read_dir(&self.dir) {
             Ok(entries) => entries,
+            Err(error) if error.kind() == ErrorKind::NotFound => return Ok(Vec::new()),
+            Err(error) => return Err(error.into()),
+        };
+        let mut found: Vec<(SystemTime, String)> = Vec::new();
+        for entry in entries {
+            let entry = entry?;
+            let file = entry.file_name().to_string_lossy().into_owned();
+            let Some(name) = file
+                .strip_suffix(".json")
+                .filter(|_| !file.starts_with('.'))
+            else {
+                continue;
+            };
+            found.push((entry.metadata()?.modified()?, name.to_owned()));
+        }
+        found.sort();
+        Ok(found.into_iter().map(|(_, name)| name).collect())
+    }
+
+    /// The delivery under `name`; `None` when there is none. A file that
+    /// cannot be understood is removed and reported, so it does not stay in
+    /// the way.
+    pub fn read(&self, name: &str) -> Result<Option<Delivery>, InboxError> {
+        let path = self.path_of(name)?;
+        let json = match fs::read_to_string(&path) {
+            Ok(json) => json,
             Err(error) if error.kind() == ErrorKind::NotFound => return Ok(None),
             Err(error) => return Err(error.into()),
         };
-        let mut oldest: Option<String> = None;
-        for entry in entries {
-            let name = entry?.file_name().to_string_lossy().into_owned();
-            let is_delivery = name.ends_with(".json") && !name.starts_with('.');
-            if is_delivery && oldest.as_ref().is_none_or(|found| name < *found) {
-                oldest = Some(name);
+        match serde_json::from_str(&json) {
+            Ok(delivery) => Ok(Some(delivery)),
+            Err(error) => {
+                fs::remove_file(&path)?;
+                Err(InboxError::Unreadable {
+                    file: format!("{name}.json"),
+                    reason: error.to_string(),
+                })
             }
         }
-        Ok(oldest)
     }
-}
 
-fn millis_now() -> u128 {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map(|elapsed| elapsed.as_millis())
-        .unwrap_or_default()
+    /// Removes the delivery under `name`. `false` when there was none.
+    pub fn remove(&self, name: &str) -> Result<bool, InboxError> {
+        match fs::remove_file(self.path_of(name)?) {
+            Ok(()) => Ok(true),
+            Err(error) if error.kind() == ErrorKind::NotFound => Ok(false),
+            Err(error) => Err(error.into()),
+        }
+    }
+
+    /// The file for `name`. A name that would hide the file, or point
+    /// outside the folder, is refused.
+    fn path_of(&self, name: &str) -> Result<PathBuf, InboxError> {
+        if name.is_empty() || name.starts_with('.') || name.contains(['/', '\\']) {
+            return Err(InboxError::BadName(name.to_owned()));
+        }
+        Ok(self.dir.join(format!("{name}.json")))
+    }
+
+    /// Writes the file whole: under a temporary name first, which `names`
+    /// skips, then renamed over `path`.
+    fn write(&self, name: &str, path: &Path, delivery: &Delivery) -> Result<(), InboxError> {
+        fs::create_dir_all(&self.dir)?;
+        let temporary = self.dir.join(format!(".{name}.{}.tmp", Uuid::new_v4()));
+        let json = serde_json::to_string(delivery).expect("a delivery always serializes");
+        fs::write(&temporary, json)?;
+        fs::rename(&temporary, path)?;
+        Ok(())
+    }
 }

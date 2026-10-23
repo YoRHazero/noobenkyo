@@ -20,7 +20,7 @@ pub enum Group {
     /// 词库：条目的说明、导出、查已有的词、检查、送进导入对话框
     #[command(subcommand)]
     Dictionary(DictionaryCommand),
-    /// 听力：剧本的说明、列世界和集、写剧本的上下文、检查、送进 app
+    /// 听力：剧本的说明、列世界和集、写剧本的上下文、检查、送进 app、读回送进去的剧本
     #[command(subcommand)]
     Listening(ListeningCommand),
 }
@@ -35,7 +35,7 @@ pub enum DictionaryCommand {
     Existing { file: PathBuf },
     /// 检查条目：通过时没有输出；有问题时每条一行，退出码 1
     Check { file: PathBuf },
-    /// 送进 app 的导入对话框
+    /// 送进 app 的导入对话框，名字取文件名（去掉扩展名）
     Send { file: PathBuf },
 }
 
@@ -134,7 +134,7 @@ pub enum ListeningCommand {
     },
     /// 检查剧本：通过时没有输出；有问题时每条一行，退出码 1
     Check { file: PathBuf },
-    /// 先在本地检查，通过了才送进 app 的剧本预览
+    /// 先在本地检查，通过了才送进 app 的剧本预览，名字取文件名（去掉扩展名）
     Send {
         file: PathBuf,
         /// 存成这个世界的新一集
@@ -143,7 +143,12 @@ pub enum ListeningCommand {
         /// 续写这一集（uuid）
         #[arg(long)]
         append: Option<Uuid>,
+        /// 覆写 inbox 里同名的那一份剧本；改之前先 show
+        #[arg(long)]
+        replace: bool,
     },
+    /// 打印 inbox 里这一份剧本的当前版本，带着用户在预览里的修改
+    Show { name: String },
 }
 
 #[cfg(test)]
