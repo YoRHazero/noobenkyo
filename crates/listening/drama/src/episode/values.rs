@@ -10,8 +10,12 @@ pub struct EpisodeSummary {
     pub uuid: Uuid,
     pub number: f64,
     pub title: String,
+    pub summary: String,
     pub created_at: DateTime<FixedOffset>,
     pub lines: u32,
+    /// Characters of every line's Japanese and Chinese as stored, reading
+    /// marks included: what the script context would hand over.
+    pub char_count: u32,
     /// Lines without Japanese audio.
     pub missing_ja: u32,
     /// Lines without Chinese audio.

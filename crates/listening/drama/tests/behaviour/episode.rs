@@ -51,7 +51,7 @@ async fn equal_numbers_keep_the_order_of_creation() {
 }
 
 #[tokio::test]
-async fn the_list_counts_lines_and_missing_audio() {
+async fn the_list_counts_lines_characters_and_missing_audio() {
     let db = memory_db().await;
     seeded_world(&db).await;
     let uuid = import(&db, &first_script(), 1).await;
@@ -66,8 +66,11 @@ async fn the_list_counts_lines_and_missing_audio() {
             uuid,
             number: 1.0,
             title: "初遇".into(),
+            summary: "初遇的梗概。".into(),
             created_at: now(),
             lines: 3,
+            // Characters, not bytes; reading marks count too.
+            char_count: 47,
             missing_ja: 1,
             missing_zh: 2,
         }]

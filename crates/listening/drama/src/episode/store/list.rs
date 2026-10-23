@@ -26,8 +26,10 @@ pub async fn episodes(
                 uuid: row.uuid,
                 number: row.number,
                 title: row.title,
+                summary: row.summary,
                 created_at: row.created_at,
                 lines: count.lines,
+                char_count: count.chars,
                 missing_ja: count.missing_ja,
                 missing_zh: count.missing_zh,
             }

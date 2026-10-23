@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 
-use sea_orm::sea_query::{Expr, ExprTrait};
+use sea_orm::sea_query::{Expr, ExprTrait, Func};
 use sea_orm::{
     ColumnTrait, ConnectionTrait, DbErr, EntityTrait, JoinType, QueryFilter, QueryOrder,
     QuerySelect, RelationTrait,
@@ -11,10 +11,13 @@ use sea_orm::{
 use crate::entity::{episode, line, line_audio};
 use crate::{Language, LineId, LineView};
 
-/// How many lines an episode has, and how many lack audio in each language.
+/// How many lines an episode has, how many characters they hold, and how
+/// many lack audio in each language.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct LineCounts {
     pub lines: u32,
+    /// Characters of Japanese and Chinese together, as stored.
+    pub chars: u32,
     pub missing_ja: u32,
     pub missing_zh: u32,
 }
@@ -94,10 +97,14 @@ pub async fn line_counts(
     db: &impl ConnectionTrait,
     world_id: i64,
 ) -> Result<HashMap<i64, LineCounts>, DbErr> {
-    let lines: Vec<(i64, i64)> = line::Entity::find()
+    let characters = Func::char_length(Expr::col((line::Entity, line::Column::Ja))).add(
+        Func::char_length(Expr::col((line::Entity, line::Column::Zh))),
+    );
+    let lines: Vec<(i64, i64, i64)> = line::Entity::find()
         .select_only()
         .column(line::Column::EpisodeId)
         .column_as(Expr::col((line::Entity, line::Column::Id)).count(), "lines")
+        .column_as(Expr::expr(Func::sum(characters)), "chars")
         .join(JoinType::InnerJoin, line::Relation::Episode.def())
         .filter(episode::Column::WorldId.eq(world_id))
         .group_by(line::Column::EpisodeId)
@@ -122,12 +129,13 @@ pub async fn line_counts(
         .await?;
 
     let mut counts: HashMap<i64, LineCounts> = HashMap::new();
-    for (episode_id, total) in lines {
+    for (episode_id, total, chars) in lines {
         let total = to_count(total);
         counts.insert(
             episode_id,
             LineCounts {
                 lines: total,
+                chars: to_count(chars),
                 missing_ja: total,
                 missing_zh: total,
             },
