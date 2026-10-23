@@ -2,15 +2,19 @@
 
 use dictionary_word::{Content, ReadingContent, SenseContent};
 
+use super::dropped_parts::DroppedParts;
 use super::entry_error::EntryError;
-use super::sentences::{DroppedSentence, split};
+use super::sentences::split;
 use super::{reading_layer, sense_layer, word_layer};
 use crate::Entry;
 
-/// The content of an entry with the sentences that were dropped, or why the
-/// whole entry is dropped.
-pub fn entry_content(entry: Entry) -> Result<(Content, Vec<DroppedSentence>), EntryError> {
+/// The content of an entry with the parts that were dropped from it, or why
+/// the whole entry is dropped.
+pub fn entry_content(entry: Entry) -> Result<(Content, DroppedParts), EntryError> {
     let writing = word_layer::writing(&entry.writing)?;
+    let origin = word_layer::optional_text(entry.origin);
+    let (origin_language, dropped_language) =
+        word_layer::origin_language(&origin, entry.origin_language);
     let glosses = sense_layer::glosses(entry.glosses);
     let labels = sense_layer::labels(entry.labels);
     let sentences = entry.sentences.unwrap_or_default();
@@ -23,7 +27,7 @@ pub fn entry_content(entry: Entry) -> Result<(Content, Vec<DroppedSentence>), En
     }
     let kana = reading_layer::kana(&writing, entry.kana.as_deref(), glosses.is_some())?;
 
-    let (kept, dropped) = split(sentences);
+    let (kept, dropped_sentences) = split(sentences);
     let sense = glosses.map(|glosses| SenseContent {
         glosses,
         labels,
@@ -32,9 +36,13 @@ pub fn entry_content(entry: Entry) -> Result<(Content, Vec<DroppedSentence>), En
     });
     let content = Content {
         writing,
-        origin: word_layer::optional_text(entry.origin),
-        stratum: word_layer::optional_text(entry.stratum),
+        origin,
+        origin_language,
         reading: kana.map(|kana| ReadingContent { kana, sense }),
+    };
+    let dropped = DroppedParts {
+        origin_language: dropped_language,
+        sentences: dropped_sentences,
     };
     Ok((content, dropped))
 }
@@ -103,9 +111,25 @@ mod tests {
                 "sentences": [{"marked": "明日"}, {"marked": "[[{明日|あす}]]"}]}"#,
         ))
         .unwrap();
-        assert_eq!(dropped.len(), 1);
+        assert_eq!(dropped.sentences.len(), 1);
         let sense = content.reading.unwrap().sense.unwrap();
         assert_eq!(sense.sentences.len(), 1);
+    }
+
+    #[test]
+    fn keeps_a_language_only_with_an_origin() {
+        let content = content_of(
+            r#"{"writing": "コーヒー", "origin": "koffie", "origin_language": "荷兰语"}"#,
+        );
+        assert_eq!(content.origin_language, "荷兰语");
+
+        let (content, dropped) = entry_content(entry(
+            r#"{"writing": "ネコ", "origin_language": "日语", "kana": "ねこ", "glosses": ["猫"]}"#,
+        ))
+        .unwrap();
+        assert_eq!(content.origin_language, "");
+        assert_eq!(dropped.origin_language.as_deref(), Some("日语"));
+        assert!(content.reading.unwrap().sense.is_some());
     }
 
     #[test]
@@ -114,19 +138,18 @@ mod tests {
             r#"{"writing": "明日", "kana": "あす", "glosses": ["明天"], "sentences": [{"marked": "明日"}]}"#,
         ))
         .unwrap();
-        assert_eq!(dropped.len(), 1);
+        assert_eq!(dropped.sentences.len(), 1);
         assert!(content.reading.unwrap().sense.unwrap().sentences.is_empty());
     }
 
     #[test]
     fn normalizes_full_entry() {
         let content = content_of(
-            r#"{"writing": "諦める", "origin": "", "stratum": "和语", "kana": "あきらめる",
+            r#"{"writing": "諦める", "origin": "", "kana": "あきらめる",
                 "glosses": ["放弃", "死心", "放弃"], "labels": ["N3"],
                 "sentences": [{"marked": "[[{諦|あきら}めない]]で", "translation": " 别放弃 "}],
                 "stage": 2, "passes": 3, "modified_at": "2026-10-17T21:05:02.117+08:00"}"#,
         );
-        assert_eq!(content.stratum, "和语");
         let sense = content.reading.unwrap().sense.unwrap();
         assert_eq!(sense.glosses, ["放弃", "死心"]);
         assert_eq!(sense.labels, ["N3"]);

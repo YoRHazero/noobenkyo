@@ -19,7 +19,7 @@ impl MigrationTrait for Migration {
                     )
                     .col(ColumnDef::new(Word::Writing).text().not_null())
                     .col(ColumnDef::new(Word::Origin).text().not_null())
-                    .col(ColumnDef::new(Word::Stratum).text().not_null())
+                    .col(ColumnDef::new(Word::OriginLanguage).text().not_null())
                     .to_owned(),
             )
             .await?;
@@ -179,7 +179,7 @@ enum Word {
     Id,
     Writing,
     Origin,
-    Stratum,
+    OriginLanguage,
 }
 
 #[derive(DeriveIden)]

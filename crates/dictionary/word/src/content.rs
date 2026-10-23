@@ -13,7 +13,7 @@ pub struct Content {
     /// Empty for native words.
     pub origin: String,
     /// Empty when unknown.
-    pub stratum: String,
+    pub origin_language: String,
     /// `None` when the content stops at the word layer.
     pub reading: Option<ReadingContent>,
 }

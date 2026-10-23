@@ -7,7 +7,8 @@ use crate::{Dropped, ImportOptions, preview};
 
 /// What importing `text` with `options` would merge incompletely or maybe
 /// wrongly, one line of Chinese each, in line order: words that look
-/// inflected, dropped sentences and unknown fields of the merged entries.
+/// inflected, dropped languages, dropped sentences and unknown fields of the
+/// merged entries.
 /// Skipped lines are left out. Empty means every line is either merged as
 /// written or skipped as a whole.
 pub fn check(text: &str, options: ImportOptions) -> Vec<String> {
@@ -28,13 +29,17 @@ pub fn check(text: &str, options: ImportOptions) -> Vec<String> {
     for line in &preview.inflections {
         warnings.push((*line, "疑似活用形".to_owned()));
     }
-    for problem in &preview.problems {
-        if let Dropped::Sentence { marked } = &problem.dropped
-            && merged.contains_key(&problem.line)
-        {
-            let what = format!("丢掉例句 {marked}：{}", problem.reason);
-            warnings.push((problem.line, what));
-        }
+    for problem in preview
+        .problems
+        .iter()
+        .filter(|problem| merged.contains_key(&problem.line))
+    {
+        let what = match &problem.dropped {
+            Dropped::OriginLanguage { value } => format!("丢掉语种 {value}：{}", problem.reason),
+            Dropped::Sentence { marked } => format!("丢掉例句 {marked}：{}", problem.reason),
+            Dropped::Entry | Dropped::Sense => continue,
+        };
+        warnings.push((problem.line, what));
     }
     for (line, names) in unknown {
         warnings.push((line, format!("未知字段 {}", names.join("、"))));
@@ -77,6 +82,18 @@ mod tests {
             [
                 "第 1 行 諦める：丢掉例句 [[諦めない]]で：目标词里的汉字 諦 没有注音",
                 "第 1 行 諦める：未知字段 gloss、pos",
+            ]
+        );
+    }
+
+    #[test]
+    fn lists_a_language_without_an_origin() {
+        let text = r#"{"writing": "ネコ", "origin_language": "日语", "kana": "ねこ", "glosses": ["猫"], "sentences": [{"marked": "[[猫]]"}]}"#;
+        assert_eq!(
+            check(text, NOTHING_CHOSEN),
+            [
+                "第 1 行 ネコ：丢掉语种 日语：没有词源",
+                "第 1 行 ネコ：丢掉例句 [[猫]]：目标词里的汉字 猫 没有注音",
             ]
         );
     }

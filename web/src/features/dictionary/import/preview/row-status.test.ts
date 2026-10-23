@@ -5,7 +5,7 @@ import { rowStatus } from '@/features/dictionary/import/preview/row-status'
 const entry: ConvertedEntry = {
   line: 1,
   writing: '上',
-  content: { writing: '上', origin: '', stratum: '', reading: null },
+  content: { writing: '上', origin: '', origin_language: '', reading: null },
 }
 
 describe('rowStatus', () => {
@@ -22,10 +22,14 @@ describe('rowStatus', () => {
       line: 1,
       entry,
       inflected: true,
+      droppedLanguage: { value: '日语', reason: '没有词源' },
       droppedSentences: [{ marked: '[[上]]x', reason: '多余的 x' }],
       unknownFields: ['pos'],
     })
-    expect(status).toEqual({ kind: 'warning', text: '警告：活用形、非法例句、未知字段' })
+    expect(status).toEqual({
+      kind: 'warning',
+      text: '警告：活用形、语种缺词源、非法例句、未知字段',
+    })
   })
 
   it('has none for a line imported as written', () => {
@@ -35,6 +39,7 @@ describe('rowStatus', () => {
         line: 1,
         entry,
         inflected: false,
+        droppedLanguage: null,
         droppedSentences: [],
         unknownFields: [],
       }),

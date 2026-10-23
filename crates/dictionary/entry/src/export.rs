@@ -13,7 +13,7 @@ pub struct Exported {
     pub entries: u32,
 }
 
-/// Writes each piece of content as one line. Empty origin, stratum and
+/// Writes each piece of content as one line. Empty origin, origin language and
 /// translation are left out; progress is written only when kept.
 pub fn to_text(contents: &[Content], keep_progress: bool) -> Exported {
     let mut text = String::new();
@@ -33,7 +33,7 @@ fn to_entry(content: &Content, keep_progress: bool) -> Entry {
     let mut entry = Entry {
         writing: content.writing.clone(),
         origin: non_empty(&content.origin),
-        stratum: non_empty(&content.stratum),
+        origin_language: non_empty(&content.origin_language),
         ..Entry::default()
     };
     let Some(reading) = &content.reading else {
@@ -75,9 +75,9 @@ mod tests {
     use crate::convert;
 
     const TEXT: &str = concat!(
-        r#"{"writing":"諦める","stratum":"和语","kana":"あきらめる","glosses":["放弃","死心"],"labels":["N3"],"sentences":[{"marked":"[[{諦|あきら}めない]]で","translation":"别放弃"}],"stage":2,"passes":3,"lapses":1,"modified_at":"2026-10-17T21:05:02.117+08:00"}"#,
+        r#"{"writing":"諦める","kana":"あきらめる","glosses":["放弃","死心"],"labels":["N3"],"sentences":[{"marked":"[[{諦|あきら}めない]]で","translation":"别放弃"}],"stage":2,"passes":3,"lapses":1,"modified_at":"2026-10-17T21:05:02.117+08:00"}"#,
         "\n",
-        r#"{"writing":"パソコン","origin":"personal computer"}"#,
+        r#"{"writing":"パソコン","origin":"personal computer","origin_language":"英语"}"#,
         "\n",
         r#"{"writing":"上","kana":"うえ"}"#,
         "\n",

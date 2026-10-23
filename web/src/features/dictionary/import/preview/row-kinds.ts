@@ -1,19 +1,25 @@
 import { isWarning, type PreviewRow } from '@/features/dictionary/import/preview/preview-rows'
 
 /** The kinds of warning; one row can be several at once. */
-export type WarningKind = 'inflection' | 'sentence' | 'unknownField'
+export type WarningKind = 'inflection' | 'originLanguage' | 'sentence' | 'unknownField'
 export type SkipKind = 'katakana' | 'invalid'
 /** What the table can be narrowed to: a whole category, or one kind of it. */
 export type RowFilter = 'warning' | 'skipped' | WarningKind | SkipKind
 
 /** In the order statuses and the summary name them. */
-export const warningKinds: WarningKind[] = ['inflection', 'sentence', 'unknownField']
+export const warningKinds: WarningKind[] = [
+  'inflection',
+  'originLanguage',
+  'sentence',
+  'unknownField',
+]
 export const skipKinds: SkipKind[] = ['katakana', 'invalid']
 
 const labels: Record<RowFilter, string> = {
   warning: '警告',
   skipped: '跳过',
   inflection: '活用形',
+  originLanguage: '语种缺词源',
   sentence: '非法例句',
   unknownField: '未知字段',
   katakana: '片假名词',
@@ -34,6 +40,8 @@ export function rowIs(row: PreviewRow, filter: RowFilter): boolean {
       return row.kind !== 'imported'
     case 'inflection':
       return row.kind === 'imported' && row.inflected
+    case 'originLanguage':
+      return row.kind === 'imported' && row.droppedLanguage !== null
     case 'sentence':
       return row.kind === 'imported' && row.droppedSentences.length > 0
     case 'unknownField':

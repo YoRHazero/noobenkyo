@@ -6,6 +6,12 @@ export type DroppedSentence = {
   reason: string
 }
 
+/** A language written without an origin, left out of the word. */
+export type DroppedLanguage = {
+  value: string
+  reason: string
+}
+
 /** One line of the text in the preview. */
 export type PreviewRow =
   /** Merged; a warning when part of the line is left out, or it looks inflected. */
@@ -14,6 +20,7 @@ export type PreviewRow =
       line: number
       entry: ConvertedEntry
       inflected: boolean
+      droppedLanguage: DroppedLanguage | null
       droppedSentences: DroppedSentence[]
       unknownFields: string[]
     }
@@ -24,6 +31,7 @@ export type PreviewRow =
 
 /** One row per non-blank line, in line order. */
 export function previewRows(preview: ImportPreview, text: string): PreviewRow[] {
+  const droppedLanguages = new Map<number, DroppedLanguage>()
   const droppedSentences = groupByLine<DroppedSentence>()
   const unknownFields = groupByLine<string>()
   const rows: PreviewRow[] = []
@@ -35,6 +43,12 @@ export function previewRows(preview: ImportPreview, text: string): PreviewRow[] 
           line: problem.line,
           writing: problem.writing,
           source: lineText(text, problem.line).trim(),
+          reason: problem.reason,
+        })
+        break
+      case 'originLanguage':
+        droppedLanguages.set(problem.line, {
+          value: problem.dropped.value,
           reason: problem.reason,
         })
         break
@@ -61,6 +75,7 @@ export function previewRows(preview: ImportPreview, text: string): PreviewRow[] 
       line: entry.line,
       entry,
       inflected: inflections.has(entry.line),
+      droppedLanguage: droppedLanguages.get(entry.line) ?? null,
       droppedSentences: droppedSentences.get(entry.line),
       unknownFields: unknownFields.get(entry.line),
     })
@@ -75,7 +90,10 @@ export function previewRows(preview: ImportPreview, text: string): PreviewRow[] 
 export function isWarning(row: PreviewRow): boolean {
   return (
     row.kind === 'imported' &&
-    (row.inflected || row.droppedSentences.length > 0 || row.unknownFields.length > 0)
+    (row.inflected ||
+      row.droppedLanguage !== null ||
+      row.droppedSentences.length > 0 ||
+      row.unknownFields.length > 0)
   )
 }
 

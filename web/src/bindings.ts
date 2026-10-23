@@ -129,7 +129,7 @@ export type Content = {
 	/**  Empty for native words. */
 	origin: string,
 	/**  Empty when unknown. */
-	stratum: string,
+	origin_language: string,
 	/**  `None` when the content stops at the word layer. */
 	reading: ReadingContent | null,
 };
@@ -192,6 +192,11 @@ export type DictionaryStats = {
 export type Dropped = 
 /**  The whole entry. */
 { kind: "entry" } | 
+/**
+ *  The origin's language, written without an origin; the rest of the
+ *  entry is kept.
+ */
+{ kind: "originLanguage"; value: string } | 
 /**  One sentence; the rest of the entry is kept. */
 { kind: "sentence"; marked: string } | 
 /**

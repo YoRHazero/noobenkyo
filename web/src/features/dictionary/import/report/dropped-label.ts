@@ -5,6 +5,8 @@ export function droppedLabel(dropped: Dropped): string {
   switch (dropped.kind) {
     case 'entry':
       return '跳过：非法'
+    case 'originLanguage':
+      return '警告：语种缺词源'
     case 'sentence':
       return '警告：非法例句'
     case 'sense':

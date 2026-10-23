@@ -56,6 +56,7 @@ export function PreviewRowView({ row, opened, onToggle, onLocate }: Props) {
           ) : (
             <PreviewRowDetail
               entry={row.entry}
+              droppedLanguage={row.kind === 'imported' ? row.droppedLanguage : null}
               droppedSentences={row.kind === 'imported' ? row.droppedSentences : []}
               unknownFields={row.kind === 'imported' ? row.unknownFields : []}
             />

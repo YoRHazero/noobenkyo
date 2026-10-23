@@ -5,9 +5,12 @@ use super::{Converted, ConvertedEntry};
 use crate::read::{ReadLine, read};
 use crate::{Dropped, IgnoredField, Problem};
 
+/// Why a language is dropped.
+const NO_ORIGIN: &str = "没有词源";
+
 /// Entry text → contents the dictionary understands, plus what was dropped
-/// or ignored. A bad sentence drops only itself; any other problem drops the
-/// whole entry.
+/// or ignored. A bad sentence drops only itself, and so does a language
+/// without an origin; any other problem drops the whole entry.
 pub fn convert(text: &str) -> Converted {
     let read = read(text);
     let mut problems = read.problems;
@@ -21,7 +24,15 @@ pub fn convert(text: &str) -> Converted {
         let writing = entry.writing.clone();
         match entry_content(entry) {
             Ok((content, dropped)) => {
-                problems.extend(dropped.into_iter().map(|sentence| Problem {
+                if let Some(value) = dropped.origin_language {
+                    problems.push(Problem {
+                        line,
+                        writing: writing.clone(),
+                        dropped: Dropped::OriginLanguage { value },
+                        reason: NO_ORIGIN.to_owned(),
+                    });
+                }
+                problems.extend(dropped.sentences.into_iter().map(|sentence| Problem {
                     line,
                     writing: writing.clone(),
                     dropped: Dropped::Sentence {

@@ -4,6 +4,7 @@
 
 mod convert_text;
 mod converted;
+mod dropped_parts;
 mod entry_content;
 mod entry_error;
 mod reading_layer;

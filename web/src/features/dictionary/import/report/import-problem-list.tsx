@@ -35,6 +35,9 @@ export function ImportProblemList({ problems }: Props) {
                 {droppedLabel(problem.dropped)}
               </td>
               <td className="px-3 py-2">
+                {problem.dropped.kind === 'originLanguage' && (
+                  <span className="block">{problem.dropped.value}</span>
+                )}
                 {problem.dropped.kind === 'sentence' && (
                   <span lang="ja" className="block font-mono">
                     {problem.dropped.marked}

@@ -74,7 +74,7 @@ fn content(
     Some(Content {
         writing: word.writing.clone(),
         origin: word.origin.clone(),
-        stratum: word.stratum.clone(),
+        origin_language: word.origin_language.clone(),
         reading,
     })
 }

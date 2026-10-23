@@ -12,7 +12,7 @@ pub struct Model {
     #[sea_orm(column_type = "Text", unique_key = "word_writing_origin")]
     pub origin: String,
     #[sea_orm(column_type = "Text")]
-    pub stratum: String,
+    pub origin_language: String,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

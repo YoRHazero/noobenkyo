@@ -11,7 +11,7 @@ pub struct Entry {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub origin: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub stratum: Option<String>,
+    pub origin_language: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub kana: Option<String>,
     /// The first gloss is the primary gloss.

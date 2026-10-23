@@ -22,22 +22,26 @@ pub async fn insert_word(
     db: &impl ConnectionTrait,
     writing: &str,
     origin: &str,
-    stratum: &str,
+    origin_language: &str,
 ) -> Result<word::Model, DbErr> {
     word::ActiveModel {
         writing: Set(writing.to_owned()),
         origin: Set(origin.to_owned()),
-        stratum: Set(stratum.to_owned()),
+        origin_language: Set(origin_language.to_owned()),
         ..Default::default()
     }
     .insert(db)
     .await
 }
 
-pub async fn set_stratum(db: &impl ConnectionTrait, id: i64, stratum: &str) -> Result<(), DbErr> {
+pub async fn set_origin_language(
+    db: &impl ConnectionTrait,
+    id: i64,
+    origin_language: &str,
+) -> Result<(), DbErr> {
     word::ActiveModel {
         id: Set(id),
-        stratum: Set(stratum.to_owned()),
+        origin_language: Set(origin_language.to_owned()),
         ..Default::default()
     }
     .update(db)

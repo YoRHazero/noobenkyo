@@ -13,7 +13,7 @@ async fn insert_word(
     word::ActiveModel {
         writing: Set(writing.into()),
         origin: Set(origin.into()),
-        stratum: Set(String::new()),
+        origin_language: Set(String::new()),
         ..Default::default()
     }
     .insert(db)

@@ -19,7 +19,7 @@ async fn gives_each_row_once_word_by_word() {
         &db,
         &[
             ashita,
-            word_only("パソコン", "personal computer", "外来语"),
+            word_only("パソコン", "personal computer", "英语"),
             reading_only("上", "うえ"),
         ],
     )
@@ -31,7 +31,7 @@ async fn gives_each_row_once_word_by_word() {
             Content {
                 writing: "明日".into(),
                 origin: String::new(),
-                stratum: String::new(),
+                origin_language: String::new(),
                 reading: Some(ReadingContent {
                     kana: "あした".into(),
                     sense: Some(SenseContent {
@@ -53,13 +53,13 @@ async fn gives_each_row_once_word_by_word() {
             Content {
                 writing: "パソコン".into(),
                 origin: "personal computer".into(),
-                stratum: "外来语".into(),
+                origin_language: "英语".into(),
                 reading: None,
             },
             Content {
                 writing: "上".into(),
                 origin: String::new(),
-                stratum: String::new(),
+                origin_language: String::new(),
                 reading: Some(ReadingContent {
                     kana: "うえ".into(),
                     sense: None,

@@ -136,18 +136,18 @@ async fn takes_later_progress() {
 }
 
 #[tokio::test]
-async fn fills_empty_stratum_only() {
+async fn fills_empty_origin_language_only() {
     let db = memory_db().await;
     merge(
         &db,
         &[
-            word_only("明日", "", ""),
-            word_only("明日", "", "和语"),
-            word_only("明日", "", "汉语"),
+            word_only("パン", "pão", ""),
+            word_only("パン", "pão", "葡萄牙语"),
+            word_only("パン", "pão", "西班牙语"),
         ],
     )
     .await;
-    assert_eq!(all_words(&db).await[0].stratum, "和语");
+    assert_eq!(all_words(&db).await[0].origin_language, "葡萄牙语");
 }
 
 #[tokio::test]

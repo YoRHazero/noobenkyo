@@ -1,25 +1,42 @@
 import type { ConvertedEntry } from '@/bindings'
 import { Badge } from '@/components/ui/badge'
 import { DetailItem, DetailList } from '@/features/dictionary/detail-list'
-import type { DroppedSentence } from '@/features/dictionary/import/preview/preview-rows'
+import type {
+  DroppedLanguage,
+  DroppedSentence,
+} from '@/features/dictionary/import/preview/preview-rows'
 import { PreviewSentence } from '@/features/dictionary/import/preview/preview-sentence'
 import { useStudySettings } from '@/backend/study/use-study-settings'
 import { progressText } from '@/features/dictionary/progress-text'
 
 type Props = {
   entry: ConvertedEntry
+  droppedLanguage: DroppedLanguage | null
   droppedSentences: DroppedSentence[]
   unknownFields: string[]
 }
 
 /** Everything an entry brings in, and what of its line is left out. */
-export function PreviewRowDetail({ entry, droppedSentences, unknownFields }: Props) {
+export function PreviewRowDetail({
+  entry,
+  droppedLanguage,
+  droppedSentences,
+  unknownFields,
+}: Props) {
   const { content } = entry
   const sense = content.reading?.sense ?? null
   const maxStage = useStudySettings().data?.quiz.max_stage
   return (
     <DetailList>
-      {content.stratum && <DetailItem label="语种">{content.stratum}</DetailItem>}
+      {content.origin_language && <DetailItem label="语种">{content.origin_language}</DetailItem>}
+      {droppedLanguage && (
+        <DetailItem label="语种">
+          <span className="flex flex-col">
+            <span className="text-warning">✕ {droppedLanguage.value}</span>
+            <span className="text-muted-foreground">{droppedLanguage.reason}</span>
+          </span>
+        </DetailItem>
+      )}
       {sense && (
         <DetailItem label="释义">
           <span className="font-medium">{sense.glosses[0]}</span>

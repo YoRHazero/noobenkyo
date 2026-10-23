@@ -33,7 +33,7 @@ pub async fn merge_content(
     Ok(outcome)
 }
 
-/// Finds or creates the word. An empty stratum is filled in; a set one is kept.
+/// Finds or creates the word. An empty origin_language is filled in; a set one is kept.
 async fn merge_word(
     db: &impl ConnectionTrait,
     content: &Content,
@@ -41,14 +41,20 @@ async fn merge_word(
 ) -> Result<word::Model, DbErr> {
     match word_table::find_word(db, &content.writing, &content.origin).await? {
         Some(existing) => {
-            if existing.stratum.is_empty() && !content.stratum.is_empty() {
-                word_table::set_stratum(db, existing.id, &content.stratum).await?;
+            if existing.origin_language.is_empty() && !content.origin_language.is_empty() {
+                word_table::set_origin_language(db, existing.id, &content.origin_language).await?;
             }
             Ok(existing)
         }
         None => {
             outcome.word_added = true;
-            word_table::insert_word(db, &content.writing, &content.origin, &content.stratum).await
+            word_table::insert_word(
+                db,
+                &content.writing,
+                &content.origin,
+                &content.origin_language,
+            )
+            .await
         }
     }
 }

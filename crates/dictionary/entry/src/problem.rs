@@ -17,6 +17,9 @@ pub struct Problem {
 pub enum Dropped {
     /// The whole entry.
     Entry,
+    /// The origin's language, written without an origin; the rest of the
+    /// entry is kept.
+    OriginLanguage { value: String },
     /// One sentence; the rest of the entry is kept.
     Sentence { marked: String },
     /// The sense layer, when merging finds several matching senses; the word

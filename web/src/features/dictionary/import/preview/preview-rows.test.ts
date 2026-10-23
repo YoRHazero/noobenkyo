@@ -6,7 +6,7 @@ import { linesOf } from '@/features/dictionary/import/preview/row-kinds'
 const content = (writing: string): Content => ({
   writing,
   origin: '',
-  stratum: '',
+  origin_language: '',
   reading: null,
 })
 
@@ -18,7 +18,7 @@ const text = [
   '{"x": 1',
   '{"writing": "食べた"}',
   '{"writing": "上", "pos": "名词"}',
-  '{"writing": "下"}',
+  '{"writing": "下", "origin_language": "日语"}',
 ].join('\n')
 
 const preview: ImportPreview = {
@@ -40,6 +40,12 @@ const preview: ImportPreview = {
     },
     { line: 3, writing: '', dropped: { kind: 'entry' }, reason: '不是合法的 JSON' },
     { line: 5, writing: '', dropped: { kind: 'entry' }, reason: '不是合法的 JSON' },
+    {
+      line: 8,
+      writing: '下',
+      dropped: { kind: 'originLanguage', value: '日语' },
+      reason: '没有词源',
+    },
   ],
   ignored_fields: [{ name: 'pos', lines: [7] }],
 }
@@ -59,19 +65,22 @@ describe('previewRows', () => {
     ])
   })
 
-  it('attaches dropped sentences and unknown fields to their line', () => {
+  it('attaches dropped parts and unknown fields to their line', () => {
     expect(rows[0]).toMatchObject({
+      droppedLanguage: null,
       droppedSentences: [{ marked: '[[諦めない]]で', reason: '目标词里的汉字 諦 没有注音' }],
       unknownFields: [],
     })
     expect(rows[5]).toMatchObject({ droppedSentences: [], unknownFields: ['pos'] })
+    expect(rows[6]).toMatchObject({ droppedLanguage: { value: '日语', reason: '没有词源' } })
     expect(rows[3]).toMatchObject({ source: '{"x": 1' })
   })
 
   it('marks warnings, and finds the lines of every kind', () => {
-    expect(rows.map(isWarning)).toEqual([true, false, false, false, true, true, false])
-    expect(linesOf(rows, 'warning')).toEqual([1, 6, 7])
+    expect(rows.map(isWarning)).toEqual([true, false, false, false, true, true, true])
+    expect(linesOf(rows, 'warning')).toEqual([1, 6, 7, 8])
     expect(linesOf(rows, 'inflection')).toEqual([6])
+    expect(linesOf(rows, 'originLanguage')).toEqual([8])
     expect(linesOf(rows, 'sentence')).toEqual([1])
     expect(linesOf(rows, 'unknownField')).toEqual([7])
     expect(linesOf(rows, 'skipped')).toEqual([3, 4, 5])

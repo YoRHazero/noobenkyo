@@ -44,11 +44,11 @@ pub fn progress_at(stage: u32, passes: u32, lapses: u32) -> Progress {
     }
 }
 
-pub fn word_only(writing: &str, origin: &str, stratum: &str) -> Content {
+pub fn word_only(writing: &str, origin: &str, origin_language: &str) -> Content {
     Content {
         writing: writing.into(),
         origin: origin.into(),
-        stratum: stratum.into(),
+        origin_language: origin_language.into(),
         reading: None,
     }
 }
