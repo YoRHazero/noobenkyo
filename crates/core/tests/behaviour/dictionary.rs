@@ -2,13 +2,13 @@
 //! rendered for the frontend.
 
 use dictionary::{ContentFilter, Fragment, ImportOptions, SenseKey, SentenceDisplay, TargetPiece};
-use noobenkyo_lib::commands::dictionary::entries::{
+use noobenkyo_core::commands::dictionary::entries::{
     dictionary_check_entries, dictionary_default_import_options, dictionary_export,
     dictionary_preview_entries,
 };
-use noobenkyo_lib::commands::dictionary::query::dictionary_sense_detail;
-use noobenkyo_lib::commands::dictionary::render::dictionary_render_sentence;
-use noobenkyo_lib::commands::stats::dictionary::dictionary_stats;
+use noobenkyo_core::commands::dictionary::query::dictionary_sense_detail;
+use noobenkyo_core::commands::dictionary::render::dictionary_render_sentence;
+use noobenkyo_core::commands::stats::dictionary::dictionary_stats;
 
 use crate::support::{SAMPLE, TestApp};
 

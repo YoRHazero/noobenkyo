@@ -1,15 +1,15 @@
 //! The learning line: topping the zone up, asking, answering and writing back.
 
 use dictionary::{ContentFilter, Fragment, SenseOrder, StageCount};
-use noobenkyo_lib::commands::dictionary::delete::dictionary_delete_sense;
-use noobenkyo_lib::commands::dictionary::query::{
+use noobenkyo_core::commands::dictionary::delete::dictionary_delete_sense;
+use noobenkyo_core::commands::dictionary::query::{
     dictionary_filter_senses, dictionary_sense_detail,
 };
-use noobenkyo_lib::commands::learn::answering::{
+use noobenkyo_core::commands::learn::answering::{
     learn_confirm_answer, learn_report_sentence, learn_skip, learn_submit_answer,
 };
-use noobenkyo_lib::commands::learn::asking::learn_next;
-use noobenkyo_lib::commands::stats::dictionary::dictionary_stats;
+use noobenkyo_core::commands::learn::asking::learn_next;
+use noobenkyo_core::commands::stats::dictionary::dictionary_stats;
 use study::{QuestionType, Rating};
 
 use crate::support::{TestApp, learn_everything, learn_once, revealed_key};

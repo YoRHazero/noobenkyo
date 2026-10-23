@@ -1,6 +1,6 @@
 //! Study settings: read, replaced, and restored from the defaults.
 
-use noobenkyo_lib::commands::settings::{
+use noobenkyo_core::commands::settings::{
     study_default_settings, study_settings, update_study_settings,
 };
 use study::StudySettings;

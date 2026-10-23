@@ -1,15 +1,15 @@
 //! Test data and steps shared by the behaviour tests.
 
 use dictionary::{ImportReport, SenseKey};
-use noobenkyo_lib::app_state::AppState;
-use noobenkyo_lib::commands::dictionary::entries::{
+use noobenkyo_core::app_state::AppState;
+use noobenkyo_core::commands::dictionary::entries::{
     dictionary_default_import_options, dictionary_import,
 };
-use noobenkyo_lib::commands::learn::answering::{learn_confirm_answer, learn_submit_answer};
-use noobenkyo_lib::commands::learn::asking::learn_next;
-use noobenkyo_lib::commands::review::answering::{review_confirm_answer, review_submit_answer};
-use noobenkyo_lib::commands::review::asking::review_next;
-use noobenkyo_lib::payloads::RevealPayload;
+use noobenkyo_core::commands::learn::answering::{learn_confirm_answer, learn_submit_answer};
+use noobenkyo_core::commands::learn::asking::learn_next;
+use noobenkyo_core::commands::review::answering::{review_confirm_answer, review_submit_answer};
+use noobenkyo_core::commands::review::asking::review_next;
+use noobenkyo_core::payloads::RevealPayload;
 use study::Rating;
 use tauri::test::{MockRuntime, mock_app};
 use tauri::{App, Manager, State};

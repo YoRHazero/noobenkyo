@@ -1,12 +1,12 @@
 //! The review line: a session over learned senses, from start to end.
 
 use dictionary::StageCount;
-use noobenkyo_lib::commands::review::answering::{
+use noobenkyo_core::commands::review::answering::{
     review_confirm_answer, review_report_sentence, review_skip, review_submit_answer,
 };
-use noobenkyo_lib::commands::review::asking::review_next;
-use noobenkyo_lib::commands::review::session::{review_end, review_start};
-use noobenkyo_lib::commands::stats::dictionary::dictionary_stats;
+use noobenkyo_core::commands::review::asking::review_next;
+use noobenkyo_core::commands::review::session::{review_end, review_start};
+use noobenkyo_core::commands::stats::dictionary::dictionary_stats;
 use study::{Rating, SessionOptions};
 
 use crate::support::{TestApp, learn_everything, review_once};
