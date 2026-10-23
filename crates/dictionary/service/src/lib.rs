@@ -13,7 +13,7 @@ mod query;
 mod render;
 mod service;
 
-pub use entries::{check_entries, preview_entries};
+pub use entries::{check_entries, generated_import_options, preview_entries};
 pub use error::DictionaryError;
 pub use render::render_sentence;
 pub use service::DictionaryService;

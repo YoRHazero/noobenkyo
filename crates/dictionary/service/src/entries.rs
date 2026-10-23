@@ -49,3 +49,8 @@ pub fn preview_entries(text: &str, options: ImportOptions) -> ImportPreview {
 pub fn check_entries(text: &str, options: ImportOptions) -> Vec<String> {
     dictionary_entry::check(text, options)
 }
+
+/// The import options for lists a model or an agent wrote.
+pub fn generated_import_options() -> ImportOptions {
+    ImportOptions::generated()
+}

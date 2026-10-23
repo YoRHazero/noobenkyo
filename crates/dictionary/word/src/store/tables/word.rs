@@ -66,6 +66,22 @@ pub async fn words_by_ids(
     Ok(found)
 }
 
+/// Words written with any of the given writings, whatever their origin.
+pub async fn words_with_writings(
+    db: &impl ConnectionTrait,
+    writings: &[&str],
+) -> Result<Vec<word::Model>, DbErr> {
+    let mut found = Vec::new();
+    for chunk in writings.chunks(ID_CHUNK) {
+        let rows = word::Entity::find()
+            .filter(word::Column::Writing.is_in(chunk.iter().copied()))
+            .all(db)
+            .await?;
+        found.extend(rows);
+    }
+    Ok(found)
+}
+
 /// Deletes a word; its readings, senses, labels and sentences go with it.
 pub async fn delete_word(db: &impl ConnectionTrait, id: i64) -> Result<(), DbErr> {
     word::Entity::delete_by_id(id).exec(db).await.map(|_| ())

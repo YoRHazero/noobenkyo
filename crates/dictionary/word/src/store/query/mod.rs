@@ -1,7 +1,8 @@
 //! Reading the dictionary: rows matching a filter, a page of them, one
-//! sense in full, and counts.
+//! sense in full, counts, and which words are already there.
 
 pub mod dump;
+pub mod existing_words;
 pub mod filter_senses;
 pub mod search;
 pub mod sense_detail;

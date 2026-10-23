@@ -4,6 +4,7 @@
 mod delete;
 mod dump;
 mod edit;
+mod existing_words;
 mod filter_senses;
 mod merge;
 mod rows;

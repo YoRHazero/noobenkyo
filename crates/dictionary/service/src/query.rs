@@ -1,11 +1,11 @@
-//! Reading the dictionary: counts, pages of rows, one sense in full, and
-//! senses with their progress.
+//! Reading the dictionary: counts, pages of rows, one sense in full, senses
+//! with their progress, and which words are already there.
 
-use dictionary_word::store::query::{filter_senses, search, sense_detail, stats};
+use dictionary_word::store::query::{existing_words, filter_senses, search, sense_detail, stats};
 
 use crate::{
     ContentFilter, DictionaryError, DictionaryService, DictionaryStats, SearchPage, SenseDetail,
-    SenseKey, SenseOrder, SenseProgress,
+    SenseKey, SenseOrder, SenseProgress, WordKey,
 };
 
 impl DictionaryService {
@@ -42,5 +42,12 @@ impl DictionaryService {
         limit: Option<u32>,
     ) -> Result<Vec<SenseProgress>, DictionaryError> {
         Ok(filter_senses::filter_senses(&self.db, filter, exclude, order, limit).await?)
+    }
+
+    /// The given words that are already in the dictionary, matched exactly
+    /// by writing and origin, in the order given and each once. Searching
+    /// cannot tell this: it matches parts of writings.
+    pub async fn existing_words(&self, keys: &[WordKey]) -> Result<Vec<WordKey>, DictionaryError> {
+        Ok(existing_words::existing_words(&self.db, keys).await?)
     }
 }

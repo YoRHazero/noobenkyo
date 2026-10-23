@@ -1,8 +1,8 @@
 //! Entries in and out: previewing, checking, importing and exporting text.
 
 use dictionary::{
-    Completeness, ContentFilter, DictionaryService, Dropped, ImportOptions, check_entries,
-    preview_entries,
+    Completeness, ContentFilter, DictionaryService, Dropped, ImportOptions, WordKey, check_entries,
+    generated_import_options, preview_entries,
 };
 
 const TEXT: &str = concat!(
@@ -134,4 +134,47 @@ async fn the_report_adds_only_merge_problems_to_the_preview() {
     assert_eq!(converting, preview.problems);
     assert_eq!(merging.len(), 1);
     assert_eq!(merging[0].line, 1);
+}
+
+#[tokio::test]
+async fn generated_lists_keep_katakana_and_never_set_progress() {
+    let dir = tempfile::tempdir().unwrap();
+    let dictionary = service(&dir).await;
+    let report = dictionary
+        .import(TEXT, generated_import_options())
+        .await
+        .unwrap();
+    assert_eq!(report.words_added, 3);
+    let exported = dictionary
+        .export(&ContentFilter::default(), None, true)
+        .await
+        .unwrap();
+    assert!(
+        exported
+            .text
+            .lines()
+            .next()
+            .unwrap()
+            .contains(r#""stage":0"#)
+    );
+}
+
+#[tokio::test]
+async fn finds_which_words_are_already_there() {
+    let dir = tempfile::tempdir().unwrap();
+    let dictionary = service(&dir).await;
+    dictionary.import(TEXT, keep_katakana()).await.unwrap();
+    let key = |writing: &str, origin: &str| WordKey {
+        writing: writing.into(),
+        origin: origin.into(),
+    };
+    let found = dictionary
+        .existing_words(&[
+            key("下", ""),
+            key("パソコン", "personal computer"),
+            key("上", ""),
+        ])
+        .await
+        .unwrap();
+    assert_eq!(found, [key("パソコン", "personal computer"), key("上", "")]);
 }

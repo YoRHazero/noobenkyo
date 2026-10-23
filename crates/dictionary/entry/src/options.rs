@@ -11,6 +11,20 @@ pub struct ImportOptions {
     pub keep_progress: bool,
 }
 
+impl ImportOptions {
+    /// For lists a model or an agent wrote, as opposed to outside word lists.
+    /// Katakana words stay, because rows exported for filling in sentences
+    /// contain them; inflections are not flagged, because a model cannot fix
+    /// a false alarm; progress is ignored, so a model cannot change it.
+    pub fn generated() -> Self {
+        Self {
+            drop_pure_katakana: false,
+            detect_inflections: false,
+            keep_progress: false,
+        }
+    }
+}
+
 impl Default for ImportOptions {
     fn default() -> Self {
         Self {
