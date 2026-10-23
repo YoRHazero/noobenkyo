@@ -1,11 +1,16 @@
 //! Checks the dependency rules between our crates, as declared in their manifests:
-//! groups never depend on each other, sub-crates never depend on their group's
-//! service crate, and core depends only on service crates.
+//! groups never depend on each other, except that ai may use the other groups'
+//! service crates; sub-crates never depend on their group's service crate; and
+//! core depends only on service crates.
 
 use std::collections::HashMap;
 use std::path::Path;
 
 use cargo_metadata::{Metadata, MetadataCommand, Package};
+
+/// The group that talks to models. It may depend on the service crates of
+/// the feature groups; they never depend on it.
+const AI: &str = "ai";
 
 /// Where a workspace crate sits: its group (first directory under crates/) and whether
 /// it is the group's service crate.
@@ -64,6 +69,14 @@ fn groups_do_not_depend_on_each_other() {
         }
         for dependency in internal_dependencies(package, &places) {
             let other = &places[dependency];
+            if own.group == AI && other.group != AI {
+                assert!(
+                    other.is_service,
+                    "{} (group ai) depends on {}, which is not a service crate",
+                    package.name, dependency
+                );
+                continue;
+            }
             assert_eq!(
                 other.group, own.group,
                 "{} (group {}) depends on {} (group {})",

@@ -11,6 +11,9 @@ members = [
     "crates/listening/drama",
     "crates/listening/script",
     "crates/listening/service",
+    "crates/ai/tools",
+    "crates/ai/agent",
+    "crates/ai/service",
     "crates/core",
 ]
 
@@ -34,6 +37,9 @@ study = { path = "crates/study/service" }
 listening-drama = { path = "crates/listening/drama" }
 listening-script = { path = "crates/listening/script" }
 listening = { path = "crates/listening/service" }
+# ai group
+ai-tools = { path = "crates/ai/tools" }
+ai = { path = "crates/ai/service" }
 
 # external
 sea-orm = { version = "2.0.4", default-features = false, features = ["macros", "with-json", "with-chrono", "with-uuid", "sqlx-sqlite", "runtime-tokio"] }
@@ -54,3 +60,5 @@ specta-typescript = "0.0.12"
 tauri-plugin-dialog = "2.8"
 tauri-plugin-fs = "2.7"
 cargo_metadata = "0.23"
+clap = { version = "4", features = ["derive"] }
+dirs = "7"
