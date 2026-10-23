@@ -44,7 +44,7 @@ pub fn preview_entries(text: &str, options: ImportOptions) -> ImportPreview {
 
 /// The preview's problems, skipped words and ignored fields, one line of
 /// Chinese each. Empty means every entry would be merged as written. Needs no
-/// dictionary and only plain values, so it can be handed to the model as a
+/// dictionary and only plain values, so it can be handed to the ai group as a
 /// plain function.
 pub fn check_entries(text: &str, options: ImportOptions) -> Vec<String> {
     dictionary_entry::check(text, options)
