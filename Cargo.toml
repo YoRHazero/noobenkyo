@@ -8,6 +8,9 @@ members = [
     "crates/study/learn",
     "crates/study/review",
     "crates/study/service",
+    "crates/listening/drama",
+    "crates/listening/script",
+    "crates/listening/service",
     "crates/core",
 ]
 
@@ -27,16 +30,21 @@ study-quiz = { path = "crates/study/quiz" }
 study-learn = { path = "crates/study/learn" }
 study-review = { path = "crates/study/review" }
 study = { path = "crates/study/service" }
+# listening group
+listening-drama = { path = "crates/listening/drama" }
+listening-script = { path = "crates/listening/script" }
+listening = { path = "crates/listening/service" }
 
 # external
-sea-orm = { version = "2.0.4", default-features = false, features = ["macros", "with-json", "with-chrono", "sqlx-sqlite", "runtime-tokio"] }
+sea-orm = { version = "2.0.4", default-features = false, features = ["macros", "with-json", "with-chrono", "with-uuid", "sqlx-sqlite", "runtime-tokio"] }
 sea-orm-migration = { version = "2.0.4", default-features = false, features = ["sqlx-sqlite", "runtime-tokio"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 chrono = { version = "0.4", features = ["serde"] }
 thiserror = "2"
-specta = { version = "=2.0.0-rc.25", features = ["derive", "chrono"] }
+specta = { version = "=2.0.0-rc.25", features = ["derive", "chrono", "uuid"] }
 rand = "0.9"
+uuid = { version = "1", features = ["v4", "serde"] }
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "sync"] }
 tempfile = "3"
 tauri = { version = "2.12" }

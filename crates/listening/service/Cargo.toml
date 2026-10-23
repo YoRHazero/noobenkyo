@@ -1,0 +1,20 @@
+[package]
+name = "listening"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+listening-drama.workspace = true
+listening-script.workspace = true
+sea-orm.workspace = true
+sea-orm-migration.workspace = true
+chrono.workspace = true
+thiserror.workspace = true
+rand.workspace = true
+uuid.workspace = true
+
+[dev-dependencies]
+tokio.workspace = true
+tempfile.workspace = true

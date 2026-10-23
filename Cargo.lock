@@ -2513,6 +2513,45 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32a66949e030da00e8c7d4434b251670a91556f4144941d37452769c25d58a53"
 
 [[package]]
+name = "listening"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "listening-drama",
+ "listening-script",
+ "rand 0.9.5",
+ "sea-orm",
+ "sea-orm-migration",
+ "tempfile",
+ "thiserror 2.0.21",
+ "tokio",
+ "uuid",
+]
+
+[[package]]
+name = "listening-drama"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "rand 0.9.5",
+ "sea-orm",
+ "sea-orm-migration",
+ "serde",
+ "specta",
+ "thiserror 2.0.21",
+ "tokio",
+ "uuid",
+]
+
+[[package]]
+name = "listening-script"
+version = "0.1.0"
+dependencies = [
+ "listening-drama",
+ "serde_json",
+]
+
+[[package]]
 name = "litemap"
 version = "0.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4207,6 +4246,7 @@ dependencies = [
  "paste",
  "rustc_version",
  "specta-macros",
+ "uuid",
 ]
 
 [[package]]
