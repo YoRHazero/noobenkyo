@@ -43,7 +43,7 @@ pub async fn missing_audio(
                 continue;
             }
             items.push(SpeechItem {
-                line: LineId(row.id),
+                line: LineId::from_row(row.id)?,
                 language,
                 text: spoken(row, language)?,
                 voice: row.voice.clone(),

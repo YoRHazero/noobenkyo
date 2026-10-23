@@ -1,6 +1,6 @@
 use sea_orm::{ColumnTrait, ConnectionTrait, DbErr, EntityTrait, QueryFilter};
 
-use super::ID_CHUNK;
+use super::{ID_CHUNK, affected};
 use crate::entity::line_audio;
 use crate::{Language, LineId};
 
@@ -10,15 +10,15 @@ pub async fn clear_audio(
     db: &impl ConnectionTrait,
     ids: &[LineId],
     language: Language,
-) -> Result<u64, DbErr> {
-    let mut cleared = 0;
+) -> Result<u32, DbErr> {
+    let mut cleared: u64 = 0;
     for chunk in ids.chunks(ID_CHUNK) {
         cleared += line_audio::Entity::delete_many()
-            .filter(line_audio::Column::LineId.is_in(chunk.iter().map(|id| id.0)))
+            .filter(line_audio::Column::LineId.is_in(chunk.iter().map(|id| id.row())))
             .filter(line_audio::Column::Language.eq(language.code()))
             .exec(db)
             .await?
             .rows_affected;
     }
-    Ok(cleared)
+    Ok(affected(cleared))
 }

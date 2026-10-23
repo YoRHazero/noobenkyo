@@ -7,4 +7,6 @@ publish.workspace = true
 
 [dependencies]
 listening-drama.workspace = true
+serde.workspace = true
 serde_json.workspace = true
+specta.workspace = true

@@ -14,12 +14,13 @@ mod service;
 mod worlds;
 
 pub use error::ListeningError;
-pub use script::check_script;
+pub use script::{check_script, preview_script};
 pub use service::ListeningService;
 
 pub use listening_drama::{
     CastMember, CharacterDetail, CharacterSummary, EpisodeDetail, EpisodeSummary, Gender, Language,
     LineId, LineView, MainCharacter, NewCharacter, NewReference, Reference, ReferenceText, Role,
-    ScriptContext, ScriptEpisode, ScriptLine, SpeechItem, WorldDetail, WorldSummary,
+    RubySegment, ScriptContext, ScriptEpisode, ScriptLine, SpeechItem, WorldDetail, WorldSummary,
 };
+pub use listening_script::{PreviewLine, ScriptPreview};
 pub use uuid::Uuid;

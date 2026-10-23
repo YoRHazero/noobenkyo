@@ -5,7 +5,7 @@ use listening_script::parse_script;
 use rand::SeedableRng;
 use rand::rngs::StdRng;
 
-use crate::{ListeningError, ListeningService, ScriptContext, Uuid, clock};
+use crate::{ListeningError, ListeningService, ScriptContext, ScriptPreview, Uuid, clock};
 
 impl ListeningService {
     /// What a script for the world is written from. Fails when the cast
@@ -36,6 +36,13 @@ impl ListeningService {
         let mut rng = StdRng::from_os_rng();
         Ok(append::append_script(&self.db, episode, &script, &mut rng).await?)
     }
+}
+
+/// What the script would be stored as, for the script preview: the title,
+/// summary and lines, each Japanese line also split for ruby; or the
+/// problems that stop it. Needs no data.
+pub fn preview_script(text: &str) -> ScriptPreview {
+    listening_script::preview_script(text)
 }
 
 /// Why the text is not a script that passes, one line of Chinese each.

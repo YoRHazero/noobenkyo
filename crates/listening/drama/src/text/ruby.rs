@@ -2,14 +2,17 @@
 //! not empty and the reading is kana. Outside marks there is no lone `{`,
 //! `|` or `}`.
 
+use serde::Serialize;
 use thiserror::Error;
 
 use super::kana::is_kana;
 
-/// A piece of a Japanese line.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum Segment {
-    Text(String),
+/// A piece of a Japanese line: plain text, or a writing with its reading,
+/// shown as ruby.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, specta::Type)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum RubySegment {
+    Text { text: String },
     Ruby { writing: String, reading: String },
 }
 
@@ -34,7 +37,7 @@ pub enum RubyError {
 }
 
 /// Splits a Japanese line into text and reading marks.
-pub fn parse(ja: &str) -> Result<Vec<Segment>, RubyError> {
+pub fn parse(ja: &str) -> Result<Vec<RubySegment>, RubyError> {
     let chars: Vec<char> = ja.chars().collect();
     let mut segments = Vec::new();
     let mut text = String::new();
@@ -43,7 +46,9 @@ pub fn parse(ja: &str) -> Result<Vec<Segment>, RubyError> {
         match chars[i] {
             '{' => {
                 if !text.is_empty() {
-                    segments.push(Segment::Text(std::mem::take(&mut text)));
+                    segments.push(RubySegment::Text {
+                        text: std::mem::take(&mut text),
+                    });
                 }
                 let (segment, consumed) = parse_mark(&chars[i..])?;
                 segments.push(segment);
@@ -57,13 +62,13 @@ pub fn parse(ja: &str) -> Result<Vec<Segment>, RubyError> {
         }
     }
     if !text.is_empty() {
-        segments.push(Segment::Text(text));
+        segments.push(RubySegment::Text { text });
     }
     Ok(segments)
 }
 
 /// Parses the mark that starts `chars`; returns it with the number of chars consumed.
-fn parse_mark(chars: &[char]) -> Result<(Segment, usize), RubyError> {
+fn parse_mark(chars: &[char]) -> Result<(RubySegment, usize), RubyError> {
     let end = chars[1..].iter().position(|c| matches!(c, '{' | '}'));
     let Some(close) = end.map(|offset| offset + 1).filter(|at| chars[*at] == '}') else {
         let until = end.map_or(chars.len(), |offset| offset + 1);
@@ -88,15 +93,15 @@ fn parse_mark(chars: &[char]) -> Result<(Segment, usize), RubyError> {
     if let Some(found) = reading.chars().find(|c| !is_kana(*c)) {
         return Err(RubyError::NotKana { mark, found });
     }
-    Ok((Segment::Ruby { writing, reading }, close + 1))
+    Ok((RubySegment::Ruby { writing, reading }, close + 1))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    fn ruby(writing: &str, reading: &str) -> Segment {
-        Segment::Ruby {
+    fn ruby(writing: &str, reading: &str) -> RubySegment {
+        RubySegment::Ruby {
             writing: writing.into(),
             reading: reading.into(),
         }
@@ -108,14 +113,18 @@ mod tests {
             parse("{明日|あした}は{美咲|みさき}と会う。").unwrap(),
             vec![
                 ruby("明日", "あした"),
-                Segment::Text("は".into()),
+                RubySegment::Text { text: "は".into() },
                 ruby("美咲", "みさき"),
-                Segment::Text("と会う。".into()),
+                RubySegment::Text {
+                    text: "と会う。".into()
+                },
             ]
         );
         assert_eq!(
             parse("会う。").unwrap(),
-            vec![Segment::Text("会う。".into())]
+            vec![RubySegment::Text {
+                text: "会う。".into()
+            }]
         );
         assert_eq!(parse("").unwrap(), vec![]);
     }

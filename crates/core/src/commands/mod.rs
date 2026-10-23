@@ -2,6 +2,7 @@
 
 pub mod dictionary;
 pub mod learn;
+pub mod listening;
 pub mod review;
 pub mod settings;
 pub mod stats;

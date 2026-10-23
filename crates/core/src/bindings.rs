@@ -3,7 +3,7 @@
 use specta_typescript::Typescript;
 use tauri_specta::{Builder, collect_commands};
 
-use crate::commands::{dictionary, learn, review, settings, stats};
+use crate::commands::{dictionary, learn, listening, review, settings, stats};
 
 const BINDINGS_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../web/src/bindings.ts");
 
@@ -40,6 +40,30 @@ pub fn builder() -> Builder<tauri::Wry> {
         settings::study_settings,
         settings::update_study_settings,
         settings::study_default_settings,
+        listening::characters::listening_characters,
+        listening::characters::listening_character,
+        listening::characters::listening_create_character,
+        listening::characters::listening_add_reference,
+        listening::characters::listening_reference,
+        listening::characters::listening_character_usage,
+        listening::characters::listening_delete_character,
+        listening::worlds::listening_worlds,
+        listening::worlds::listening_world,
+        listening::worlds::listening_create_world,
+        listening::worlds::listening_update_setting,
+        listening::worlds::listening_add_cast,
+        listening::worlds::listening_set_role,
+        listening::worlds::listening_remove_cast,
+        listening::worlds::listening_delete_world,
+        listening::episodes::listening_episodes,
+        listening::episodes::listening_episode,
+        listening::episodes::listening_update_episode,
+        listening::episodes::listening_delete_episode,
+        listening::lines::listening_audio,
+        listening::lines::listening_update_line,
+        listening::lines::listening_clear_audio,
+        listening::lines::listening_delete_lines,
+        listening::script::listening_preview_script,
     ])
 }
 

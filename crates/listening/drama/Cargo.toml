@@ -12,6 +12,7 @@ serde.workspace = true
 chrono.workspace = true
 thiserror.workspace = true
 specta.workspace = true
+specta-typescript.workspace = true
 rand.workspace = true
 uuid.workspace = true
 

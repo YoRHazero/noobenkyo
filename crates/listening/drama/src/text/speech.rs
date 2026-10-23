@@ -1,4 +1,4 @@
-use super::ruby::{RubyError, Segment, parse};
+use super::ruby::{RubyError, RubySegment, parse};
 
 /// The text handed to text-to-speech: every reading mark replaced by its reading.
 pub fn speech_text(ja: &str) -> Result<String, RubyError> {
@@ -6,8 +6,8 @@ pub fn speech_text(ja: &str) -> Result<String, RubyError> {
     Ok(segments
         .into_iter()
         .map(|segment| match segment {
-            Segment::Text(text) => text,
-            Segment::Ruby { reading, .. } => reading,
+            RubySegment::Text { text } => text,
+            RubySegment::Ruby { reading, .. } => reading,
         })
         .collect())
 }

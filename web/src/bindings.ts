@@ -76,6 +76,88 @@ export const commands = {
 	/**  Invalid settings are rejected and the old ones kept. */
 	updateStudySettings: (settings: StudySettings) => typedError<null, CommandError>(__TAURI_INVOKE("update_study_settings", { settings })),
 	studyDefaultSettings: () => __TAURI_INVOKE<StudySettings>("study_default_settings"),
+	listeningCharacters: () => typedError<CharacterSummary[], CommandError>(__TAURI_INVOKE("listening_characters")),
+	/**  One character with its prompt and reference texts; `None` if it is gone. */
+	listeningCharacter: (name: string) => typedError<{
+	name: string,
+	kana: string,
+	gender: Gender,
+	age: number,
+	prompt: string | null,
+	references: ReferenceText[],
+} | null, CommandError>(__TAURI_INVOKE("listening_character", { name })),
+	/**
+	 *  Creates a character with the references the user uploaded. Returns the
+	 *  problems that rejected it, empty when it was created.
+	 */
+	listeningCreateCharacter: (character: NewCharacter) => typedError<string[], CommandError>(__TAURI_INVOKE("listening_create_character", { character })),
+	/**  Adds the reference recording a character lacks in `language`. */
+	listeningAddReference: (name: string, language: Language, audio: number[], text: string) => typedError<null, CommandError>(__TAURI_INVOKE("listening_add_reference", { name, language, audio, text })),
+	/**
+	 *  A character's reference recording in `language`, to listen to; `None`
+	 *  if it has none.
+	 */
+	listeningReference: (name: string, language: Language) => typedError<{
+	audio: number[],
+	text: string,
+} | null, CommandError>(__TAURI_INVOKE("listening_reference", { name, language })),
+	/**  Names of the worlds whose cast has the character, to confirm a delete. */
+	listeningCharacterUsage: (name: string) => typedError<string[], CommandError>(__TAURI_INVOKE("listening_character_usage", { name })),
+	listeningDeleteCharacter: (name: string) => typedError<boolean, CommandError>(__TAURI_INVOKE("listening_delete_character", { name })),
+	listeningWorlds: () => typedError<WorldSummary[], CommandError>(__TAURI_INVOKE("listening_worlds")),
+	/**  One world with its setting and cast; `None` if it is gone. */
+	listeningWorld: (name: string) => typedError<{
+	name: string,
+	setting: string,
+	/**  The narrator first, then main characters, then minor ones. */
+	cast: CastMember[],
+} | null, CommandError>(__TAURI_INVOKE("listening_world", { name })),
+	listeningCreateWorld: (name: string, setting: string) => typedError<null, CommandError>(__TAURI_INVOKE("listening_create_world", { name, setting })),
+	listeningUpdateSetting: (name: string, setting: string) => typedError<null, CommandError>(__TAURI_INVOKE("listening_update_setting", { name, setting })),
+	listeningAddCast: (world: string, character: string, role: Role) => typedError<null, CommandError>(__TAURI_INVOKE("listening_add_cast", { world, character, role })),
+	listeningSetRole: (world: string, character: string, role: Role) => typedError<null, CommandError>(__TAURI_INVOKE("listening_set_role", { world, character, role })),
+	listeningRemoveCast: (world: string, character: string) => typedError<boolean, CommandError>(__TAURI_INVOKE("listening_remove_cast", { world, character })),
+	/**  Deletes the world with its episodes and their audio. */
+	listeningDeleteWorld: (name: string) => typedError<boolean, CommandError>(__TAURI_INVOKE("listening_delete_world", { name })),
+	listeningEpisodes: (world: string) => typedError<EpisodeSummary[], CommandError>(__TAURI_INVOKE("listening_episodes", { world })),
+	/**  One episode with its lines; `None` if it is gone. */
+	listeningEpisode: (episode: string) => typedError<{
+	uuid: string,
+	world: string,
+	/**  Always finite, exported as a plain number; see [`EpisodeSummary`]. */
+	number: number,
+	title: string,
+	summary: string,
+	created_at: string,
+	lines: LineView[],
+} | null, CommandError>(__TAURI_INVOKE("listening_episode", { episode })),
+	/**
+	 *  Replaces the number, title and summary together. Returns the problems
+	 *  that rejected them, empty when they were replaced.
+	 */
+	listeningUpdateEpisode: (episode: string, number: number | null, title: string, summary: string) => typedError<string[], CommandError>(__TAURI_INVOKE("listening_update_episode", { episode, number, title, summary })),
+	listeningDeleteEpisode: (episode: string) => typedError<boolean, CommandError>(__TAURI_INVOKE("listening_delete_episode", { episode })),
+	/**  A line's audio in `language`, to play; `None` if it has none. */
+	listeningAudio: (line: LineId, language: Language) => typedError<number[] | null, CommandError>(__TAURI_INVOKE("listening_audio", { line, language })),
+	/**
+	 *  Replaces one language of a line and drops its audio in that language.
+	 *  Returns the problems that rejected the text, empty when it was replaced
+	 *  or unchanged.
+	 */
+	listeningUpdateLine: (line: LineId, language: Language, text: string) => typedError<string[], CommandError>(__TAURI_INVOKE("listening_update_line", { line, language, text })),
+	/**
+	 *  Drops the lines' audio in `language`. Returns how many recordings were
+	 *  dropped.
+	 */
+	listeningClearAudio: (lines: LineId[], language: Language) => typedError<number, CommandError>(__TAURI_INVOKE("listening_clear_audio", { lines, language })),
+	/**  Returns how many lines were deleted. */
+	listeningDeleteLines: (lines: LineId[]) => typedError<number, CommandError>(__TAURI_INVOKE("listening_delete_lines", { lines })),
+	/**
+	 *  What a script would be stored as, for the script preview, or the problems
+	 *  that stop it. Asynchronous, although pure, because its time grows with
+	 *  the text.
+	 */
+	listeningPreviewScript: (text: string) => __TAURI_INVOKE<ScriptPreview>("listening_preview_script", { text }),
 };
 
 /* Types */
@@ -92,6 +174,34 @@ export type Card = {
 	kana: string,
 	glosses: string[],
 	visible: ComprehensiveVisibility,
+};
+
+export type CastMember = {
+	character: string,
+	role: Role,
+	/**  Languages the character has a reference recording in. */
+	languages: Language[],
+};
+
+/**  One character in full, without the audio. */
+export type CharacterDetail = {
+	name: string,
+	kana: string,
+	gender: Gender,
+	age: number,
+	prompt: string | null,
+	references: ReferenceText[],
+};
+
+/**  A character in the list. */
+export type CharacterSummary = {
+	name: string,
+	kana: string,
+	gender: Gender,
+	age: number,
+	/**  Languages it has a reference recording in. */
+	languages: Language[],
+	has_prompt: boolean,
 };
 
 /**
@@ -205,6 +315,41 @@ export type Dropped =
  */
 { kind: "sense" };
 
+/**  One episode with its lines. */
+export type EpisodeDetail = {
+	uuid: string,
+	world: string,
+	/**  Always finite, exported as a plain number; see [`EpisodeSummary`]. */
+	number: number,
+	title: string,
+	summary: string,
+	created_at: string,
+	lines: LineView[],
+};
+
+/**  An episode in a world's list. */
+export type EpisodeSummary = {
+	uuid: string,
+	/**
+	 *  Always finite: update_episode rejects anything else. Exported as a
+	 *  plain number, not the `number | null` a float would be.
+	 */
+	number: number,
+	title: string,
+	summary: string,
+	created_at: string,
+	lines: number,
+	/**
+	 *  Characters of every line's Japanese and Chinese as stored, reading
+	 *  marks included: what the script context would hand over.
+	 */
+	char_count: number,
+	/**  Lines without Japanese audio. */
+	missing_ja: number,
+	/**  Lines without Chinese audio. */
+	missing_zh: number,
+};
+
 /**  An exported entry text. */
 export type Exported = {
 	text: string,
@@ -216,6 +361,8 @@ export type Exported = {
 export type Fragment = { kind: "text"; text: string } | { kind: "ruby"; base: string; ruby: string } | 
 /**  The target as one unit, made of pieces with or without ruby. */
 { kind: "target"; pieces: TargetPiece[] } | { kind: "blank" };
+
+export type Gender = "female" | "male";
 
 /**  A field the format does not know, ignored wherever it appeared. */
 export type IgnoredField = {
@@ -275,6 +422,9 @@ export type Judgement = "Correct" | "Wrong" |
 /**  The rule can tell neither; a model may judge it instead. */
 "Unsure";
 
+/**  The language of a reference recording, a line's text, or its audio. */
+export type Language = "ja" | "zh";
+
 /**  The order new senses enter the learning zone in. */
 export type LearnOrder = 
 /**  Creation (rowid) order. */
@@ -290,12 +440,62 @@ export type LearnSettings = {
 	recent_limit: number,
 };
 
+/**
+ *  Identifies a line. Valid on this machine only. A `u32`, so it reaches the
+ *  frontend as a plain number; the table's row id is 64-bit.
+ */
+export type LineId = number;
+
+/**  A line of an episode as shown to the user. */
+export type LineView = {
+	id: LineId,
+	/**  The name written in the script. */
+	speaker: string,
+	/**  The character whose voice reads it. */
+	voice: string,
+	/**  May carry reading marks `{writing|reading}`; this is what editing starts from. */
+	ja: string,
+	/**  `ja` split into text and ruby, for showing it. */
+	ja_ruby: RubySegment[],
+	zh: string,
+	/**  Languages it has audio in. */
+	audio: Language[],
+};
+
+/**  A character to create. */
+export type NewCharacter = {
+	name: string,
+	kana: string,
+	gender: Gender,
+	age: number,
+	/**  The full description handed to VoiceDesign, if the references were made with it. */
+	prompt: string | null,
+	references: NewReference[],
+};
+
+/**  A reference recording and the text spoken in it. */
+export type NewReference = {
+	language: Language,
+	audio: number[],
+	text: string,
+};
+
 /**  How the pool is ordered. */
 export type PickOrder = 
 /**  The most overdue first. */
 "Urgent" | 
 /**  At random, more likely the more overdue. */
 "Weighted";
+
+/**  One line of the preview. Its number is its place in `lines`, from 1. */
+export type PreviewLine = {
+	speaker: string,
+	/**  As written, with reading marks: what editing starts from. */
+	ja: string,
+	/**  `ja` split into text and ruby, for showing it. */
+	ja_ruby: RubySegment[],
+	zh: string,
+};
 
 /**  Something taken out of an entry text, and why. */
 export type Problem = {
@@ -387,6 +587,18 @@ export type ReadingKey = {
 	kana: string,
 };
 
+/**  A reference recording with its text. */
+export type Reference = {
+	audio: number[],
+	text: string,
+};
+
+/**  The text of one reference recording. */
+export type ReferenceText = {
+	language: Language,
+	text: string,
+};
+
 export type ReferenceView = {
 	/**  `None` for comprehensive questions, which take no input. */
 	judgement: Judgement | null,
@@ -426,6 +638,23 @@ export type ReviewSettings = {
 	/**  What the start dialog offers. */
 	defaults: SessionOptions,
 };
+
+/**
+ *  What a character is in a world. Only main characters have a description:
+ *  personality, occupation, history, abilities and relationships.
+ */
+export type Role = { kind: "narrator" } | { kind: "main"; description: string } | { kind: "minor" };
+
+/**
+ *  A piece of a Japanese line: plain text, or a writing with its reading,
+ *  shown as ruby.
+ */
+export type RubySegment = { kind: "text"; text: string } | { kind: "ruby"; writing: string; reading: string };
+
+/**  A script that passes, ready to show; or why it does not pass. */
+export type ScriptPreview = { kind: "passed"; title: string; summary: string; lines: PreviewLine[] } | 
+/**  One line of Chinese each, the same as `check_script` gives. */
+{ kind: "failed"; problems: string[] };
 
 export type SearchPage = {
 	rows: SearchRow[],
@@ -572,6 +801,20 @@ export type TargetPiece = { kind: "text"; text: string } | { kind: "ruby"; base:
 export type WordKey = {
 	writing: string,
 	origin: string,
+};
+
+/**  One world with its cast. */
+export type WorldDetail = {
+	name: string,
+	setting: string,
+	/**  The narrator first, then main characters, then minor ones. */
+	cast: CastMember[],
+};
+
+/**  A world in the list. */
+export type WorldSummary = {
+	name: string,
+	episodes: number,
 };
 
 /* Tauri Specta runtime */

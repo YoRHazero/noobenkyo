@@ -22,6 +22,12 @@ impl From<dictionary::DictionaryError> for CommandError {
     }
 }
 
+impl From<listening::ListeningError> for CommandError {
+    fn from(error: listening::ListeningError) -> Self {
+        Self::new(error.to_string())
+    }
+}
+
 impl From<study::StudyError> for CommandError {
     fn from(error: study::StudyError) -> Self {
         Self::new(error.to_string())

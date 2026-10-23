@@ -18,7 +18,7 @@ impl ListeningService {
     }
 
     /// Deletes lines with their audio. Returns how many were deleted.
-    pub async fn delete_lines(&self, lines: &[LineId]) -> Result<u64, ListeningError> {
+    pub async fn delete_lines(&self, lines: &[LineId]) -> Result<u32, ListeningError> {
         Ok(delete::delete_lines(&self.db, lines).await?)
     }
 
@@ -43,7 +43,7 @@ impl ListeningService {
         &self,
         lines: &[LineId],
         language: Language,
-    ) -> Result<u64, ListeningError> {
+    ) -> Result<u32, ListeningError> {
         Ok(clear_audio::clear_audio(&self.db, lines, language).await?)
     }
 

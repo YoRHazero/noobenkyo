@@ -6,6 +6,7 @@ mod bindings;
 mod dependency_rules;
 mod dictionary;
 mod learning;
+mod listening;
 mod review;
 mod settings;
 mod support;

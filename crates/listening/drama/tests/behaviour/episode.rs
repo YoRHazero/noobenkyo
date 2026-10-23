@@ -3,7 +3,7 @@ use listening_drama::episode::store::detail::episode;
 use listening_drama::episode::store::list::episodes;
 use listening_drama::episode::store::update::update_episode;
 use listening_drama::line::store::save_audio::save_audio;
-use listening_drama::{DramaError, EpisodeSummary, Language, LineId, LineView};
+use listening_drama::{DramaError, EpisodeSummary, Language, LineId, LineView, RubySegment};
 use uuid::Uuid;
 
 use crate::support::{first_script, import, lines, memory_db, now, script, seeded_world};
@@ -98,6 +98,18 @@ async fn detail_has_every_line_with_speaker_and_voice() {
             speaker: "旁白".into(),
             voice: "老陈".into(),
             ja: "{春|はる}の{朝|あさ}。".into(),
+            ja_ruby: vec![
+                RubySegment::Ruby {
+                    writing: "春".into(),
+                    reading: "はる".into()
+                },
+                RubySegment::Text { text: "の".into() },
+                RubySegment::Ruby {
+                    writing: "朝".into(),
+                    reading: "あさ".into()
+                },
+                RubySegment::Text { text: "。".into() },
+            ],
             zh: "春天的早晨。".into(),
             audio: vec![],
         }

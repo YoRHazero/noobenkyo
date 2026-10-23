@@ -9,6 +9,7 @@ use sea_orm::{
 };
 
 use crate::entity::{episode, line, line_audio};
+use crate::text::ruby;
 use crate::{Language, LineId, LineView};
 
 /// How many lines an episode has, how many characters they hold, and how
@@ -30,17 +31,20 @@ pub async fn lines_of(db: &impl ConnectionTrait, episode_id: i64) -> Result<Vec<
         .all(db)
         .await?;
     let mut audio = audio_of_episode(db, episode_id).await?;
-    Ok(rows
-        .into_iter()
-        .map(|row| LineView {
-            audio: audio.remove(&row.id).unwrap_or_default(),
-            id: LineId(row.id),
-            speaker: row.speaker,
-            voice: row.voice,
-            ja: row.ja,
-            zh: row.zh,
+    rows.into_iter()
+        .map(|row| {
+            Ok(LineView {
+                audio: audio.remove(&row.id).unwrap_or_default(),
+                id: LineId::from_row(row.id)?,
+                ja_ruby: ruby::parse(&row.ja)
+                    .map_err(|error| DbErr::Custom(format!("line {}: {error}", row.id)))?,
+                speaker: row.speaker,
+                voice: row.voice,
+                ja: row.ja,
+                zh: row.zh,
+            })
         })
-        .collect())
+        .collect()
 }
 
 /// Languages each line of an episode has audio in, by line id. Reads no audio.

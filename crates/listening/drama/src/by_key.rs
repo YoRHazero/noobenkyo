@@ -68,7 +68,7 @@ pub async fn find_line(
     db: &impl ConnectionTrait,
     id: LineId,
 ) -> Result<Option<line::Model>, DbErr> {
-    line::Entity::find_by_id(id.0).one(db).await
+    line::Entity::find_by_id(id.row()).one(db).await
 }
 
 pub async fn require_line(

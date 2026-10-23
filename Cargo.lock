@@ -2677,6 +2677,7 @@ dependencies = [
  "sea-orm-migration",
  "serde",
  "specta",
+ "specta-typescript",
  "thiserror 2.0.21",
  "tokio",
  "uuid",
@@ -2687,7 +2688,9 @@ name = "listening-script"
 version = "0.1.0"
 dependencies = [
  "listening-drama",
+ "serde",
  "serde_json",
+ "specta",
 ]
 
 [[package]]
@@ -2880,6 +2883,7 @@ version = "0.1.0"
 dependencies = [
  "cargo_metadata 0.23.1",
  "dictionary",
+ "listening",
  "serde",
  "specta",
  "specta-typescript",

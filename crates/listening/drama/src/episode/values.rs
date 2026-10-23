@@ -1,5 +1,6 @@
 use chrono::{DateTime, FixedOffset};
 use serde::Serialize;
+use specta_typescript::Number;
 use uuid::Uuid;
 
 use crate::LineView;
@@ -8,6 +9,9 @@ use crate::LineView;
 #[derive(Clone, Debug, PartialEq, Serialize, specta::Type)]
 pub struct EpisodeSummary {
     pub uuid: Uuid,
+    /// Always finite: update_episode rejects anything else. Exported as a
+    /// plain number, not the `number | null` a float would be.
+    #[specta(type = Number)]
     pub number: f64,
     pub title: String,
     pub summary: String,
@@ -27,6 +31,8 @@ pub struct EpisodeSummary {
 pub struct EpisodeDetail {
     pub uuid: Uuid,
     pub world: String,
+    /// Always finite, exported as a plain number; see [`EpisodeSummary`].
+    #[specta(type = Number)]
     pub number: f64,
     pub title: String,
     pub summary: String,

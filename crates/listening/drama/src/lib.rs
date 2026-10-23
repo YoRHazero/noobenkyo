@@ -26,4 +26,5 @@ pub use language::Language;
 pub use line::{LineId, LineView, SpeechItem};
 pub use migration::Migrator;
 pub use script::{MainCharacter, Script, ScriptContext, ScriptEpisode, ScriptLine};
+pub use text::ruby::RubySegment;
 pub use world::{CastMember, Role, WorldDetail, WorldSummary};

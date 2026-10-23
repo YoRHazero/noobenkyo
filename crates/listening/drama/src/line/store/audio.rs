@@ -9,7 +9,7 @@ pub async fn audio(
     id: LineId,
     language: Language,
 ) -> Result<Option<Vec<u8>>, DbErr> {
-    let row = line_audio::Entity::find_by_id((id.0, language.code().to_owned()))
+    let row = line_audio::Entity::find_by_id((id.row(), language.code().to_owned()))
         .one(db)
         .await?;
     Ok(row.map(|row| row.audio))
