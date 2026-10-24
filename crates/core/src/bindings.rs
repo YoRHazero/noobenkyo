@@ -64,6 +64,8 @@ pub fn builder() -> Builder<tauri::Wry> {
         listening::lines::listening_clear_audio,
         listening::lines::listening_delete_lines,
         listening::script::listening_preview_script,
+        listening::script::listening_import_script,
+        listening::script::listening_append_script,
     ])
 }
 

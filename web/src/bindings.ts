@@ -158,6 +158,16 @@ export const commands = {
 	 *  the text.
 	 */
 	listeningPreviewScript: (text: string) => __TAURI_INVOKE<ScriptPreview>("listening_preview_script", { text }),
+	/**
+	 *  Checks a script and stores it as a new episode of the world. Returns the
+	 *  new episode's uuid.
+	 */
+	listeningImportScript: (world: string, text: string) => typedError<string, CommandError>(__TAURI_INVOKE("listening_import_script", { world, text })),
+	/**
+	 *  Checks a script and continues the episode with it: its lines are
+	 *  appended and its summary replaces the episode's.
+	 */
+	listeningAppendScript: (episode: string, text: string) => typedError<null, CommandError>(__TAURI_INVOKE("listening_append_script", { episode, text })),
 };
 
 /* Types */

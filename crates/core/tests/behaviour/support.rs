@@ -11,6 +11,7 @@ use noobenkyo_core::commands::dictionary::entries::{
 use noobenkyo_core::commands::learn::answering::{learn_confirm_answer, learn_submit_answer};
 use noobenkyo_core::commands::learn::asking::learn_next;
 use noobenkyo_core::commands::listening::characters::listening_create_character;
+use noobenkyo_core::commands::listening::script::listening_import_script;
 use noobenkyo_core::commands::listening::worlds::{listening_add_cast, listening_create_world};
 use noobenkyo_core::commands::review::answering::{review_confirm_answer, review_submit_answer};
 use noobenkyo_core::commands::review::asking::review_next;
@@ -47,8 +48,7 @@ impl TestApp {
 
     /// A fresh app with 星见町 and the sample script stored in it as its
     /// first episode. 老陈 narrates, 美咲 and 健二 are main characters, 店员
-    /// is a minor one; all have references in both languages. The script is
-    /// stored through the service, since saving scripts has no command yet.
+    /// is a minor one; all have references in both languages.
     pub async fn with_world() -> (Self, Uuid) {
         let app = Self::fresh().await;
         for (name, kana) in [
@@ -75,10 +75,7 @@ impl TestApp {
                 .await
                 .unwrap();
         }
-        let episode = app
-            .state()
-            .listening
-            .import_script(WORLD, SAMPLE_SCRIPT)
+        let episode = listening_import_script(app.state(), WORLD.into(), SAMPLE_SCRIPT.into())
             .await
             .unwrap();
         (app, episode)

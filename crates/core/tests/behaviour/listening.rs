@@ -11,7 +11,9 @@ use noobenkyo_core::commands::listening::episodes::{
 use noobenkyo_core::commands::listening::lines::{
     listening_audio, listening_clear_audio, listening_delete_lines, listening_update_line,
 };
-use noobenkyo_core::commands::listening::script::listening_preview_script;
+use noobenkyo_core::commands::listening::script::{
+    listening_append_script, listening_import_script, listening_preview_script,
+};
 use noobenkyo_core::commands::listening::worlds::{
     listening_add_cast, listening_create_world, listening_delete_world, listening_remove_cast,
     listening_set_role, listening_update_setting, listening_world, listening_worlds,
@@ -334,4 +336,68 @@ async fn the_preview_shows_the_script_as_it_would_be_stored() {
             ]
         }
     );
+}
+
+/// One more line for the sample script, with a summary of the whole episode.
+const CONTINUATION: &str = r#"{
+  "title": "不用",
+  "summary": "两人放学后一起去看了灯塔。",
+  "lines": [{ "speaker": "美咲", "ja": "{灯台|とうだい}、きれいだね。", "zh": "灯塔真美啊。" }]
+}"#;
+
+#[tokio::test]
+async fn scripts_are_stored_and_continued() {
+    let (app, episode) = TestApp::with_world().await;
+    listening_append_script(app.state(), episode, CONTINUATION.into())
+        .await
+        .unwrap();
+    let detail = listening_episode(app.state(), episode)
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(
+        (detail.title.as_str(), detail.summary.as_str()),
+        ("海边的早晨", "两人放学后一起去看了灯塔。")
+    );
+    assert_eq!(detail.lines.len(), 9);
+    assert_eq!(detail.lines[8].voice, "美咲");
+
+    let second = listening_import_script(app.state(), WORLD.into(), SAMPLE_SCRIPT.into())
+        .await
+        .unwrap();
+    let listed: Vec<_> = listening_episodes(app.state(), WORLD.into())
+        .await
+        .unwrap()
+        .iter()
+        .map(|summary| (summary.uuid, summary.number))
+        .collect();
+    assert_eq!(listed, vec![(episode, 1.0), (second, 2.0)]);
+}
+
+#[tokio::test]
+async fn scripts_that_cannot_be_stored_say_why() {
+    let (app, episode) = TestApp::with_world().await;
+    let error = listening_import_script(app.state(), WORLD.into(), "{}".into())
+        .await
+        .unwrap_err();
+    assert_eq!(
+        error.message,
+        "剧本不通过：缺少 title；缺少 summary；缺少 lines"
+    );
+    let error = listening_append_script(app.state(), episode, "[]".into())
+        .await
+        .unwrap_err();
+    assert!(
+        error.message.starts_with("剧本不通过："),
+        "{}",
+        error.message
+    );
+
+    listening_create_world(app.state(), "空镇".into(), String::new())
+        .await
+        .unwrap();
+    let error = listening_import_script(app.state(), "空镇".into(), SAMPLE_SCRIPT.into())
+        .await
+        .unwrap_err();
+    assert_eq!(error.message, "世界 空镇 缺少旁白、主要角色");
 }
