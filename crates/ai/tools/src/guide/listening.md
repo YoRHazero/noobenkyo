@@ -17,7 +17,7 @@ noobenkyo listening send ep.json --world 星见町 --replace
 
 - **guide**：打印这份说明。
 - **worlds**：所有世界，JSON 数组，每项是 name（世界名）、episodes（有几集）。
-- **episodes 世界**：这个世界的集，按集数排，JSON 数组。每项是 uuid、number（集数）、title、summary（梗概）、created_at、lines（行数）、char_count（日语和中文的字数，读音标记也算）、missing_ja 和 missing_zh（缺几行音频）。
+- **episodes 世界**：这个世界的集，按集数排，JSON 数组。每项是 uuid、number（集数）、title、summary（梗概）、created_at、lines（行数）、char_count（日语和中文的字数，读音标记也算）、missing_ja 和 missing_zh（缺几行音频）。梗概和字数用来判断哪些集看梗概就够，哪些要用 context 拿全文。
 - **context 世界**：写剧本要用的上下文，JSON 对象：
   - world、setting：世界名和设定。
   - mains：主要角色，每个是 name、kana（名字的读音）、gender（female 或 male）、age、description（在这个世界里的身份）。

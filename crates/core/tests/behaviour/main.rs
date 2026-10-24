@@ -8,6 +8,7 @@ mod dictionary;
 mod inbox;
 mod learning;
 mod listening;
+mod prompts;
 mod review;
 mod settings;
 mod support;

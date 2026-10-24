@@ -4,6 +4,7 @@ pub mod dictionary;
 pub mod inbox;
 pub mod learn;
 pub mod listening;
+pub mod prompts;
 pub mod review;
 pub mod settings;
 pub mod stats;

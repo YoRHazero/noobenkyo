@@ -197,6 +197,12 @@ export const commands = {
 	 */
 	inboxSaveScript: (name: string, target: ScriptTarget, text: string) => typedError<string, CommandError>(__TAURI_INVOKE("inbox_save_script", { name, target, text })),
 	inboxDiscardScript: (name: string) => typedError<null, CommandError>(__TAURI_INVOKE("inbox_discard_script", { name })),
+	/**  The prompt for writing a new episode or continuing one. */
+	aiScriptPrompt: (task: ScriptTask) => __TAURI_INVOKE<string>("ai_script_prompt", { task }),
+	/**  The prompt for filling in sentences for the rows the filter shows. */
+	aiFillSentencesPrompt: (task: FillSentencesTask) => __TAURI_INVOKE<string>("ai_fill_sentences_prompt", { task }),
+	/**  The prompt for writing a new word list. */
+	aiWordListPrompt: (task: WordListTask) => __TAURI_INVOKE<string>("ai_word_list_prompt", { task }),
 };
 
 /** Events */
@@ -399,6 +405,20 @@ export type Exported = {
 	text: string,
 	/**  Lines in `text`, one per piece of content. */
 	entries: number,
+};
+
+/**
+ *  Sentences to write for senses that have none, from the rows the
+ *  dictionary page's keyword and progress filter show.
+ */
+export type FillSentencesTask = {
+	/**  Blank for no keyword. */
+	keyword: string | null,
+	progress: ProgressState,
+	/**  How many rows to take, in the page's order. */
+	limit: number,
+	/**  How many sentences each sense gets. */
+	per_sense: number,
 };
 
 /**  One piece of a rendered sentence, handed to the frontend as is. */
@@ -732,6 +752,23 @@ export type ScriptTarget =
 /**  More lines for this episode. */
 { kind: "append"; episode: string };
 
+/**
+ *  A script to write, as chosen in the generation form: a new episode of
+ *  the world, or more of one of its episodes.
+ */
+export type ScriptTask = {
+	world: string,
+	/**  The episode to continue; `None` for a new episode. */
+	appending: string | null,
+	/**
+	 *  The episodes that come before, in the order of the story. Empty
+	 *  leaves the choice to the agent.
+	 */
+	previous: string[],
+	/**  What happens in it. Blank leaves it to the agent. */
+	premise: string,
+};
+
 export type SearchPage = {
 	rows: SearchRow[],
 	/**  Rows matching the filter, over all pages. */
@@ -877,6 +914,16 @@ export type TargetPiece = { kind: "text"; text: string } | { kind: "ruby"; base:
 export type WordKey = {
 	writing: string,
 	origin: string,
+};
+
+/**  A new word list on a topic, written down to its sentences. */
+export type WordListTask = {
+	/**  Blank leaves the topic to the agent. */
+	topic: string,
+	/**  How many words. */
+	count: number,
+	/**  How many sentences each sense gets. */
+	per_sense: number,
 };
 
 /**  One world with its cast. */
