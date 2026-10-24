@@ -4,7 +4,7 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
-const features = ['dictionary', 'study', 'settings']
+const features = ['dictionary', 'study', 'settings', 'listening']
 
 /** Imports outside the current directory go through `@/`, so paths can be checked. */
 const noParentImports = { regex: '^\\.\\./', message: '跨目录引用请用 @/ 路径' }
@@ -18,7 +18,8 @@ const bindingsTypesOnly = {
 
 /**
  * The one direction of dependency: app → features → backend → bindings;
- * app and features may use components; components see bindings' types only.
+ * app and features may use components and files; components see bindings'
+ * types only; files uses no other layer.
  */
 const layers = [
   { files: ['src/**/*.{ts,tsx}'], patterns: [] },
@@ -38,8 +39,8 @@ const layers = [
     files: ['src/backend/**/*.{ts,tsx}'],
     patterns: [
       {
-        regex: '^@/(app|features|components)/',
-        message: 'backend 只包装 bindings 里的命令，不能引用 app、features、components',
+        regex: '^@/(app|features|components|files)/',
+        message: 'backend 只包装 bindings 里的命令，不能引用 app、features、components、files',
       },
     ],
   },
@@ -48,8 +49,18 @@ const layers = [
     patterns: [
       bindingsTypesOnly,
       {
-        regex: '^@/(app|features|backend)/',
-        message: 'components 不含业务概念，数据从参数传进来，不能引用 app、features、backend',
+        regex: '^@/(app|features|backend|files)/',
+        message:
+          'components 不含业务概念，数据从参数传进来，不能引用 app、features、backend、files',
+      },
+    ],
+  },
+  {
+    files: ['src/files/**/*.{ts,tsx}'],
+    patterns: [
+      {
+        regex: '^@/(app|features|components|backend|bindings)(/|$)',
+        message: 'files 只包装 Tauri 的 dialog、fs 插件，不引用其他任何一层',
       },
     ],
   },

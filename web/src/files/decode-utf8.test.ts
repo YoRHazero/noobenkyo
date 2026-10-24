@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { decodeUtf8 } from '@/features/dictionary/entry-file/decode-utf8'
+import { decodeUtf8 } from '@/files/decode-utf8'
 
 const bytes = (...values: number[]) => new Uint8Array(values)
 

@@ -1,8 +1,8 @@
 import { useMutation } from '@tanstack/react-query'
 import type { ContentFilter } from '@/bindings'
 import { useDictionaryExport } from '@/backend/dictionary/use-dictionary-export'
+import { writeTextFile } from '@/files/write-text-file'
 import { chooseExportPath } from '@/features/dictionary/entry-file/choose-export-path'
-import { writeEntryFile } from '@/features/dictionary/entry-file/write-entry-file'
 
 type Input = {
   filter: ContentFilter
@@ -27,7 +27,7 @@ export function useExportToFile() {
         return null
       }
       const exported = await exportEntries.mutateAsync({ filter, limit: null, keepProgress })
-      await writeEntryFile(path, exported.text)
+      await writeTextFile(path, exported.text)
       return { path, entries: exported.entries }
     },
   })
