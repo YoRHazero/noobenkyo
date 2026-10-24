@@ -1,73 +1,39 @@
-import { useEffect, useState } from 'react'
+import { useNavigate } from '@tanstack/react-router'
 import { useDictionaryStats } from '@/backend/dictionary/use-dictionary-stats'
-import { useReviewEnd } from '@/backend/review/use-review-end'
 import { useReviewStart } from '@/backend/review/use-review-start'
 import { useStudySettings } from '@/backend/study/use-study-settings'
 import { ErrorText } from '@/components/error-text'
 import { Page } from '@/components/page'
 import { ReviewEntrances } from '@/features/study/review/review-entrances'
-import { ReviewFocus } from '@/features/study/review/review-focus'
 import { sessionOptions, type ReviewMode } from '@/features/study/review/review-mode'
-import { ReviewSession } from '@/features/study/review/review-session'
-
-type Phase =
-  | { kind: 'entrances' }
-  /** `run` counts sessions, so another group starts with fresh counts. */
-  | { kind: 'session'; mode: ReviewMode; run: number }
 
 /**
- * Review: the two entrances, then one session at a time, taking the whole
- * window. The options come from the settings; leaving the page ends the session.
+ * The two ways into review. Starting one opens the session's own page,
+ * which takes the whole window; the options come from the settings.
  */
 export function ReviewPage() {
   const settings = useStudySettings()
   const stats = useDictionaryStats()
   const start = useReviewStart()
-  const end = useReviewEnd()
-  const [phase, setPhase] = useState<Phase>({ kind: 'entrances' })
-
-  const endSession = end.mutate
-  useEffect(() => () => endSession(), [endSession])
+  const navigate = useNavigate()
 
   const begin = (mode: ReviewMode) => {
     if (!settings.data) {
       return
     }
     start.mutate(sessionOptions(settings.data.review.defaults, mode), {
-      onSuccess: () =>
-        setPhase((last) => ({
-          kind: 'session',
-          mode,
-          run: last.kind === 'session' ? last.run + 1 : 0,
-        })),
+      onSuccess: () => navigate({ to: '/review/session', search: { mode } }),
     })
-  }
-  const back = () => {
-    setPhase({ kind: 'entrances' })
-    end.mutate()
   }
 
   return (
     <Page title="复习">
-      {phase.kind === 'entrances' ? (
-        <ReviewEntrances
-          groupSize={settings.data?.review.defaults.size}
-          toReview={stats.data?.stages.reduce((sum, stage) => sum + stage.senses, 0)}
-          disabled={!settings.data || start.isPending}
-          onStart={begin}
-        />
-      ) : (
-        <ReviewFocus>
-          <ReviewSession
-            key={phase.run}
-            mode={phase.mode}
-            starting={start.isPending}
-            onAgain={() => begin(phase.mode)}
-            onBack={back}
-          />
-          <ErrorText error={start.error} />
-        </ReviewFocus>
-      )}
+      <ReviewEntrances
+        groupSize={settings.data?.review.defaults.size}
+        toReview={stats.data?.stages.reduce((sum, stage) => sum + stage.senses, 0)}
+        disabled={!settings.data || start.isPending}
+        onStart={begin}
+      />
       <ErrorText error={start.error ?? settings.error ?? stats.error} />
     </Page>
   )
