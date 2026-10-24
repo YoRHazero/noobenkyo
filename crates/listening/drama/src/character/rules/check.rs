@@ -95,7 +95,10 @@ mod tests {
         let new = NewCharacter {
             kana: "misaki".into(),
             age: 0,
-            references: vec![],
+            references: vec![NewReference {
+                text: " ".into(),
+                ..new_character().references[0].clone()
+            }],
             ..new_character()
         };
         assert_eq!(
@@ -103,7 +106,7 @@ mod tests {
             vec![
                 "名字的读音只能有假名，不能有 m",
                 "年龄要在 1～100 之间",
-                "至少要有一段参考音"
+                "日语参考音的文字为空"
             ]
         );
     }

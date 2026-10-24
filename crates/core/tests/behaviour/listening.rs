@@ -235,11 +235,17 @@ async fn characters_are_created_with_the_references_uploaded() {
     .unwrap_err();
     assert_eq!(error.message, "角色 美咲 已经有中文参考音");
 
+    // References can come later: only synthesis needs them.
     let problems =
         listening_create_character(app.state(), new_character_with("健二", "けんじ", &[]))
             .await
             .unwrap();
-    assert_eq!(problems, vec!["至少要有一段参考音"]);
+    assert!(problems.is_empty(), "{problems:?}");
+    let created = listening_character(app.state(), "健二".into())
+        .await
+        .unwrap()
+        .unwrap();
+    assert!(created.references.is_empty());
 }
 
 /// Synthesis goes through the ai group, so the audio is saved through the

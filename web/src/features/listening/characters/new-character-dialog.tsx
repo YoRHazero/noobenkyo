@@ -17,8 +17,9 @@ type Props = {
 }
 
 /**
- * Creates a character from uploaded references. A rejected form keeps what
- * was typed and lists every problem; while creating, it cannot be closed.
+ * Creates a character, with the references uploaded or none: they can be
+ * added later, and only synthesis needs them. A rejected form keeps what was
+ * typed and lists every problem; while creating, it cannot be closed.
  */
 export function NewCharacterDialog({ onCreated }: Props) {
   const draft = useCharacterDraft()

@@ -97,14 +97,30 @@ async fn rejected_characters_are_not_stored() {
         &db,
         &NewCharacter {
             age: 0,
+            ..new_character("美咲", "みさき")
+        },
+    )
+    .await
+    .unwrap();
+    assert_eq!(problems, vec!["年龄要在 1～100 之间"]);
+    assert!(characters(&db).await.unwrap().is_empty());
+}
+
+#[tokio::test]
+async fn a_character_can_start_without_references() {
+    let db = memory_db().await;
+    let problems = create_character(
+        &db,
+        &NewCharacter {
             references: vec![],
             ..new_character("美咲", "みさき")
         },
     )
     .await
     .unwrap();
-    assert_eq!(problems, vec!["年龄要在 1～100 之间", "至少要有一段参考音"]);
-    assert!(characters(&db).await.unwrap().is_empty());
+    assert!(problems.is_empty(), "{problems:?}");
+    let stored = character(&db, "美咲").await.unwrap().unwrap();
+    assert!(stored.references.is_empty());
 }
 
 #[tokio::test]

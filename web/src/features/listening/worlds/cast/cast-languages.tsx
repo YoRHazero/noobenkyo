@@ -3,7 +3,7 @@ import { cn } from '@/components/ui/cn'
 
 const short: Record<Language, string> = { ja: '日', zh: '中' }
 
-/** The languages a cast member has references in: 「日 中」. */
+/** The languages a cast member has references in: 「日 中」, or 「无参考音」. */
 export function CastLanguages({
   languages,
   className,
@@ -13,7 +13,7 @@ export function CastLanguages({
 }) {
   return (
     <span className={cn('text-xs tracking-wider', className)}>
-      {languages.map((language) => short[language]).join(' ')}
+      {languages.length === 0 ? '无参考音' : languages.map((language) => short[language]).join(' ')}
     </span>
   )
 }

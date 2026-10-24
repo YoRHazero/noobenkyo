@@ -14,12 +14,10 @@ pub fn reference_problems(language: Language, audio: &[u8], text: &str) -> Vec<S
     problems
 }
 
-/// What is wrong with a new character's references: there is at least one,
-/// at most one per language, and each is complete.
+/// What is wrong with a new character's references: at most one per
+/// language, each complete. None at all is fine; they can be added later,
+/// and only synthesis needs them.
 pub fn references_problems(references: &[NewReference]) -> Vec<String> {
-    if references.is_empty() {
-        return vec!["至少要有一段参考音".to_owned()];
-    }
     let mut seen = HashSet::new();
     let mut problems = Vec::new();
     for reference in references {
@@ -54,8 +52,8 @@ mod tests {
     }
 
     #[test]
-    fn needs_at_least_one() {
-        assert_eq!(references_problems(&[]), vec!["至少要有一段参考音"]);
+    fn none_at_all_is_fine() {
+        assert!(references_problems(&[]).is_empty());
     }
 
     #[test]

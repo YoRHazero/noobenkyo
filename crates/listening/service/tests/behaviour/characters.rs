@@ -39,10 +39,7 @@ async fn rejected_characters_come_back_as_problems() {
         .create_character(&new_character("ミサキ", "みさき", &[]))
         .await
         .unwrap();
-    assert_eq!(
-        problems,
-        vec!["名字里没有汉字，读音要和名字相同", "至少要有一段参考音"]
-    );
+    assert_eq!(problems, vec!["名字里没有汉字，读音要和名字相同"]);
     assert!(listening.characters().await.unwrap().is_empty());
 }
 
