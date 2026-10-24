@@ -1,4 +1,4 @@
-import { DetailItem, DetailList } from '@/features/dictionary/detail-list'
+import { DetailItem, DetailList } from '@/components/detail-list'
 
 type Props = {
   /** The line as written. */

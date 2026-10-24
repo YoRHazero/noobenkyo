@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { DeleteSenseButtons } from '@/features/dictionary/browse/delete-sense-buttons'
 import { ProgressActions } from '@/features/dictionary/browse/progress-actions'
-import { DetailItem, DetailList } from '@/features/dictionary/detail-list'
+import { DetailItem, DetailList } from '@/components/detail-list'
 import { progressText } from '@/features/dictionary/progress-text'
 
 type Props = {

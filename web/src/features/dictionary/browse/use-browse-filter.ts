@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { Completeness, ContentFilter, ProgressState } from '@/bindings'
-import { useDebounced } from '@/features/dictionary/browse/use-debounced'
+import { useDebounced } from '@/components/use-debounced'
 
 export const rowsPerPage = 50
 

@@ -1,6 +1,6 @@
 import type { ConvertedEntry } from '@/bindings'
 import { Badge } from '@/components/ui/badge'
-import { DetailItem, DetailList } from '@/features/dictionary/detail-list'
+import { DetailItem, DetailList } from '@/components/detail-list'
 import type {
   DroppedLanguage,
   DroppedSentence,

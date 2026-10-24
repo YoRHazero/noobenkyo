@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { SentenceField } from '@/features/dictionary/browse/sentence-field'
 import { joinList, splitList } from '@/features/dictionary/browse/text-list'
-import { DetailItem, DetailList } from '@/features/dictionary/detail-list'
+import { DetailItem, DetailList } from '@/components/detail-list'
 
 type SentenceDraft = {
   /** Keeps a field's identity while the ones above it are removed. */
