@@ -2661,6 +2661,8 @@ dependencies = [
  "rand 0.9.5",
  "sea-orm",
  "sea-orm-migration",
+ "serde",
+ "serde_json",
  "tempfile",
  "thiserror 2.0.21",
  "tokio",
