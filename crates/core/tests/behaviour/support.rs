@@ -85,6 +85,14 @@ impl TestApp {
         self.dir.path().join("data")
     }
 
+    /// Leaves an item in the inbox as the command line does: the JSON of one
+    /// inbox file, written whole under the item's name.
+    pub fn deliver(&self, name: &str, json: &str) {
+        let inbox = self.data_dir().join("inbox");
+        std::fs::create_dir_all(&inbox).unwrap();
+        std::fs::write(inbox.join(format!("{name}.json")), json).unwrap();
+    }
+
     /// A fresh app with the sample word list imported with the default
     /// options: 9 senses with sentences, 上 without, the two katakana words
     /// skipped.

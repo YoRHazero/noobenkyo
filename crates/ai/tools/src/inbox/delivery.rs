@@ -11,8 +11,9 @@ pub enum Delivery {
     Script { target: ScriptTarget, text: String },
 }
 
-/// Where a delivered script goes once the user saves it.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+/// Where a delivered script goes once the user saves it. The frontend gets
+/// it as it is and hands it back when writing edits back or saving.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, specta::Type)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum ScriptTarget {
     /// A new episode of the world, numbered by default.

@@ -39,6 +39,13 @@ pub fn dictionary_default_import_options() -> ImportOptions {
     ImportOptions::default()
 }
 
+/// The options the import dialog opens with for entries an agent sent.
+#[tauri::command]
+#[specta::specta]
+pub fn dictionary_generated_import_options() -> ImportOptions {
+    dictionary::generated_import_options()
+}
+
 /// The matching rows as an entry text, for the frontend to write to the file
 /// the user picks.
 #[tauri::command]

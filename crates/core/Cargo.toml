@@ -17,6 +17,7 @@ path = "src/main.rs"
 tauri-build.workspace = true
 
 [dependencies]
+ai.workspace = true
 dictionary.workspace = true
 listening.workspace = true
 study.workspace = true
@@ -33,4 +34,5 @@ tokio.workspace = true
 [dev-dependencies]
 tauri = { workspace = true, features = ["test"] }
 cargo_metadata.workspace = true
+serde_json.workspace = true
 tempfile.workspace = true

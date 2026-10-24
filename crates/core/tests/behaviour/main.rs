@@ -5,6 +5,7 @@
 mod bindings;
 mod dependency_rules;
 mod dictionary;
+mod inbox;
 mod learning;
 mod listening;
 mod review;

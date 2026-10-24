@@ -77,14 +77,10 @@ impl Inbox {
         let mut found: Vec<(SystemTime, String)> = Vec::new();
         for entry in entries {
             let entry = entry?;
-            let file = entry.file_name().to_string_lossy().into_owned();
-            let Some(name) = file
-                .strip_suffix(".json")
-                .filter(|_| !file.starts_with('.'))
-            else {
+            let Some(name) = Self::name_of(&entry.path()) else {
                 continue;
             };
-            found.push((entry.metadata()?.modified()?, name.to_owned()));
+            found.push((entry.metadata()?.modified()?, name));
         }
         found.sort();
         Ok(found.into_iter().map(|(_, name)| name).collect())
@@ -121,6 +117,16 @@ impl Inbox {
         }
     }
 
+    /// The name of the delivery kept in the file at `path`; `None` for a
+    /// file still being written, or one that is not a delivery.
+    pub fn name_of(path: &Path) -> Option<String> {
+        let file = path.file_name()?.to_str()?;
+        if file.starts_with('.') {
+            return None;
+        }
+        file.strip_suffix(".json").map(str::to_owned)
+    }
+
     /// The file for `name`. A name that would hide the file, or point
     /// outside the folder, is refused.
     fn path_of(&self, name: &str) -> Result<PathBuf, InboxError> {
@@ -139,5 +145,23 @@ impl Inbox {
         fs::write(&temporary, json)?;
         fs::rename(&temporary, path)?;
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::path::Path;
+
+    use super::Inbox;
+
+    #[test]
+    fn only_finished_json_files_are_deliveries() {
+        let name = |file: &str| Inbox::name_of(&Path::new("/data/inbox").join(file));
+        assert_eq!(name("ep.json").as_deref(), Some("ep"));
+        assert_eq!(name("第1集.json").as_deref(), Some("第1集"));
+        assert_eq!(name(".ep.1234.tmp"), None);
+        assert_eq!(name(".ep.json"), None);
+        assert_eq!(name("ep.txt"), None);
+        assert_eq!(Inbox::name_of(Path::new("/data/inbox")), None);
     }
 }

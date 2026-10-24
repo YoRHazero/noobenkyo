@@ -16,6 +16,12 @@ impl CommandError {
     }
 }
 
+impl From<ai::AiError> for CommandError {
+    fn from(error: ai::AiError) -> Self {
+        Self::new(error.to_string())
+    }
+}
+
 impl From<dictionary::DictionaryError> for CommandError {
     fn from(error: dictionary::DictionaryError) -> Self {
         Self::new(error.to_string())
