@@ -1,6 +1,5 @@
 import type { CastMember, Language } from '@/bindings'
 import {
-  modeAllowed,
   modeLanguages,
   startMode,
   type PlayMode,
@@ -15,21 +14,16 @@ export type VoiceModes = {
   other: PlayMode
 }
 
-/**
- * Modes for the cast: the remembered ones where the voice can still use
- * them, the start mode elsewhere.
- */
+/** Modes for the cast: the remembered ones, the start mode for the rest. */
 export function castModes(
   cast: readonly CastMember[],
   remembered: Partial<VoiceModes>,
 ): VoiceModes {
   const modes: Record<string, PlayMode> = {}
   for (const member of cast) {
-    const kept = remembered.cast?.[member.character]
-    modes[member.character] =
-      kept !== undefined && modeAllowed(kept, member.languages) ? kept : startMode(member.languages)
+    modes[member.character] = remembered.cast?.[member.character] ?? startMode
   }
-  return { cast: modes, other: remembered.other ?? 'ja-zh' }
+  return { cast: modes, other: remembered.other ?? startMode }
 }
 
 /** The languages a line plays in, by its voice's mode. */

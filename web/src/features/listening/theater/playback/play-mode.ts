@@ -26,18 +26,9 @@ export function modeLanguages(mode: PlayMode): Language[] {
   }
 }
 
-/** Whether a voice with references in `languages` can use the mode. */
-export function modeAllowed(mode: PlayMode, languages: readonly Language[]): boolean {
-  return modeLanguages(mode).every((language) => languages.includes(language))
-}
-
-/** Where a voice starts: both languages, Japanese first, when it has both. */
-export function startMode(languages: readonly Language[]): PlayMode {
-  if (languages.includes('ja') && !languages.includes('zh')) {
-    return 'ja'
-  }
-  if (languages.includes('zh') && !languages.includes('ja')) {
-    return 'zh'
-  }
-  return 'ja-zh'
-}
+/**
+ * Where every voice starts. Modes are how the user wants to listen, not what
+ * a character's references allow: whether an episode can play depends only
+ * on the audio its lines have.
+ */
+export const startMode: PlayMode = 'ja-zh'

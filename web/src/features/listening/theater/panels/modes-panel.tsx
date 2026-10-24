@@ -2,9 +2,9 @@ import type { CastMember, Language } from '@/bindings'
 import { cn } from '@/components/ui/cn'
 import { missingAudioText } from '@/features/listening/missing-audio-text'
 import {
-  modeAllowed,
   playModeNames,
   playModes,
+  startMode,
   type PlayMode,
 } from '@/features/listening/theater/playback/play-mode'
 import type { VoiceModes } from '@/features/listening/theater/playback/voice-modes'
@@ -23,8 +23,9 @@ type Props = {
 }
 
 /**
- * The mode of every voice in the cast; a mode needs the voice's references
- * in its languages. A change applies from the next line on.
+ * The mode of every voice in the cast, any of the four whatever references
+ * the character has: missing audio is what stops playing. A change applies
+ * from the next line on.
  */
 export function ModesPanel({ cast, modes, missing, otherVoices, onMode, onClose }: Props) {
   const warning = missingAudioText(missing.ja, missing.zh)
@@ -37,8 +38,7 @@ export function ModesPanel({ cast, modes, missing, otherVoices, onMode, onClose 
             key={member.character}
             name={member.character}
             note={roleNames[member.role.kind]}
-            mode={modes.cast[member.character] ?? 'ja-zh'}
-            allowed={(mode) => modeAllowed(mode, member.languages)}
+            mode={modes.cast[member.character] ?? startMode}
             onMode={(mode) => onMode(member.character, mode)}
           />
         ))}
@@ -47,7 +47,6 @@ export function ModesPanel({ cast, modes, missing, otherVoices, onMode, onClose 
             name="其他声音"
             note="不在可出场角色里"
             mode={modes.other}
-            allowed={() => true}
             onMode={(mode) => onMode(null, mode)}
           />
         )}
@@ -60,11 +59,10 @@ type RowProps = {
   name: string
   note: string
   mode: PlayMode
-  allowed: (mode: PlayMode) => boolean
   onMode: (mode: PlayMode) => void
 }
 
-function ModeRow({ name, note, mode, allowed, onMode }: RowProps) {
+function ModeRow({ name, note, mode, onMode }: RowProps) {
   return (
     <div className="flex flex-col gap-1.5">
       <span className="text-sm">
@@ -77,9 +75,8 @@ function ModeRow({ name, note, mode, allowed, onMode }: RowProps) {
             key={option}
             type="button"
             aria-pressed={option === mode}
-            disabled={!allowed(option)}
             className={cn(
-              'rounded-md px-2.5 py-1 text-xs text-white/50 transition-colors hover:bg-white/10 hover:text-white disabled:pointer-events-none disabled:opacity-25',
+              'rounded-md px-2.5 py-1 text-xs text-white/50 transition-colors hover:bg-white/10 hover:text-white',
               option === mode && 'bg-white/15 text-white',
             )}
             onMouseDown={(event) => event.preventDefault()}
