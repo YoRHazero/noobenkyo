@@ -1,8 +1,8 @@
 import { useState } from 'react'
+import type { ScriptTarget } from '@/bindings'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogTrigger } from '@/components/ui/dialog'
 import { ImportScriptDialog } from '@/features/listening/script/import-script-dialog'
-import type { ScriptTarget } from '@/features/listening/script/script-target'
 
 type Props = {
   target: ScriptTarget

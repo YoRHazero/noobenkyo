@@ -42,7 +42,7 @@ export function WorldDetail({ name, onDeleted }: Props) {
         actions={
           <>
             <ImportScriptButton
-              target={{ kind: 'new', world: name }}
+              target={{ kind: 'newEpisode', world: name }}
               label="导入剧本…"
               title={`导入剧本：${name}的新一集`}
             />

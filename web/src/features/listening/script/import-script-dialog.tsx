@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
+import type { ScriptTarget } from '@/bindings'
 import { useListeningAppendScript } from '@/backend/listening/use-listening-append-script'
 import { useListeningImportScript } from '@/backend/listening/use-listening-import-script'
 import { ErrorText } from '@/components/error-text'
@@ -9,7 +10,8 @@ import { DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
 import { openScriptFile } from '@/features/listening/script/open-script-file'
 import { ScriptPreview } from '@/features/listening/script/script-preview'
-import type { ScriptTarget } from '@/features/listening/script/script-target'
+import { useScriptEditor } from '@/features/listening/script/use-script-editor'
+import { useSettledText } from '@/features/listening/script/use-settled-text'
 
 type Props = {
   target: ScriptTarget
@@ -19,11 +21,15 @@ type Props = {
 }
 
 /**
- * A script the user pasted or opened, shown in the script preview. Saving a
- * new episode goes to its page; continuing one closes the dialog.
+ * A script the user pasted or opened, shown in the script preview. An edit
+ * made in the preview replaces the text in the box with the edited script,
+ * so the box is locked while an editor is open. Saving a new episode goes to
+ * its page; continuing one closes the dialog.
  */
 export function ImportScriptDialog({ target, title, onClose }: Props) {
   const [text, setText] = useState('')
+  const { settled, settle } = useSettledText(text)
+  const editor = useScriptEditor()
   const navigate = useNavigate()
   const importScript = useListeningImportScript()
   const appendScript = useListeningAppendScript()
@@ -41,9 +47,17 @@ export function ImportScriptDialog({ target, title, onClose }: Props) {
       event.preventDefault()
     }
   }
+  const boxLocked = busy || editor.status !== 'closed'
+
+  // The preview has checked the edited text already.
+  const edit = async (next: string) => {
+    setText(next)
+    settle(next)
+    return []
+  }
 
   const save = async (script: string) => {
-    if (target.kind === 'new') {
+    if (target.kind === 'newEpisode') {
       const uuid = await importScript.mutateAsync({ world: target.world, text: script })
       onClose()
       await navigate({ to: '/listening/episodes/$uuid', params: { uuid } })
@@ -69,7 +83,7 @@ export function ImportScriptDialog({ target, title, onClose }: Props) {
             <Button
               variant="outline"
               size="sm"
-              disabled={busy || read.isPending}
+              disabled={boxLocked || read.isPending}
               onClick={() => read.mutate()}
             >
               打开文件…
@@ -80,12 +94,20 @@ export function ImportScriptDialog({ target, title, onClose }: Props) {
             placeholder='{ "title": "…", "summary": "…", "lines": [ { "speaker": "…", "ja": "…", "zh": "…" } ] }'
             spellCheck={false}
             value={text}
-            disabled={busy}
+            disabled={boxLocked}
             className="min-h-0 flex-1 resize-none font-mono text-xs field-sizing-fixed"
             onChange={(event) => setText(event.target.value)}
           />
         </div>
-        <ScriptPreview target={target} text={text} save={save} discard={onClose} />
+        <ScriptPreview
+          target={target}
+          text={settled}
+          stale={settled !== text}
+          editor={editor}
+          edit={edit}
+          save={save}
+          discard={async () => onClose()}
+        />
       </div>
     </DialogContent>
   )
