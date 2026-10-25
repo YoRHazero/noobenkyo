@@ -4,7 +4,7 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
-const features = ['dictionary', 'study', 'settings', 'listening']
+const features = ['dictionary', 'study', 'settings', 'listening', 'pet']
 
 /** Imports outside the current directory go through `@/`, so paths can be checked. */
 const noParentImports = { regex: '^\\.\\./', message: '跨目录引用请用 @/ 路径' }
@@ -18,8 +18,8 @@ const bindingsTypesOnly = {
 
 /**
  * The one direction of dependency: app → features → backend → bindings;
- * app and features may use components and files; components see bindings'
- * types only; files uses no other layer.
+ * app and features may use components, files and stores; components see
+ * bindings' types only; files and stores use no other layer.
  */
 const layers = [
   { files: ['src/**/*.{ts,tsx}'], patterns: [] },
@@ -30,7 +30,7 @@ const layers = [
       bindingsTypesOnly,
       {
         regex: `^@/features/(?!${feature}/)`,
-        message: 'features 之间互不引用，共用的放进 components',
+        message: 'features 之间互不引用，共用的界面部件放进 components，共用的前端状态放进 stores',
       },
       { regex: '^@/app/', message: 'features 不能引用 app' },
     ],
@@ -39,8 +39,9 @@ const layers = [
     files: ['src/backend/**/*.{ts,tsx}'],
     patterns: [
       {
-        regex: '^@/(app|features|components|files)/',
-        message: 'backend 只包装 bindings 里的命令，不能引用 app、features、components、files',
+        regex: '^@/(app|features|components|files|stores)/',
+        message:
+          'backend 只包装 bindings 里的命令，不能引用 app、features、components、files、stores',
       },
     ],
   },
@@ -49,9 +50,9 @@ const layers = [
     patterns: [
       bindingsTypesOnly,
       {
-        regex: '^@/(app|features|backend|files)/',
+        regex: '^@/(app|features|backend|files|stores)/',
         message:
-          'components 不含业务概念，数据从参数传进来，不能引用 app、features、backend、files',
+          'components 不含业务概念，数据从参数传进来，不能引用 app、features、backend、files、stores',
       },
     ],
   },
@@ -59,8 +60,17 @@ const layers = [
     files: ['src/files/**/*.{ts,tsx}'],
     patterns: [
       {
-        regex: '^@/(app|features|components|backend|bindings)(/|$)',
+        regex: '^@/(app|features|components|backend|bindings|stores)(/|$)',
         message: 'files 只包装 Tauri 的 dialog、fs 插件，不引用其他任何一层',
+      },
+    ],
+  },
+  {
+    files: ['src/stores/**/*.{ts,tsx}'],
+    patterns: [
+      {
+        regex: '^@/(app|features|components|backend|files|bindings)(/|$)',
+        message: 'stores 只放跨 feature 的纯前端状态，不引用其他任何一层',
       },
     ],
   },
