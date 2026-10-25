@@ -1,3 +1,5 @@
 dist
 src/bindings.ts
 pnpm-lock.yaml
+# Written by scripts/pet/cut.sh, which checks them byte for byte
+src/features/pet/sprites

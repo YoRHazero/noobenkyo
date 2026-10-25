@@ -8,3 +8,4 @@ web/dist/
 *.db-wal
 crates/core/gen/
 .claude/
+art/
