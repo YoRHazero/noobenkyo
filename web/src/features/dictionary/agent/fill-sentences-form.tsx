@@ -4,6 +4,7 @@ import { useAiFillSentencesPrompt } from '@/backend/ai/use-ai-fill-sentences-pro
 import { useDictionarySearch } from '@/backend/dictionary/use-dictionary-search'
 import { CopyButton } from '@/components/copy-button'
 import { ErrorText } from '@/components/error-text'
+import { petFailed, petRequested } from '@/stores/pet'
 import { CountField } from '@/features/dictionary/agent/count-field'
 import { fillRangeText } from '@/features/dictionary/agent/fill-range-text'
 import { parsePositiveInteger } from '@/features/dictionary/agent/positive-integer'
@@ -50,7 +51,12 @@ export function FillSentencesForm({ filter }: Props) {
         <div className="mr-auto">
           <ErrorText error={rows.error ?? prompt.error} />
         </div>
-        <CopyButton text={ready ? prompt.data : undefined} label="复制给 agent" />
+        <CopyButton
+          text={ready ? prompt.data : undefined}
+          label="复制给 agent"
+          onCopied={petRequested}
+          onFailed={petFailed}
+        />
       </div>
     </div>
   )

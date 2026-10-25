@@ -8,6 +8,7 @@ import { useInboxSaveScript } from '@/backend/ai/use-inbox-save-script'
 import { ErrorText } from '@/components/error-text'
 import { Button } from '@/components/ui/button'
 import { DialogContent, DialogTitle } from '@/components/ui/dialog'
+import { petFailed } from '@/stores/pet'
 import { ScriptPreview } from '@/features/listening/script/script-preview'
 import { ScriptTargetText } from '@/features/listening/script/script-target-text'
 import { useScriptEditor } from '@/features/listening/script/use-script-editor'
@@ -109,7 +110,10 @@ function InboxScriptPreview({ name, opened, latest, onClose }: PreviewProps) {
   const edit = async (text: string) => {
     setWriting(true)
     try {
-      const problems = await replace.mutateAsync({ name, target: script.target, text })
+      const problems = await replace.mutateAsync(
+        { name, target: script.target, text },
+        { onError: petFailed },
+      )
       if (problems.length === 0) {
         setScript({ target: script.target, text })
         // Written back over the agent's version: the user kept their own.
@@ -123,7 +127,10 @@ function InboxScriptPreview({ name, opened, latest, onClose }: PreviewProps) {
   }
 
   const save = async (text: string) => {
-    const uuid = await saveScript.mutateAsync({ name, target: script.target, text })
+    const uuid = await saveScript.mutateAsync(
+      { name, target: script.target, text },
+      { onError: petFailed },
+    )
     onClose()
     if (script.target.kind === 'newEpisode') {
       await navigate({ to: '/listening/episodes/$uuid', params: { uuid } })
@@ -131,7 +138,7 @@ function InboxScriptPreview({ name, opened, latest, onClose }: PreviewProps) {
   }
 
   const discard = async () => {
-    await discardScript.mutateAsync(name)
+    await discardScript.mutateAsync(name, { onError: petFailed })
     onClose()
   }
 

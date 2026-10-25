@@ -6,6 +6,7 @@ import { ErrorText } from '@/components/error-text'
 import { Button } from '@/components/ui/button'
 import { DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
+import { petFailed, petRequested } from '@/stores/pet'
 import { PreviousEpisodes } from '@/features/listening/generate/previous-episodes'
 
 type Props = {
@@ -64,7 +65,12 @@ export function GenerateDialog({ world, appending, title }: Props) {
         <Button variant="outline" disabled>
           生成
         </Button>
-        <CopyButton text={prompt.data} label="复制给 agent" />
+        <CopyButton
+          text={prompt.data}
+          label="复制给 agent"
+          onCopied={petRequested}
+          onFailed={petFailed}
+        />
       </DialogFooter>
     </DialogContent>
   )

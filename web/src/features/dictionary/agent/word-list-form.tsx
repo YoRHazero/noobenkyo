@@ -4,6 +4,7 @@ import { CopyButton } from '@/components/copy-button'
 import { ErrorText } from '@/components/error-text'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { petFailed, petRequested } from '@/stores/pet'
 import { CountField } from '@/features/dictionary/agent/count-field'
 import { parsePositiveInteger } from '@/features/dictionary/agent/positive-integer'
 
@@ -44,7 +45,12 @@ export function WordListForm() {
         <div className="mr-auto">
           <ErrorText error={prompt.error} />
         </div>
-        <CopyButton text={ready ? prompt.data : undefined} label="复制给 agent" />
+        <CopyButton
+          text={ready ? prompt.data : undefined}
+          label="复制给 agent"
+          onCopied={petRequested}
+          onFailed={petFailed}
+        />
       </div>
     </div>
   )

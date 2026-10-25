@@ -7,6 +7,9 @@ type Props = {
   /** What goes on the clipboard; `undefined` while it is not ready, which greys the button. */
   text: string | undefined
   label: string
+  /** After a copy, with where the button was when clicked. */
+  onCopied?: (from: DOMRect) => void
+  onFailed?: () => void
 }
 
 /**
@@ -14,16 +17,26 @@ type Props = {
  * the text changes. The text must be at hand before the click: the webview
  * only lets a page write the clipboard while handling the click.
  */
-export function CopyButton({ text, label }: Props) {
+export function CopyButton({ text, label, onCopied, onFailed }: Props) {
   const [copied, setCopied] = useState<string | null>(null)
   const [error, setError] = useState<Error | null>(null)
 
-  const copy = () => {
+  const copy = (event: React.MouseEvent<HTMLButtonElement>) => {
     if (text === undefined) {
       return
     }
+    const from = event.currentTarget.getBoundingClientRect()
     setError(null)
-    writeClipboard(text).then(() => setCopied(text), setError)
+    writeClipboard(text).then(
+      () => {
+        setCopied(text)
+        onCopied?.(from)
+      },
+      (error: Error) => {
+        setError(error)
+        onFailed?.()
+      },
+    )
   }
 
   return (

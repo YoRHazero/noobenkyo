@@ -6,42 +6,46 @@ import { useInboxTakeEntries } from '@/backend/ai/use-inbox-take-entries'
 import { useDictionaryGeneratedImportOptions } from '@/backend/dictionary/use-dictionary-generated-import-options'
 import { cn } from '@/components/ui/cn'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { petFailed } from '@/stores/pet'
 import { InboxList } from '@/app/inbox/inbox-list'
 import { OpenedItem, type Opened } from '@/app/inbox/opened-item'
 
 type Props = {
   /** The navigation's own look, so the menu reads as one of its items. */
   className: string
+  /** Whether the list is open; the layout holds it, so the pet can open it too. */
+  open: boolean
+  onOpenChange: (open: boolean) => void
 }
 
 /**
  * 「inbox」 in the navigation, with how many items wait. It never opens by
- * itself; clicked, it lists them. Opening one closes the list: entries are
+ * itself; clicked (or the pet clicked while she reads her phone), it lists
+ * them. Opening one closes the list: entries are
  * taken out first and go to the import dialog with the options for
  * generated lists; a script opens its preview and stays until it is saved
  * or discarded.
  */
-export function InboxMenu({ className }: Props) {
+export function InboxMenu({ className, open: listOpen, onOpenChange }: Props) {
   useInboxChanged()
   const items = useInboxList()
   const options = useDictionaryGeneratedImportOptions()
   const take = useInboxTakeEntries()
-  const [listOpen, setListOpen] = useState(false)
   const [opened, setOpened] = useState<Opened | null>(null)
   const count = items.data?.length ?? 0
 
   const open = async (item: InboxItem) => {
     if (item.kind === 'script') {
-      setListOpen(false)
+      onOpenChange(false)
       setOpened({ kind: 'script', name: item.name })
       return
     }
     if (!options.data) {
       return
     }
-    const text = await take.mutateAsync(item.name).catch(() => null)
+    const text = await take.mutateAsync(item.name, { onError: petFailed }).catch(() => null)
     if (text !== null) {
-      setListOpen(false)
+      onOpenChange(false)
       setOpened({ kind: 'entries', text, options: options.data })
     }
   }
@@ -51,7 +55,7 @@ export function InboxMenu({ className }: Props) {
       <Popover
         open={listOpen}
         onOpenChange={(open) => {
-          setListOpen(open)
+          onOpenChange(open)
           take.reset()
         }}
       >
