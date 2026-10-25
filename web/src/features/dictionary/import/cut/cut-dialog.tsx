@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dialog'
 import { cutLines } from '@/features/dictionary/import/cut/cut-lines'
 import { fixPrompt } from '@/features/dictionary/import/cut/fix-prompt'
-import { writeClipboard } from '@/features/dictionary/import/cut/write-clipboard'
+import { writeClipboard } from '@/components/write-clipboard'
 
 /** What is about to be cut. */
 export type Cutting = {

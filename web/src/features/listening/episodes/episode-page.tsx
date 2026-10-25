@@ -3,6 +3,8 @@ import { ChevronLeft, Play } from 'lucide-react'
 import { useListeningEpisode } from '@/backend/listening/use-listening-episode'
 import { ErrorText } from '@/components/error-text'
 import { Button } from '@/components/ui/button'
+import { episodeLabel } from '@/features/listening/episode-label'
+import { GenerateButton } from '@/features/listening/generate/generate-button'
 import { ImportScriptButton } from '@/features/listening/script/import-script-button'
 import { DeleteEpisodeButton } from '@/features/listening/episodes/delete-episode-button'
 import { EpisodeHeader } from '@/features/listening/episodes/episode-header'
@@ -14,8 +16,7 @@ type Props = {
 
 /**
  * An episode to edit: its header and its lines. Playing it opens the theater
- * there. Generating more and synthesizing are not there yet; their buttons
- * are reserved.
+ * there. Synthesizing is not there yet; its button is reserved.
  */
 export function EpisodePage({ uuid }: Props) {
   const episode = useListeningEpisode(uuid)
@@ -58,9 +59,12 @@ export function EpisodePage({ uuid }: Props) {
           label="续写：导入…"
           title={`续写：${detail.title}`}
         />
-        <Button variant="outline" size="sm" disabled>
-          续写：生成…
-        </Button>
+        <GenerateButton
+          world={detail.world}
+          appending={detail.uuid}
+          label="续写：生成…"
+          title={`续写：${episodeLabel(detail.number)} ${detail.title}`}
+        />
         <Button variant="outline" size="sm" disabled>
           合成
         </Button>

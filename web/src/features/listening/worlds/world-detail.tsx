@@ -1,7 +1,7 @@
 import { useListeningEpisodes } from '@/backend/listening/use-listening-episodes'
 import { useListeningWorld } from '@/backend/listening/use-listening-world'
 import { ErrorText } from '@/components/error-text'
-import { Button } from '@/components/ui/button'
+import { GenerateButton } from '@/features/listening/generate/generate-button'
 import { ImportScriptButton } from '@/features/listening/script/import-script-button'
 import { CastList } from '@/features/listening/worlds/cast/cast-list'
 import { DeleteWorldButton } from '@/features/listening/worlds/delete-world-button'
@@ -16,7 +16,7 @@ type Props = {
 
 /**
  * A world: its setting, its episodes (the most used, so first), and its
- * cast. Generating an episode is not there yet, so its button is reserved.
+ * cast.
  */
 export function WorldDetail({ name, onDeleted }: Props) {
   const world = useListeningWorld(name)
@@ -46,9 +46,12 @@ export function WorldDetail({ name, onDeleted }: Props) {
               label="导入剧本…"
               title={`导入剧本：${name}的新一集`}
             />
-            <Button variant="outline" size="sm" disabled>
-              生成…
-            </Button>
+            <GenerateButton
+              world={name}
+              appending={null}
+              label="生成…"
+              title={`生成：${name}的新一集`}
+            />
           </>
         }
       >
