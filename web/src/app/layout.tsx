@@ -1,9 +1,11 @@
 import { Link, Outlet, useLocation } from '@tanstack/react-router'
 import { cn } from '@/components/ui/cn'
+import { InboxMenu } from '@/app/inbox/inbox-menu'
 
 /**
  * Learning and review are entered from the home page, so they are not here.
- * 听力 opens on the worlds and stays marked on every page under it.
+ * 听力 opens on the worlds and stays marked on every page under it. The
+ * inbox sits at the far end.
  */
 const links = [
   { to: '/', label: '首页', section: null },
@@ -11,6 +13,9 @@ const links = [
   { to: '/listening/worlds', label: '听力', section: '/listening/' },
   { to: '/settings', label: '设置', section: null },
 ] as const
+
+const itemClass =
+  'rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground'
 
 /** The top navigation, always shown, above the current page. */
 export function Layout() {
@@ -27,15 +32,15 @@ export function Layout() {
               <Link
                 key={link.to}
                 to={link.to}
-                className={cn(
-                  'rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground',
-                  active && 'bg-accent text-foreground',
-                )}
+                className={cn(itemClass, active && 'bg-accent text-foreground')}
               >
                 {link.label}
               </Link>
             )
           })}
+          <div className="ml-auto">
+            <InboxMenu className={itemClass} />
+          </div>
         </nav>
       </header>
       <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-8">

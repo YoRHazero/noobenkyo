@@ -1,3 +1,4 @@
+import type { ImportOptions } from '@/bindings'
 import { useDictionaryDefaultImportOptions } from '@/backend/dictionary/use-dictionary-default-import-options'
 import { useDictionaryImport } from '@/backend/dictionary/use-dictionary-import'
 import { ErrorText } from '@/components/error-text'
@@ -7,6 +8,10 @@ import { useImportDraft } from '@/features/dictionary/import/use-import-draft'
 import { ImportReportView } from '@/features/dictionary/import/report/import-report-view'
 
 type Props = {
+  /** The text it opens with, e.g. entries an agent sent; empty by default. */
+  initialText?: string
+  /** The options it opens with until the user changes one; the defaults otherwise. */
+  initialOptions?: ImportOptions
   onClose: () => void
 }
 
@@ -15,8 +20,8 @@ type Props = {
  * While importing, the dialog cannot be closed. Escape closes it, except in
  * a field marked `data-own-escape` (the find bar), which uses Escape itself.
  */
-export function ImportDialog({ onClose }: Props) {
-  const draft = useImportDraft()
+export function ImportDialog({ initialText = '', initialOptions, onClose }: Props) {
+  const draft = useImportDraft(initialText)
   const defaults = useDictionaryDefaultImportOptions()
   const importText = useDictionaryImport()
   const busy = importText.isPending
@@ -31,7 +36,7 @@ export function ImportDialog({ onClose }: Props) {
     }
     keepOpen(event)
   }
-  const options = draft.options ?? defaults.data
+  const options = draft.options ?? initialOptions ?? defaults.data
 
   return (
     <DialogContent

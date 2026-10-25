@@ -8,8 +8,8 @@ export type ImportView = 'raw' | 'table'
  * What the dialog holds while the user prepares an import. It lives above
  * the editor and the report, so going back from the report finds it as left.
  */
-export function useImportDraft() {
-  const [text, setText] = useState('')
+export function useImportDraft(initialText: string) {
+  const [text, setText] = useState(initialText)
   /** `null` until the user changes one, meaning the default options. */
   const [options, setOptions] = useState<ImportOptions | null>(null)
   const [view, setView] = useState<ImportView>('raw')
