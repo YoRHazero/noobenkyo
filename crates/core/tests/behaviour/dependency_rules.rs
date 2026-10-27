@@ -1,7 +1,7 @@
 //! Checks the dependency rules between our crates, as declared in their manifests:
 //! groups never depend on each other, except that ai may use the other groups'
-//! service crates; sub-crates never depend on their group's service crate; and
-//! core depends only on service crates.
+//! service crates; sub-crates never depend on their group's service crate;
+//! ai-invoker depends on no crate of ours; and core depends only on service crates.
 
 use std::collections::HashMap;
 use std::path::Path;
@@ -89,6 +89,22 @@ fn groups_do_not_depend_on_each_other() {
             );
         }
     }
+}
+
+#[test]
+fn invoker_depends_on_no_group() {
+    let metadata = metadata();
+    let places = places(&metadata);
+    let invoker = metadata
+        .workspace_packages()
+        .into_iter()
+        .find(|package| package.name.as_str() == "ai-invoker")
+        .unwrap();
+    let dependencies = internal_dependencies(invoker, &places);
+    assert!(
+        dependencies.is_empty(),
+        "ai-invoker depends on {dependencies:?}"
+    );
 }
 
 #[test]

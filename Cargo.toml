@@ -12,6 +12,7 @@ members = [
     "crates/listening/script",
     "crates/listening/service",
     "crates/ai/tools",
+    "crates/ai/invoker",
     "crates/ai/agent",
     "crates/ai/service",
     "crates/core",
@@ -39,6 +40,7 @@ listening-script = { path = "crates/listening/script" }
 listening = { path = "crates/listening/service" }
 # ai group
 ai-tools = { path = "crates/ai/tools" }
+ai-invoker = { path = "crates/ai/invoker" }
 ai = { path = "crates/ai/service" }
 
 # external
@@ -64,3 +66,6 @@ clap = { version = "4", features = ["derive"] }
 dirs = "7"
 notify = "8"
 shlex = "1"
+base64 = "0.22"
+sha2 = "0.10"
+log = "0.4"
