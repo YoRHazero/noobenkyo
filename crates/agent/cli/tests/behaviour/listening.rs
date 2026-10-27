@@ -1,6 +1,6 @@
 //! `noobenkyo listening …`
 
-use agent_tools::{Delivery, Inbox, ScriptTarget};
+use inbox::{Delivery, InboxScript, InboxService, InboxSource, ScriptTarget};
 use serde_json::Value;
 
 use crate::support::{SAMPLE_SCRIPT, file, noobenkyo, sample_episode, seeded_listening};
@@ -73,7 +73,7 @@ fn check_reads_standard_input() {
 async fn send_checks_first_and_then_fills_the_inbox() {
     let dir = tempfile::tempdir().unwrap();
     seeded_listening(dir.path()).await;
-    let inbox = Inbox::in_data_dir(dir.path());
+    let inbox = InboxService::new(dir.path());
     let ep = file(dir.path(), "ep.json", SAMPLE_SCRIPT);
 
     let run = noobenkyo(
@@ -82,7 +82,7 @@ async fn send_checks_first_and_then_fills_the_inbox() {
         None,
     );
     assert_eq!((run.code, run.stdout.as_str()), (1, "世界 火星 不存在\n"));
-    assert!(inbox.names().unwrap().is_empty());
+    assert!(inbox.list().unwrap().is_empty());
 
     let run = noobenkyo(
         dir.path(),
@@ -95,9 +95,10 @@ async fn send_checks_first_and_then_fills_the_inbox() {
         "{}",
         run.stderr
     );
+    assert!(dir.path().join("inbox-agent/ep.json").is_file());
     assert_eq!(
-        inbox.read("ep").unwrap(),
-        Some(Delivery::Script {
+        inbox.read_script(InboxSource::Agent, "ep").unwrap(),
+        Some(InboxScript {
             target: ScriptTarget::NewEpisode {
                 world: "星见町".into()
             },
@@ -119,7 +120,7 @@ fn send_needs_exactly_one_target() {
 async fn show_and_replace_work_on_the_same_delivery() {
     let dir = tempfile::tempdir().unwrap();
     seeded_listening(dir.path()).await;
-    let inbox = Inbox::in_data_dir(dir.path());
+    let inbox = InboxService::new(dir.path());
     let ep = file(dir.path(), "ep.json", SAMPLE_SCRIPT);
     let send = |extra: &[&str]| {
         let mut args = vec!["listening", "send", ep.as_str(), "--world", "星见町"];
@@ -142,14 +143,13 @@ async fn show_and_replace_work_on_the_same_delivery() {
     // The user edits the title in the preview.
     let edited = SAMPLE_SCRIPT.replace("海边的早晨", "下雨的早晨");
     inbox
-        .replace(
+        .replace_script(
+            InboxSource::Agent,
             "ep",
-            &Delivery::Script {
-                target: ScriptTarget::NewEpisode {
-                    world: "星见町".into(),
-                },
-                text: edited.clone(),
+            ScriptTarget::NewEpisode {
+                world: "星见町".into(),
             },
+            &edited,
         )
         .unwrap();
     let shown = noobenkyo(dir.path(), &["listening", "show", "ep"], None);
@@ -166,9 +166,7 @@ async fn show_and_replace_work_on_the_same_delivery() {
         "{}",
         replaced.stderr
     );
-    let Some(Delivery::Script { text, .. }) = inbox.read("ep").unwrap() else {
-        panic!("ep is still a script");
-    };
+    let text = inbox.require_script(InboxSource::Agent, "ep").unwrap().text;
     assert!(
         text.contains("下雨的早晨") && text.contains("说好"),
         "{text}"
@@ -178,7 +176,7 @@ async fn show_and_replace_work_on_the_same_delivery() {
 #[test]
 fn show_needs_a_waiting_script() {
     let dir = tempfile::tempdir().unwrap();
-    let inbox = Inbox::in_data_dir(dir.path());
+    let inbox = InboxService::new(dir.path());
     let missing = noobenkyo(dir.path(), &["listening", "show", "ep"], None);
     assert_eq!(
         (missing.code, missing.stderr.as_str()),
@@ -186,7 +184,11 @@ fn show_needs_a_waiting_script() {
     );
 
     inbox
-        .put("words", &Delivery::Entries { text: "{}".into() })
+        .put(
+            InboxSource::Agent,
+            "words",
+            &Delivery::Entries { text: "{}".into() },
+        )
         .unwrap();
     let entries = noobenkyo(dir.path(), &["listening", "show", "words"], None);
     assert_eq!(

@@ -11,9 +11,9 @@ members = [
     "crates/listening/drama",
     "crates/listening/script",
     "crates/listening/service",
+    "crates/inbox/service",
     "crates/agent/tools",
     "crates/agent/cli",
-    "crates/agent/service",
     "crates/ai/invoker",
     "crates/core",
 ]
@@ -38,9 +38,10 @@ study = { path = "crates/study/service" }
 listening-drama = { path = "crates/listening/drama" }
 listening-script = { path = "crates/listening/script" }
 listening = { path = "crates/listening/service" }
+# inbox group
+inbox = { path = "crates/inbox/service" }
 # agent group
 agent-tools = { path = "crates/agent/tools" }
-agent = { path = "crates/agent/service" }
 # ai group
 ai-invoker = { path = "crates/ai/invoker" }
 
@@ -66,7 +67,6 @@ cargo_metadata = "0.23"
 clap = { version = "4", features = ["derive"] }
 dirs = "7"
 notify = "8"
-shlex = "1"
 base64 = "0.22"
 sha2 = "0.10"
 log = "0.4"

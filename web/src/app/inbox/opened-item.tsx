@@ -1,14 +1,16 @@
-import type { ImportOptions } from '@/bindings'
+import type { ImportOptions, InboxSource } from '@/bindings'
 import { Dialog } from '@/components/ui/dialog'
 import { ImportDialog } from '@/features/dictionary/import/import-dialog'
 import { InboxScriptDialog } from '@/features/listening/script/inbox-script-dialog'
 
 /**
  * The one item open from the inbox. Entries have left the inbox by now, so
- * their text comes along; a script stays there and is opened by its name.
+ * their text comes along; a script stays there and is opened by its source
+ * and name.
  */
 export type Opened =
-  { kind: 'entries'; text: string; options: ImportOptions } | { kind: 'script'; name: string }
+  | { kind: 'entries'; text: string; options: ImportOptions }
+  | { kind: 'script'; source: InboxSource; name: string }
 
 type Props = {
   opened: Opened | null
@@ -22,7 +24,9 @@ export function OpenedItem({ opened, onClose }: Props) {
       {opened?.kind === 'entries' && (
         <ImportDialog initialText={opened.text} initialOptions={opened.options} onClose={onClose} />
       )}
-      {opened?.kind === 'script' && <InboxScriptDialog name={opened.name} onClose={onClose} />}
+      {opened?.kind === 'script' && (
+        <InboxScriptDialog source={opened.source} name={opened.name} onClose={onClose} />
+      )}
     </Dialog>
   )
 }

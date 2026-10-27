@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import type { InboxItem } from '@/bindings'
-import { useInboxChanged } from '@/backend/agent/use-inbox-changed'
-import { useInboxList } from '@/backend/agent/use-inbox-list'
-import { useInboxTakeEntries } from '@/backend/agent/use-inbox-take-entries'
+import { useInboxChanged } from '@/backend/inbox/use-inbox-changed'
+import { useInboxList } from '@/backend/inbox/use-inbox-list'
+import { useInboxTakeEntries } from '@/backend/inbox/use-inbox-take-entries'
 import { useDictionaryGeneratedImportOptions } from '@/backend/dictionary/use-dictionary-generated-import-options'
 import { cn } from '@/components/ui/cn'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -37,13 +37,15 @@ export function InboxMenu({ className, open: listOpen, onOpenChange }: Props) {
   const open = async (item: InboxItem) => {
     if (item.kind === 'script') {
       onOpenChange(false)
-      setOpened({ kind: 'script', name: item.name })
+      setOpened({ kind: 'script', source: item.source, name: item.name })
       return
     }
     if (!options.data) {
       return
     }
-    const text = await take.mutateAsync(item.name, { onError: petFailed }).catch(() => null)
+    const text = await take
+      .mutateAsync({ source: item.source, name: item.name }, { onError: petFailed })
+      .catch(() => null)
     if (text !== null) {
       onOpenChange(false)
       setOpened({ kind: 'entries', text, options: options.data })

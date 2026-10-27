@@ -1,15 +1,17 @@
 //! Checks the dependency rules between our crates, as declared in their manifests:
 //! groups never depend on each other, except that agent may use the feature groups'
 //! service crates; the ai group depends on no other group; sub-crates never depend
-//! on their group's service crate; and core depends only on service crates.
+//! on their group's service crate; core depends only on service crates and never on
+//! agent; and every group but agent has one service crate.
 
 use std::collections::HashMap;
 use std::path::Path;
 
 use cargo_metadata::{Metadata, MetadataCommand, Package};
 
-/// The group for external agents. It may depend on the service crates of
-/// the feature groups; they never depend on it.
+/// The group for external agents: a helper beside the app, not one of its
+/// features. It may depend on the service crates of the feature groups; they
+/// never depend on it, and neither does core, so it has no service crate.
 const AGENT: &str = "agent";
 
 /// The group that runs models for the app. It depends on no other group:
@@ -116,21 +118,36 @@ fn ai_group_depends_on_no_group() {
     }
 }
 
+fn core<'a>(metadata: &'a Metadata, places: &HashMap<String, Place>) -> &'a Package {
+    metadata
+        .workspace_packages()
+        .into_iter()
+        .find(|package| places[package.name.as_str()].group == "core")
+        .unwrap()
+}
+
 #[test]
 fn core_depends_only_on_service_crates() {
     let metadata = metadata();
     let places = places(&metadata);
-    let core = metadata
-        .workspace_packages()
-        .into_iter()
-        .find(|package| places[package.name.as_str()].group == "core")
-        .unwrap();
-    let dependencies = internal_dependencies(core, &places);
+    let dependencies = internal_dependencies(core(&metadata, &places), &places);
     assert!(!dependencies.is_empty());
     for dependency in dependencies {
         assert!(
             places[dependency].is_service,
             "core depends on {dependency}, which is not a service crate"
+        );
+    }
+}
+
+#[test]
+fn core_does_not_depend_on_the_agent_group() {
+    let metadata = metadata();
+    let places = places(&metadata);
+    for dependency in internal_dependencies(core(&metadata, &places), &places) {
+        assert_ne!(
+            places[dependency].group, AGENT,
+            "core depends on {dependency} (group agent)"
         );
     }
 }
@@ -144,6 +161,11 @@ fn every_group_has_one_service_crate() {
         *services.entry(place.group.as_str()).or_default() += usize::from(place.is_service);
     }
     for (group, count) in services {
+        // Nothing outside the agent group uses it, so it offers no service.
+        if group == AGENT {
+            assert_eq!(count, 0, "group agent has {count} service crates");
+            continue;
+        }
         // ai-invoker is the ai group's only crate until its service crate, ai,
         // is added together with ai-pipeline. Drop this exemption then.
         if group == AI && count == 0 {

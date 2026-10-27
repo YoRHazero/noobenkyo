@@ -12,6 +12,7 @@ path = "src/main.rs"
 [dependencies]
 agent-tools.workspace = true
 dictionary.workspace = true
+inbox.workspace = true
 listening.workspace = true
 clap.workspace = true
 dirs.workspace = true
@@ -21,5 +22,4 @@ tokio.workspace = true
 uuid.workspace = true
 
 [dev-dependencies]
-shlex.workspace = true
 tempfile.workspace = true

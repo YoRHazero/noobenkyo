@@ -7,12 +7,9 @@ publish.workspace = true
 
 [dependencies]
 dictionary.workspace = true
+inbox.workspace = true
 listening.workspace = true
-serde.workspace = true
-serde_json.workspace = true
-specta.workspace = true
 thiserror.workspace = true
-uuid.workspace = true
 
 [dev-dependencies]
 tokio.workspace = true

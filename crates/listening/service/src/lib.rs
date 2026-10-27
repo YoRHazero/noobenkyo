@@ -11,6 +11,7 @@ mod episodes;
 mod error;
 mod lines;
 mod script;
+mod script_destination;
 mod service;
 mod worlds;
 

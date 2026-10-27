@@ -16,14 +16,14 @@ impl CommandError {
     }
 }
 
-impl From<agent::AgentError> for CommandError {
-    fn from(error: agent::AgentError) -> Self {
+impl From<dictionary::DictionaryError> for CommandError {
+    fn from(error: dictionary::DictionaryError) -> Self {
         Self::new(error.to_string())
     }
 }
 
-impl From<dictionary::DictionaryError> for CommandError {
-    fn from(error: dictionary::DictionaryError) -> Self {
+impl From<inbox::InboxError> for CommandError {
+    fn from(error: inbox::InboxError) -> Self {
         Self::new(error.to_string())
     }
 }

@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useAgentScriptPrompt } from '@/backend/agent/use-agent-script-prompt'
 import { useListeningEpisodes } from '@/backend/listening/use-listening-episodes'
 import { CopyButton } from '@/components/copy-button'
 import { ErrorText } from '@/components/error-text'
@@ -8,6 +7,7 @@ import { DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/compon
 import { Textarea } from '@/components/ui/textarea'
 import { petFailed, petRequested } from '@/stores/pet'
 import { PreviousEpisodes } from '@/features/listening/generate/previous-episodes'
+import { scriptPrompt } from '@/features/listening/generate/script-prompt'
 
 type Props = {
   world: string
@@ -31,7 +31,7 @@ export function GenerateDialog({ world, appending, title }: Props) {
   // The episode continued is the agent's to read anyway; deleted ones drop out.
   const candidates = (episodes.data ?? []).filter((episode) => episode.uuid !== appending)
   const chosen = previous.filter((uuid) => candidates.some((episode) => episode.uuid === uuid))
-  const prompt = useAgentScriptPrompt({ world, appending, previous: chosen, premise })
+  const prompt = scriptPrompt({ world, appending, previous: chosen, premise })
 
   return (
     <DialogContent aria-describedby={undefined} className="sm:max-w-2xl">
@@ -59,14 +59,11 @@ export function GenerateDialog({ world, appending, title }: Props) {
         />
       </section>
       <DialogFooter className="items-center">
-        <div className="mr-auto">
-          <ErrorText error={prompt.error} />
-        </div>
         <Button variant="outline" disabled>
           生成
         </Button>
         <CopyButton
-          text={prompt.data}
+          text={prompt}
           label="复制给 agent"
           onCopied={petRequested}
           onFailed={petFailed}

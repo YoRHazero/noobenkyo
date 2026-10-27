@@ -1,10 +1,11 @@
 //! Sending reaches the inbox only when everything checkable passes.
 
-use agent_tools::{
-    Delivery, Inbox, InboxError, ScriptTarget, SendError, replace_script, send_entries, send_script,
-};
+use agent_tools::{SendError, replace_script, send_entries, send_script};
+use inbox::{InboxError, InboxScript, InboxService, InboxSource, ScriptTarget};
 
 use crate::support::{SAMPLE_SCRIPT, listening, seeded};
+
+const AGENT: InboxSource = InboxSource::Agent;
 
 fn new_episode(world: &str) -> ScriptTarget {
     ScriptTarget::NewEpisode {
@@ -22,15 +23,12 @@ fn problems(result: Result<(), SendError>) -> Vec<String> {
 #[test]
 fn entries_are_sent_even_with_warnings() {
     let dir = tempfile::tempdir().unwrap();
-    let inbox = Inbox::in_data_dir(dir.path());
+    let inbox = InboxService::new(dir.path());
     let text = r#"{"writing": "明日", "kana": "あした", "glosses": ["明天"], "sentences": [{"marked": "[[明日]]"}]}"#;
     assert!(!agent_tools::check_entries(text).is_empty());
 
     send_entries(&inbox, "words", text).unwrap();
-    assert_eq!(
-        inbox.read("words").unwrap(),
-        Some(Delivery::Entries { text: text.into() })
-    );
+    assert_eq!(inbox.take_entries(AGENT, "words").unwrap(), text);
 }
 
 #[tokio::test]
@@ -38,7 +36,7 @@ async fn a_passing_script_for_a_complete_world_is_sent() {
     let dir = tempfile::tempdir().unwrap();
     let listening = listening(&dir).await;
     seeded(&listening).await;
-    let inbox = Inbox::in_data_dir(dir.path());
+    let inbox = InboxService::new(dir.path());
 
     send_script(
         &listening,
@@ -50,8 +48,8 @@ async fn a_passing_script_for_a_complete_world_is_sent() {
     .await
     .unwrap();
     assert_eq!(
-        inbox.read("ep").unwrap(),
-        Some(Delivery::Script {
+        inbox.read_script(AGENT, "ep").unwrap(),
+        Some(InboxScript {
             target: new_episode("星见町"),
             text: SAMPLE_SCRIPT.into(),
         })
@@ -63,7 +61,7 @@ async fn script_and_target_problems_come_together_and_nothing_is_sent() {
     let dir = tempfile::tempdir().unwrap();
     let listening = listening(&dir).await;
     seeded(&listening).await;
-    let inbox = Inbox::in_data_dir(dir.path());
+    let inbox = InboxService::new(dir.path());
 
     let found = problems(send_script(&listening, &inbox, "ep", "{}", new_episode("火星")).await);
     assert_eq!(
@@ -75,7 +73,7 @@ async fn script_and_target_problems_come_together_and_nothing_is_sent() {
             "世界 火星 不存在"
         ]
     );
-    assert!(inbox.names().unwrap().is_empty());
+    assert!(inbox.list().unwrap().is_empty());
 }
 
 #[tokio::test]
@@ -83,7 +81,7 @@ async fn a_world_without_a_narrator_cannot_take_a_script() {
     let dir = tempfile::tempdir().unwrap();
     let listening = listening(&dir).await;
     seeded(&listening).await;
-    let inbox = Inbox::in_data_dir(dir.path());
+    let inbox = InboxService::new(dir.path());
 
     let found =
         problems(send_script(&listening, &inbox, "ep", SAMPLE_SCRIPT, new_episode("雾都")).await);
@@ -96,7 +94,7 @@ async fn continuing_needs_the_episode() {
     let dir = tempfile::tempdir().unwrap();
     let listening = listening(&dir).await;
     seeded(&listening).await;
-    let inbox = Inbox::in_data_dir(dir.path());
+    let inbox = InboxService::new(dir.path());
     let episode = listening
         .import_script("星见町", SAMPLE_SCRIPT)
         .await
@@ -107,8 +105,8 @@ async fn continuing_needs_the_episode() {
         .await
         .unwrap();
     assert_eq!(
-        inbox.read("ep").unwrap(),
-        Some(Delivery::Script {
+        inbox.read_script(AGENT, "ep").unwrap(),
+        Some(InboxScript {
             target: append,
             text: SAMPLE_SCRIPT.into(),
         })
@@ -133,7 +131,7 @@ async fn a_waiting_script_is_replaced_after_the_same_checks() {
     let dir = tempfile::tempdir().unwrap();
     let listening = listening(&dir).await;
     seeded(&listening).await;
-    let inbox = Inbox::in_data_dir(dir.path());
+    let inbox = InboxService::new(dir.path());
     send_script(
         &listening,
         &inbox,
@@ -152,8 +150,8 @@ async fn a_waiting_script_is_replaced_after_the_same_checks() {
         .await
         .unwrap();
     assert_eq!(
-        inbox.read("ep").unwrap(),
-        Some(Delivery::Script {
+        inbox.read_script(AGENT, "ep").unwrap(),
+        Some(InboxScript {
             target: new_episode("星见町"),
             text: edited,
         })
@@ -165,16 +163,10 @@ async fn only_a_waiting_script_can_be_replaced() {
     let dir = tempfile::tempdir().unwrap();
     let listening = listening(&dir).await;
     seeded(&listening).await;
-    let inbox = Inbox::in_data_dir(dir.path());
+    let inbox = InboxService::new(dir.path());
 
-    let missing = replace_script(
-        &listening,
-        &inbox,
-        "ep",
-        SAMPLE_SCRIPT,
-        new_episode("星见町"),
-    )
-    .await;
+    // Said before any check, so a failing text does not hide it.
+    let missing = replace_script(&listening, &inbox, "ep", "{}", new_episode("星见町")).await;
     assert!(
         matches!(missing, Err(SendError::Inbox(InboxError::Missing(_)))),
         "{missing:?}"
@@ -190,7 +182,7 @@ async fn only_a_waiting_script_can_be_replaced() {
     )
     .await;
     assert!(
-        matches!(entries, Err(SendError::NotScript(_))),
+        matches!(entries, Err(SendError::Inbox(InboxError::NotScript(_)))),
         "{entries:?}"
     );
 }
@@ -200,7 +192,7 @@ async fn sending_under_a_waiting_name_is_refused() {
     let dir = tempfile::tempdir().unwrap();
     let listening = listening(&dir).await;
     seeded(&listening).await;
-    let inbox = Inbox::in_data_dir(dir.path());
+    let inbox = InboxService::new(dir.path());
     send_entries(&inbox, "ep", "{\"writing\": \"明日\"}").unwrap();
 
     let taken = send_script(

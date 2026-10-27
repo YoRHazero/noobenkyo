@@ -1,3 +1,4 @@
+use inbox::InboxSource;
 use tauri::State;
 
 use crate::app_state::AppState;
@@ -8,7 +9,8 @@ use crate::command_error::CommandError;
 #[specta::specta]
 pub async fn inbox_take_entries(
     state: State<'_, AppState>,
+    source: InboxSource,
     name: String,
 ) -> Result<String, CommandError> {
-    Ok(state.agent.take_entries(&name)?)
+    Ok(state.inbox.take_entries(source, &name)?)
 }

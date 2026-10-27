@@ -4,8 +4,8 @@
 
 use std::path::{Path, PathBuf};
 
-use agent_tools::Inbox;
 use dictionary::DictionaryService;
+use inbox::InboxService;
 use listening::ListeningService;
 
 use crate::outcome::Failure;
@@ -42,9 +42,9 @@ pub async fn open_listening(data_dir: &Path) -> Result<ListeningService, Failure
 }
 
 /// The inbox, once the app has created its data directory.
-pub fn inbox(data_dir: &Path) -> Result<Inbox, Failure> {
+pub fn inbox(data_dir: &Path) -> Result<InboxService, Failure> {
     require(data_dir, "app 的数据目录")?;
-    Ok(Inbox::in_data_dir(data_dir))
+    Ok(InboxService::new(data_dir))
 }
 
 fn require(path: &Path, what: &str) -> Result<(), Failure> {

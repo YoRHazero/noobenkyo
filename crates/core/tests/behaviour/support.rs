@@ -3,6 +3,7 @@
 use std::path::PathBuf;
 
 use dictionary::{ImportReport, SenseKey};
+use inbox::InboxSource;
 use listening::{Gender, Language, NewCharacter, NewReference, Role, Uuid};
 use noobenkyo_core::app_state::AppState;
 use noobenkyo_core::commands::dictionary::entries::{
@@ -85,12 +86,15 @@ impl TestApp {
         self.dir.path().join("data")
     }
 
-    /// Leaves an item in the inbox as the command line does: the JSON of one
-    /// inbox file, written whole under the item's name.
-    pub fn deliver(&self, name: &str, json: &str) {
-        let inbox = self.data_dir().join("inbox");
-        std::fs::create_dir_all(&inbox).unwrap();
-        std::fs::write(inbox.join(format!("{name}.json")), json).unwrap();
+    /// Leaves an item in the source's inbox folder as the command line
+    /// does: the JSON of one inbox file, written whole under the item's name.
+    pub fn deliver(&self, source: InboxSource, name: &str, json: &str) {
+        let folder = self.data_dir().join(match source {
+            InboxSource::Agent => "inbox-agent",
+            InboxSource::Ai => "inbox-ai",
+        });
+        std::fs::create_dir_all(&folder).unwrap();
+        std::fs::write(folder.join(format!("{name}.json")), json).unwrap();
     }
 
     /// A fresh app with the sample word list imported with the default

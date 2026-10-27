@@ -2,6 +2,5 @@
 //! services in temporary directories.
 
 mod entries;
-mod inbox;
 mod send;
 mod support;

@@ -6,5 +6,6 @@ mod episodes;
 mod lines;
 mod reopen;
 mod script;
+mod script_destination;
 mod support;
 mod worlds;

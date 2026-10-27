@@ -1,6 +1,6 @@
 //! `noobenkyo dictionary …`
 
-use agent_tools::{Delivery, Inbox};
+use inbox::{InboxItem, InboxService, InboxSource};
 
 use crate::support::{dictionary_with, file, noobenkyo};
 
@@ -66,9 +66,14 @@ async fn send_leaves_the_entries_in_the_inbox() {
         "{}",
         run.stderr
     );
+    let inbox = InboxService::new(dir.path());
+    assert!(dir.path().join("inbox-agent/words.json").is_file());
     assert_eq!(
-        Inbox::in_data_dir(dir.path()).read("words").unwrap(),
-        Some(Delivery::Entries { text: SENSE.into() })
+        inbox.list().unwrap(),
+        [InboxItem::Entries {
+            source: InboxSource::Agent,
+            name: "words".into()
+        }]
     );
 
     let again = noobenkyo(dir.path(), &["dictionary", "send", &words], None);
@@ -78,6 +83,10 @@ async fn send_leaves_the_entries_in_the_inbox() {
     );
     let stdin = noobenkyo(dir.path(), &["dictionary", "send", "-"], Some(SENSE));
     assert_eq!(stdin.code, 2);
+    assert_eq!(
+        inbox.take_entries(InboxSource::Agent, "words").unwrap(),
+        SENSE
+    );
 }
 
 #[test]

@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import type { InboxScript } from '@/bindings'
-import { useInboxDiscardScript } from '@/backend/agent/use-inbox-discard-script'
-import { useInboxReadScript } from '@/backend/agent/use-inbox-read-script'
-import { useInboxReplaceScript } from '@/backend/agent/use-inbox-replace-script'
-import { useInboxSaveScript } from '@/backend/agent/use-inbox-save-script'
+import type { InboxScript, InboxSource } from '@/bindings'
+import { useInboxDiscardScript } from '@/backend/inbox/use-inbox-discard-script'
+import { useInboxReadScript } from '@/backend/inbox/use-inbox-read-script'
+import { useInboxReplaceScript } from '@/backend/inbox/use-inbox-replace-script'
+import { useInboxSaveScript } from '@/backend/inbox/use-inbox-save-script'
 import { ErrorText } from '@/components/error-text'
 import { Button } from '@/components/ui/button'
 import { DialogContent, DialogTitle } from '@/components/ui/dialog'
@@ -14,6 +14,8 @@ import { ScriptTargetText } from '@/features/listening/script/script-target-text
 import { useScriptEditor } from '@/features/listening/script/use-script-editor'
 
 type Props = {
+  /** Who sent it: each source has its own names. */
+  source: InboxSource
   /** The name it was sent under. */
   name: string
   onClose: () => void
@@ -24,8 +26,8 @@ type Props = {
  * to the inbox, where the agent reads it with `show`; saving stores it and
  * removes it, discarding just removes it. Closing keeps it in the inbox.
  */
-export function InboxScriptDialog({ name, onClose }: Props) {
-  const read = useInboxReadScript(name)
+export function InboxScriptDialog({ source, name, onClose }: Props) {
+  const read = useInboxReadScript(source, name)
   /** The script as first read; the preview stays once it has opened, even if the script leaves. */
   const [opened, setOpened] = useState<InboxScript | null>(null)
   if (read.data && opened === null) {
@@ -35,6 +37,7 @@ export function InboxScriptDialog({ name, onClose }: Props) {
     <DialogContent aria-describedby={undefined} className="flex h-[85vh] flex-col sm:max-w-3xl">
       {opened ? (
         <InboxScriptPreview
+          source={source}
           name={name}
           opened={opened}
           latest={read.data ?? null}
@@ -57,6 +60,7 @@ export function InboxScriptDialog({ name, onClose }: Props) {
 }
 
 type PreviewProps = {
+  source: InboxSource
   name: string
   opened: InboxScript
   /** The script as the inbox has it now; `null` once it has left. */
@@ -69,7 +73,7 @@ type PreviewProps = {
  * the inbox is the agent's new version: it replaces the one shown, unless an
  * open editor has changes, in which case the user chooses.
  */
-function InboxScriptPreview({ name, opened, latest, onClose }: PreviewProps) {
+function InboxScriptPreview({ source, name, opened, latest, onClose }: PreviewProps) {
   const [script, setScript] = useState(opened)
   /** The last text read from the inbox, so each new one is looked at once. */
   const [seen, setSeen] = useState(script.text)
@@ -111,7 +115,7 @@ function InboxScriptPreview({ name, opened, latest, onClose }: PreviewProps) {
     setWriting(true)
     try {
       const problems = await replace.mutateAsync(
-        { name, target: script.target, text },
+        { source, name, target: script.target, text },
         { onError: petFailed },
       )
       if (problems.length === 0) {
@@ -128,7 +132,7 @@ function InboxScriptPreview({ name, opened, latest, onClose }: PreviewProps) {
 
   const save = async (text: string) => {
     const uuid = await saveScript.mutateAsync(
-      { name, target: script.target, text },
+      { source, name, target: script.target, text },
       { onError: petFailed },
     )
     onClose()
@@ -138,7 +142,7 @@ function InboxScriptPreview({ name, opened, latest, onClose }: PreviewProps) {
   }
 
   const discard = async () => {
-    await discardScript.mutateAsync(name, { onError: petFailed })
+    await discardScript.mutateAsync({ source, name }, { onError: petFailed })
     onClose()
   }
 

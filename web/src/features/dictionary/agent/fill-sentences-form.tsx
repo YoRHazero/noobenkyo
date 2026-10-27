@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import type { ContentFilter } from '@/bindings'
-import { useAgentFillSentencesPrompt } from '@/backend/agent/use-agent-fill-sentences-prompt'
 import { useDictionarySearch } from '@/backend/dictionary/use-dictionary-search'
 import { CopyButton } from '@/components/copy-button'
 import { ErrorText } from '@/components/error-text'
 import { petFailed, petRequested } from '@/stores/pet'
 import { CountField } from '@/features/dictionary/agent/count-field'
 import { fillRangeText } from '@/features/dictionary/agent/fill-range-text'
+import { fillSentencesPrompt } from '@/features/dictionary/agent/fill-sentences-prompt'
 import { parsePositiveInteger } from '@/features/dictionary/agent/positive-integer'
 
 type Props = {
@@ -29,14 +29,16 @@ export function FillSentencesForm({ filter }: Props) {
   )
   const limitValue = parsePositiveInteger(limit)
   const perSenseValue = parsePositiveInteger(perSense)
-  const prompt = useAgentFillSentencesPrompt({
-    keyword: filter.text,
-    progress: filter.progress,
-    limit: limitValue ?? 0,
-    per_sense: perSenseValue ?? 0,
-  })
   const total = rows.data?.total
   const ready = limitValue !== null && perSenseValue !== null && total !== undefined && total > 0
+  const prompt = ready
+    ? fillSentencesPrompt({
+        keyword: filter.text,
+        progress: filter.progress,
+        limit: limitValue,
+        perSense: perSenseValue,
+      })
+    : undefined
 
   return (
     <div className="flex flex-col gap-4">
@@ -49,10 +51,10 @@ export function FillSentencesForm({ filter }: Props) {
       </div>
       <div className="flex items-center justify-end gap-3">
         <div className="mr-auto">
-          <ErrorText error={rows.error ?? prompt.error} />
+          <ErrorText error={rows.error} />
         </div>
         <CopyButton
-          text={ready ? prompt.data : undefined}
+          text={prompt}
           label="复制给 agent"
           onCopied={petRequested}
           onFailed={petFailed}

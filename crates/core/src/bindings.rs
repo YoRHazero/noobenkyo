@@ -3,7 +3,7 @@
 use specta_typescript::Typescript;
 use tauri_specta::{Builder, collect_commands, collect_events};
 
-use crate::commands::{dictionary, inbox, learn, listening, prompts, review, settings, stats};
+use crate::commands::{dictionary, inbox, learn, listening, review, settings, stats};
 use crate::events::inbox_changed::InboxChanged;
 
 const BINDINGS_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../web/src/bindings.ts");
@@ -75,9 +75,6 @@ pub fn builder() -> Builder<tauri::Wry> {
             inbox::scripts::inbox_replace_script,
             inbox::scripts::inbox_save_script,
             inbox::scripts::inbox_discard_script,
-            prompts::agent_script_prompt,
-            prompts::agent_fill_sentences_prompt,
-            prompts::agent_word_list_prompt,
         ])
         .events(collect_events![InboxChanged])
 }

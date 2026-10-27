@@ -172,37 +172,33 @@ export const commands = {
 	 */
 	listeningAppendScript: (episode: string, text: string) => typedError<null, CommandError>(__TAURI_INVOKE("listening_append_script", { episode, text })),
 	/**
-	 *  Every item waiting, oldest first, with its kind; scripts with where they
-	 *  go. Leaves the files as they are.
+	 *  Every item waiting from every source, oldest first, with its kind and
+	 *  source; scripts with where they go. Leaves the files as they are.
 	 */
 	inboxList: () => typedError<InboxItem[], CommandError>(__TAURI_INVOKE("inbox_list")),
 	/**
 	 *  The script waiting and where it goes; `null` once it is saved or
 	 *  discarded. Leaves the file as it is.
 	 */
-	inboxReadScript: (name: string) => typedError<{
+	inboxReadScript: (source: InboxSource, name: string) => typedError<{
 	target: ScriptTarget,
 	text: string,
-} | null, CommandError>(__TAURI_INVOKE("inbox_read_script", { name })),
+} | null, CommandError>(__TAURI_INVOKE("inbox_read_script", { source, name })),
 	/**  The entry text waiting, for the import dialog; it leaves the inbox. */
-	inboxTakeEntries: (name: string) => typedError<string, CommandError>(__TAURI_INVOKE("inbox_take_entries", { name })),
+	inboxTakeEntries: (source: InboxSource, name: string) => typedError<string, CommandError>(__TAURI_INVOKE("inbox_take_entries", { source, name })),
 	/**
-	 *  Writes an edit from the preview back to the inbox, if it passes. Returns
-	 *  the problems that kept it out, empty when it was written.
+	 *  Writes an edit from the preview back to the inbox, once listening finds
+	 *  no problem with it and where it goes. Returns the problems that kept it
+	 *  out, empty when it was written.
 	 */
-	inboxReplaceScript: (name: string, target: ScriptTarget, text: string) => typedError<string[], CommandError>(__TAURI_INVOKE("inbox_replace_script", { name, target, text })),
+	inboxReplaceScript: (source: InboxSource, name: string, target: ScriptTarget, text: string) => typedError<string[], CommandError>(__TAURI_INVOKE("inbox_replace_script", { source, name, target, text })),
 	/**
 	 *  Stores the script shown as a new episode or a continuation, then removes
-	 *  it from the inbox. Returns the episode's uuid.
+	 *  it from the inbox. Returns the episode's uuid: the new one, or the one
+	 *  continued.
 	 */
-	inboxSaveScript: (name: string, target: ScriptTarget, text: string) => typedError<string, CommandError>(__TAURI_INVOKE("inbox_save_script", { name, target, text })),
-	inboxDiscardScript: (name: string) => typedError<null, CommandError>(__TAURI_INVOKE("inbox_discard_script", { name })),
-	/**  The prompt for writing a new episode or continuing one. */
-	agentScriptPrompt: (task: ScriptTask) => __TAURI_INVOKE<string>("agent_script_prompt", { task }),
-	/**  The prompt for filling in sentences for the rows the filter shows. */
-	agentFillSentencesPrompt: (task: FillSentencesTask) => __TAURI_INVOKE<string>("agent_fill_sentences_prompt", { task }),
-	/**  The prompt for writing a new word list. */
-	agentWordListPrompt: (task: WordListTask) => __TAURI_INVOKE<string>("agent_word_list_prompt", { task }),
+	inboxSaveScript: (source: InboxSource, name: string, target: ScriptTarget, text: string) => typedError<string, CommandError>(__TAURI_INVOKE("inbox_save_script", { source, name, target, text })),
+	inboxDiscardScript: (source: InboxSource, name: string) => typedError<null, CommandError>(__TAURI_INVOKE("inbox_discard_script", { source, name })),
 };
 
 /** Events */
@@ -407,20 +403,6 @@ export type Exported = {
 	entries: number,
 };
 
-/**
- *  Sentences to write for senses that have none, from the rows the
- *  dictionary page's keyword and progress filter show.
- */
-export type FillSentencesTask = {
-	/**  Blank for no keyword. */
-	keyword: string | null,
-	progress: ProgressState,
-	/**  How many rows to take, in the page's order. */
-	limit: number,
-	/**  How many sentences each sense gets. */
-	per_sense: number,
-};
-
 /**  One piece of a rendered sentence, handed to the frontend as is. */
 export type Fragment = { kind: "text"; text: string } | { kind: "ruby"; base: string; ruby: string } | 
 /**  The target as one unit, made of pieces with or without ruby. */
@@ -489,19 +471,29 @@ export type InboxChanged = null;
 
 /**
  *  One item waiting in the inbox, without its text: its kind tells the
- *  frontend which preview opens it.
+ *  frontend which preview opens it, its source and name which file it is.
  */
 export type InboxItem = 
 /**  Entries, for the import dialog. */
-{ kind: "entries"; name: string } | 
+{ kind: "entries"; source: InboxSource; name: string } | 
 /**  A script, for the script preview, with where it goes. */
-{ kind: "script"; name: string; target: ScriptTarget };
+{ kind: "script"; source: InboxSource; name: string; target: ScriptTarget };
 
 /**  A script waiting in the inbox: where it goes and its text. */
 export type InboxScript = {
 	target: ScriptTarget,
 	text: string,
 };
+
+/**
+ *  Who delivered an item. Each source has its own folder, so the same name
+ *  may wait from both.
+ */
+export type InboxSource = 
+/**  An outside agent, through the command line. */
+"agent" | 
+/**  The app's own models. */
+"ai";
 
 /**  Whether a submitted answer is right, as far as a fixed rule can tell. */
 export type Judgement = "Correct" | "Wrong" | 
@@ -752,23 +744,6 @@ export type ScriptTarget =
 /**  More lines for this episode. */
 { kind: "append"; episode: string };
 
-/**
- *  A script to write, as chosen in the generation form: a new episode of
- *  the world, or more of one of its episodes.
- */
-export type ScriptTask = {
-	world: string,
-	/**  The episode to continue; `None` for a new episode. */
-	appending: string | null,
-	/**
-	 *  The episodes that come before, in the order of the story. Empty
-	 *  leaves the choice to the agent.
-	 */
-	previous: string[],
-	/**  What happens in it. Blank leaves it to the agent. */
-	premise: string,
-};
-
 export type SearchPage = {
 	rows: SearchRow[],
 	/**  Rows matching the filter, over all pages. */
@@ -914,16 +889,6 @@ export type TargetPiece = { kind: "text"; text: string } | { kind: "ruby"; base:
 export type WordKey = {
 	writing: string,
 	origin: string,
-};
-
-/**  A new word list on a topic, written down to its sentences. */
-export type WordListTask = {
-	/**  Blank leaves the topic to the agent. */
-	topic: string,
-	/**  How many words. */
-	count: number,
-	/**  How many sentences each sense gets. */
-	per_sense: number,
 };
 
 /**  One world with its cast. */

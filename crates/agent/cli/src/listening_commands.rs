@@ -3,9 +3,8 @@
 
 use std::path::Path;
 
-use agent_tools::{
-    Delivery, ScriptTarget, SendError, listening_guide, replace_script, send_script,
-};
+use agent_tools::{SendError, listening_guide, replace_script, send_script};
+use inbox::{InboxSource, ScriptTarget};
 use listening::check_script;
 use serde::Serialize;
 
@@ -68,13 +67,10 @@ pub async fn run(command: ListeningCommand, data_dir: &Path) -> Result<Outcome, 
                 Err(error) => return Err(error.into()),
             }
         }
-        ListeningCommand::Show { name } => match inbox(data_dir)?.read(&name)? {
-            Some(Delivery::Script { text, .. }) => println!("{}", text.trim_end()),
-            Some(Delivery::Entries { .. }) => {
-                return Err(Failure(format!("inbox 里的 {name} 不是剧本")));
-            }
-            None => return Err(Failure(format!("inbox 里没有 {name}"))),
-        },
+        ListeningCommand::Show { name } => {
+            let script = inbox(data_dir)?.require_script(InboxSource::Agent, &name)?;
+            println!("{}", script.text.trim_end());
+        }
     }
     Ok(Outcome::Done)
 }
