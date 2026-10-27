@@ -1,4 +1,4 @@
-use ai::{AiError, AiService, InboxWatcher};
+use agent::{AgentError, AgentService, InboxWatcher};
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use tauri_specta::Event;
@@ -10,9 +10,9 @@ pub struct InboxChanged;
 
 /// Watches the inbox and passes every change on to the frontend, for as
 /// long as the returned watcher is kept.
-pub fn forward(app: &AppHandle, ai: &AiService) -> Result<InboxWatcher, AiError> {
+pub fn forward(app: &AppHandle, agent: &AgentService) -> Result<InboxWatcher, AgentError> {
     let app = app.clone();
-    ai.watch(move || {
+    agent.watch(move || {
         // Fails only when the app is shutting down.
         let _ = InboxChanged.emit(&app);
     })

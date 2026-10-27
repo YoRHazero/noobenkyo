@@ -46,8 +46,8 @@ pub fn preview_script(text: &str) -> ScriptPreview {
 }
 
 /// Why the text is not a script that passes, one line of Chinese each.
-/// Empty means it passes. Needs no data, so the ai group can call it while
-/// retrying.
+/// Empty means it passes. Needs no data, so the agent group and core can call
+/// it without opening anything.
 pub fn check_script(text: &str) -> Vec<String> {
     listening_script::check_script(text)
 }

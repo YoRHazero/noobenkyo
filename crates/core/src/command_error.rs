@@ -16,8 +16,8 @@ impl CommandError {
     }
 }
 
-impl From<ai::AiError> for CommandError {
-    fn from(error: ai::AiError) -> Self {
+impl From<agent::AgentError> for CommandError {
+    fn from(error: agent::AgentError) -> Self {
         Self::new(error.to_string())
     }
 }

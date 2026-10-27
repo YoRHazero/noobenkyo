@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { ContentFilter } from '@/bindings'
-import { useAiFillSentencesPrompt } from '@/backend/ai/use-ai-fill-sentences-prompt'
+import { useAgentFillSentencesPrompt } from '@/backend/agent/use-agent-fill-sentences-prompt'
 import { useDictionarySearch } from '@/backend/dictionary/use-dictionary-search'
 import { CopyButton } from '@/components/copy-button'
 import { ErrorText } from '@/components/error-text'
@@ -29,7 +29,7 @@ export function FillSentencesForm({ filter }: Props) {
   )
   const limitValue = parsePositiveInteger(limit)
   const perSenseValue = parsePositiveInteger(perSense)
-  const prompt = useAiFillSentencesPrompt({
+  const prompt = useAgentFillSentencesPrompt({
     keyword: filter.text,
     progress: filter.progress,
     limit: limitValue ?? 0,

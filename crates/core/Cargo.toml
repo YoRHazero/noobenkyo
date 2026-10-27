@@ -17,7 +17,7 @@ path = "src/main.rs"
 tauri-build.workspace = true
 
 [dependencies]
-ai.workspace = true
+agent.workspace = true
 dictionary.workspace = true
 listening.workspace = true
 study.workspace = true

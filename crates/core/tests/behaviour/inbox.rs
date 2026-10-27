@@ -1,7 +1,7 @@
 //! The inbox's commands, handed on as is: what the command line leaves is
 //! listed, read, taken, written back, saved and discarded.
 
-use ai::{InboxItem, InboxScript, ScriptTarget};
+use agent::{InboxItem, InboxScript, ScriptTarget};
 use noobenkyo_core::commands::dictionary::entries::{
     dictionary_default_import_options, dictionary_generated_import_options,
 };

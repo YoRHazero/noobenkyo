@@ -1,15 +1,19 @@
 //! Checks the dependency rules between our crates, as declared in their manifests:
-//! groups never depend on each other, except that ai may use the other groups'
-//! service crates; sub-crates never depend on their group's service crate;
-//! ai-invoker depends on no crate of ours; and core depends only on service crates.
+//! groups never depend on each other, except that agent may use the feature groups'
+//! service crates; the ai group depends on no other group; sub-crates never depend
+//! on their group's service crate; and core depends only on service crates.
 
 use std::collections::HashMap;
 use std::path::Path;
 
 use cargo_metadata::{Metadata, MetadataCommand, Package};
 
-/// The group that talks to models. It may depend on the service crates of
+/// The group for external agents. It may depend on the service crates of
 /// the feature groups; they never depend on it.
+const AGENT: &str = "agent";
+
+/// The group that runs models for the app. It depends on no other group:
+/// core fetches what it needs and stores what it returns.
 const AI: &str = "ai";
 
 /// Where a workspace crate sits: its group (first directory under crates/) and whether
@@ -69,10 +73,10 @@ fn groups_do_not_depend_on_each_other() {
         }
         for dependency in internal_dependencies(package, &places) {
             let other = &places[dependency];
-            if own.group == AI && other.group != AI {
+            if own.group == AGENT && other.group != AGENT && other.group != AI {
                 assert!(
                     other.is_service,
-                    "{} (group ai) depends on {}, which is not a service crate",
+                    "{} (group agent) depends on {}, which is not a service crate",
                     package.name, dependency
                 );
                 continue;
@@ -92,19 +96,24 @@ fn groups_do_not_depend_on_each_other() {
 }
 
 #[test]
-fn invoker_depends_on_no_group() {
+fn ai_group_depends_on_no_group() {
     let metadata = metadata();
     let places = places(&metadata);
-    let invoker = metadata
+    let ai_crates: Vec<&Package> = metadata
         .workspace_packages()
         .into_iter()
-        .find(|package| package.name.as_str() == "ai-invoker")
-        .unwrap();
-    let dependencies = internal_dependencies(invoker, &places);
-    assert!(
-        dependencies.is_empty(),
-        "ai-invoker depends on {dependencies:?}"
-    );
+        .filter(|package| places[package.name.as_str()].group == AI)
+        .collect();
+    assert!(!ai_crates.is_empty());
+    for package in ai_crates {
+        for dependency in internal_dependencies(package, &places) {
+            assert_eq!(
+                places[dependency].group, AI,
+                "{} (group ai) depends on {dependency}",
+                package.name
+            );
+        }
+    }
 }
 
 #[test]
@@ -135,6 +144,11 @@ fn every_group_has_one_service_crate() {
         *services.entry(place.group.as_str()).or_default() += usize::from(place.is_service);
     }
     for (group, count) in services {
+        // ai-invoker is the ai group's only crate until its service crate, ai,
+        // is added together with ai-pipeline. Drop this exemption then.
+        if group == AI && count == 0 {
+            continue;
+        }
         assert_eq!(count, 1, "group {group} has {count} service crates");
     }
 }

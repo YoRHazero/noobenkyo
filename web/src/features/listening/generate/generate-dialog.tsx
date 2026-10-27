@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useAiScriptPrompt } from '@/backend/ai/use-ai-script-prompt'
+import { useAgentScriptPrompt } from '@/backend/agent/use-agent-script-prompt'
 import { useListeningEpisodes } from '@/backend/listening/use-listening-episodes'
 import { CopyButton } from '@/components/copy-button'
 import { ErrorText } from '@/components/error-text'
@@ -31,7 +31,7 @@ export function GenerateDialog({ world, appending, title }: Props) {
   // The episode continued is the agent's to read anyway; deleted ones drop out.
   const candidates = (episodes.data ?? []).filter((episode) => episode.uuid !== appending)
   const chosen = previous.filter((uuid) => candidates.some((episode) => episode.uuid === uuid))
-  const prompt = useAiScriptPrompt({ world, appending, previous: chosen, premise })
+  const prompt = useAgentScriptPrompt({ world, appending, previous: chosen, premise })
 
   return (
     <DialogContent aria-describedby={undefined} className="sm:max-w-2xl">

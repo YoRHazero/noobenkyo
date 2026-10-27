@@ -75,9 +75,9 @@ pub fn builder() -> Builder<tauri::Wry> {
             inbox::scripts::inbox_replace_script,
             inbox::scripts::inbox_save_script,
             inbox::scripts::inbox_discard_script,
-            prompts::ai_script_prompt,
-            prompts::ai_fill_sentences_prompt,
-            prompts::ai_word_list_prompt,
+            prompts::agent_script_prompt,
+            prompts::agent_fill_sentences_prompt,
+            prompts::agent_word_list_prompt,
         ])
         .events(collect_events![InboxChanged])
 }

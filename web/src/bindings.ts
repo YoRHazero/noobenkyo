@@ -198,11 +198,11 @@ export const commands = {
 	inboxSaveScript: (name: string, target: ScriptTarget, text: string) => typedError<string, CommandError>(__TAURI_INVOKE("inbox_save_script", { name, target, text })),
 	inboxDiscardScript: (name: string) => typedError<null, CommandError>(__TAURI_INVOKE("inbox_discard_script", { name })),
 	/**  The prompt for writing a new episode or continuing one. */
-	aiScriptPrompt: (task: ScriptTask) => __TAURI_INVOKE<string>("ai_script_prompt", { task }),
+	agentScriptPrompt: (task: ScriptTask) => __TAURI_INVOKE<string>("agent_script_prompt", { task }),
 	/**  The prompt for filling in sentences for the rows the filter shows. */
-	aiFillSentencesPrompt: (task: FillSentencesTask) => __TAURI_INVOKE<string>("ai_fill_sentences_prompt", { task }),
+	agentFillSentencesPrompt: (task: FillSentencesTask) => __TAURI_INVOKE<string>("agent_fill_sentences_prompt", { task }),
 	/**  The prompt for writing a new word list. */
-	aiWordListPrompt: (task: WordListTask) => __TAURI_INVOKE<string>("ai_word_list_prompt", { task }),
+	agentWordListPrompt: (task: WordListTask) => __TAURI_INVOKE<string>("agent_word_list_prompt", { task }),
 };
 
 /** Events */

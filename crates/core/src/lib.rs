@@ -39,7 +39,7 @@ pub fn run() {
             };
             // Without the watcher, what agents send would never show: an app
             // that cannot watch the inbox does not start.
-            match inbox_changed::forward(app.handle(), &state.ai) {
+            match inbox_changed::forward(app.handle(), &state.agent) {
                 Ok(watcher) => {
                     app.manage(state);
                     app.manage(watcher);

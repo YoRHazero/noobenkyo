@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useEffectEvent, useRef, useState } from 'react'
-import { useInboxList } from '@/backend/ai/use-inbox-list'
+import { useInboxList } from '@/backend/agent/use-inbox-list'
 import {
   afterClip,
   firstMode,

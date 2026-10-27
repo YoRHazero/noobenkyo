@@ -3,7 +3,7 @@
 
 use std::path::Path;
 
-use ai::AiService;
+use agent::AgentService;
 use dictionary::{DictionaryError, DictionaryService};
 use listening::{ListeningError, ListeningService};
 use study::{StudyError, StudyService};
@@ -18,7 +18,7 @@ pub struct AppState {
     /// through another one.
     pub study: Mutex<StudyService>,
     /// Not locked: every inbox file is written whole and renamed into place.
-    pub ai: AiService,
+    pub agent: AgentService,
 }
 
 /// Why the data could not be opened, in the features' own words.
@@ -38,7 +38,7 @@ impl AppState {
             dictionary: DictionaryService::open(&data_dir.join("dictionary")).await?,
             listening: ListeningService::open(&data_dir.join("listening")).await?,
             study: Mutex::new(StudyService::open(&data_dir.join("study"))?),
-            ai: AiService::new(data_dir),
+            agent: AgentService::new(data_dir),
         })
     }
 }

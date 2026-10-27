@@ -1,7 +1,8 @@
 //! The listening group's public face: `ListeningService`, the pure function
 //! `check_script`, and the sub-crate types that leave the group. Only
 //! deterministic rules and storage live here; writing scripts, premises and
-//! synthesizing audio go through the ai group, which calls these functions.
+//! synthesizing audio go through the agent group, which calls these functions,
+//! and the ai group, for which core calls them.
 
 mod characters;
 mod clock;

@@ -1,5 +1,5 @@
 import { useId, useState } from 'react'
-import { useAiWordListPrompt } from '@/backend/ai/use-ai-word-list-prompt'
+import { useAgentWordListPrompt } from '@/backend/agent/use-agent-word-list-prompt'
 import { CopyButton } from '@/components/copy-button'
 import { ErrorText } from '@/components/error-text'
 import { Input } from '@/components/ui/input'
@@ -16,7 +16,7 @@ export function WordListForm() {
   const [perSense, setPerSense] = useState('3')
   const countValue = parsePositiveInteger(count)
   const perSenseValue = parsePositiveInteger(perSense)
-  const prompt = useAiWordListPrompt({
+  const prompt = useAgentWordListPrompt({
     topic,
     count: countValue ?? 0,
     per_sense: perSenseValue ?? 0,

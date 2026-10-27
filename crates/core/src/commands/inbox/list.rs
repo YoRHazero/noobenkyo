@@ -1,4 +1,4 @@
-use ai::InboxItem;
+use agent::InboxItem;
 use tauri::State;
 
 use crate::app_state::AppState;
@@ -9,5 +9,5 @@ use crate::command_error::CommandError;
 #[tauri::command]
 #[specta::specta]
 pub async fn inbox_list(state: State<'_, AppState>) -> Result<Vec<InboxItem>, CommandError> {
-    Ok(state.ai.list()?)
+    Ok(state.agent.list()?)
 }

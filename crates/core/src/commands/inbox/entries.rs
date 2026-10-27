@@ -10,5 +10,5 @@ pub async fn inbox_take_entries(
     state: State<'_, AppState>,
     name: String,
 ) -> Result<String, CommandError> {
-    Ok(state.ai.take_entries(&name)?)
+    Ok(state.agent.take_entries(&name)?)
 }

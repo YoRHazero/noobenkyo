@@ -11,10 +11,10 @@ members = [
     "crates/listening/drama",
     "crates/listening/script",
     "crates/listening/service",
-    "crates/ai/tools",
+    "crates/agent/tools",
+    "crates/agent/cli",
+    "crates/agent/service",
     "crates/ai/invoker",
-    "crates/ai/agent",
-    "crates/ai/service",
     "crates/core",
 ]
 
@@ -38,10 +38,11 @@ study = { path = "crates/study/service" }
 listening-drama = { path = "crates/listening/drama" }
 listening-script = { path = "crates/listening/script" }
 listening = { path = "crates/listening/service" }
+# agent group
+agent-tools = { path = "crates/agent/tools" }
+agent = { path = "crates/agent/service" }
 # ai group
-ai-tools = { path = "crates/ai/tools" }
 ai-invoker = { path = "crates/ai/invoker" }
-ai = { path = "crates/ai/service" }
 
 # external
 sea-orm = { version = "2.0.4", default-features = false, features = ["macros", "with-json", "with-chrono", "with-uuid", "sqlx-sqlite", "runtime-tokio"] }

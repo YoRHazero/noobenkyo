@@ -1,4 +1,4 @@
-use ai::{InboxScript, ScriptTarget};
+use agent::{InboxScript, ScriptTarget};
 use listening::Uuid;
 use tauri::State;
 
@@ -13,7 +13,7 @@ pub async fn inbox_read_script(
     state: State<'_, AppState>,
     name: String,
 ) -> Result<Option<InboxScript>, CommandError> {
-    Ok(state.ai.read_script(&name)?)
+    Ok(state.agent.read_script(&name)?)
 }
 
 /// Writes an edit from the preview back to the inbox, if it passes. Returns
@@ -27,7 +27,7 @@ pub async fn inbox_replace_script(
     text: String,
 ) -> Result<Vec<String>, CommandError> {
     Ok(state
-        .ai
+        .agent
         .replace_script(&state.listening, &name, target, &text)
         .await?)
 }
@@ -43,7 +43,7 @@ pub async fn inbox_save_script(
     text: String,
 ) -> Result<Uuid, CommandError> {
     Ok(state
-        .ai
+        .agent
         .save_script(&state.listening, &name, target, &text)
         .await?)
 }
@@ -54,5 +54,5 @@ pub async fn inbox_discard_script(
     state: State<'_, AppState>,
     name: String,
 ) -> Result<(), CommandError> {
-    Ok(state.ai.discard_script(&name)?)
+    Ok(state.agent.discard_script(&name)?)
 }

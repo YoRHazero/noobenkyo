@@ -19,8 +19,8 @@ pub struct ScriptLine {
     pub zh: String,
 }
 
-/// What a script is written from. How much of it reaches the model is the
-/// ai group's choice.
+/// What a script is written from. How much of it reaches the model is up to
+/// the writer: an agent, or the ai group.
 #[derive(Clone, Debug, PartialEq, Serialize, specta::Type)]
 pub struct ScriptContext {
     pub world: String,

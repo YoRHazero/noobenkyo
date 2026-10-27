@@ -1,16 +1,16 @@
-//! The starting prompts reach the frontend as ai writes them.
+//! The starting prompts reach the frontend as agent writes them.
 
-use ai::{FillSentencesTask, ScriptTask, WordListTask};
+use agent::{FillSentencesTask, ScriptTask, WordListTask};
 use dictionary::ProgressState;
 use noobenkyo_core::commands::prompts::{
-    ai_fill_sentences_prompt, ai_script_prompt, ai_word_list_prompt,
+    agent_fill_sentences_prompt, agent_script_prompt, agent_word_list_prompt,
 };
 
 use crate::support::WORLD;
 
 #[test]
 fn each_prompt_starts_the_agent_on_its_guide() {
-    let script = ai_script_prompt(ScriptTask {
+    let script = agent_script_prompt(ScriptTask {
         world: WORLD.into(),
         appending: None,
         previous: Vec::new(),
@@ -19,7 +19,7 @@ fn each_prompt_starts_the_agent_on_its_guide() {
     assert!(script.contains("「星见町」写新的一集剧本"));
     assert!(script.contains("`noobenkyo listening guide`"));
 
-    let sentences = ai_fill_sentences_prompt(FillSentencesTask {
+    let sentences = agent_fill_sentences_prompt(FillSentencesTask {
         keyword: None,
         progress: ProgressState::Any,
         limit: 20,
@@ -28,7 +28,7 @@ fn each_prompt_starts_the_agent_on_its_guide() {
     assert!(sentences.contains("`noobenkyo dictionary guide`"));
     assert!(sentences.contains("--limit 20`"));
 
-    let words = ai_word_list_prompt(WordListTask {
+    let words = agent_word_list_prompt(WordListTask {
         topic: "便利店购物".into(),
         count: 50,
         per_sense: 2,
