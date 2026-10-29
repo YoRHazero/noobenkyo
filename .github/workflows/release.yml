@@ -1,0 +1,85 @@
+# Pushing a tag like v0.1.0 builds the app on macOS (Apple Silicon) and
+# Windows, and puts the installers in a draft release. The agent command line
+# is not released: it has to match the app's version, so it is built from the
+# same checkout as the app. Nothing is signed with a paid certificate; macOS
+# gets an ad-hoc signature from tauri.conf.json.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  TAG: ${{ github.ref_name }}
+  GH_TOKEN: ${{ github.token }}
+  GH_REPO: ${{ github.repository }}
+
+jobs:
+  draft:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Check the tag matches the version
+        run: |
+          app=$(jq -r .version crates/core/tauri.conf.json)
+          workspace=$(sed -n 's/^version = "\(.*\)"$/\1/p' Cargo.toml | head -n 1)
+          if [ "$TAG" != "v$app" ] || [ "$app" != "$workspace" ]; then
+            echo "tag $TAG, tauri.conf.json $app, Cargo.toml $workspace: they must agree" >&2
+            exit 1
+          fi
+
+      - name: Create the draft release
+        run: |
+          gh release create "$TAG" --draft --title "noobenkyo ${TAG#v}" --notes "安装方法见 README 的「安装」一节。
+
+          - \`noobenkyo_*_aarch64.dmg\`：macOS（Apple Silicon）
+          - \`noobenkyo_*_x64-setup.exe\`：Windows"
+
+  build:
+    needs: draft
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            bundle: dmg
+            bundle_files: target/release/bundle/dmg/*.dmg
+          - os: windows-latest
+            bundle: nsis
+            bundle_files: target/release/bundle/nsis/*-setup.exe
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: web/package.json
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Install frontend dependencies
+        working-directory: web
+        run: pnpm install --frozen-lockfile
+
+      - name: Build the app
+        working-directory: web
+        run: pnpm tauri build --bundles ${{ matrix.bundle }}
+
+      - name: Upload to the draft release
+        run: gh release upload "$TAG" ${{ matrix.bundle_files }} --clobber
