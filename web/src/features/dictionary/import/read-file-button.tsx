@@ -23,7 +23,7 @@ export function ReadFileButton({ disabled, onRead }: Props) {
     <div className="flex items-center gap-3">
       <ErrorText error={read.error} />
       <Button variant="outline" disabled={disabled || read.isPending} onClick={() => read.mutate()}>
-        打开文件…
+        打开
       </Button>
     </div>
   )

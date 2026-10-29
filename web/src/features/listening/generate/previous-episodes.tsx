@@ -1,7 +1,17 @@
-import { Plus, X } from 'lucide-react'
+import { useState } from 'react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Reorder } from 'motion/react'
 import type { EpisodeSummary } from '@/bindings'
-import { episodeLabel } from '@/features/listening/episode-label'
+import { Button } from '@/components/ui/button'
+import { EpisodeBox } from '@/features/listening/generate/episode-box'
+import { EpisodeOption } from '@/features/listening/generate/episode-option'
+import { ShownEpisode } from '@/features/listening/generate/shown-episode'
+import {
+  addPicked,
+  removePicked,
+  togglePicked,
+  withoutPicks,
+} from '@/features/listening/generate/transfer'
 
 type Props = {
   /** The episodes that may come before, in their order. */
@@ -11,85 +21,114 @@ type Props = {
   onChange: (chosen: string[]) => void
 }
 
+const listClass = 'flex flex-1 flex-col gap-0.5 overflow-y-auto p-1'
+
 /**
- * The episodes before the one to write, as in the question order of the
- * settings: the chosen ones in a column to drag into order, × to take one
- * out; the others below, where a click adds one at the end. None chosen
- * leaves the choice to the agent.
+ * The episodes before the one to write, as a transfer list: the world's
+ * episodes on the left in their order, the chosen ones on the right in the
+ * order the agent reads them, dragged into order there. None chosen leaves
+ * the choice to the agent. Under them, the episode last clicked.
  */
 export function PreviousEpisodes({ episodes, chosen, onChange }: Props) {
+  const [picked, setPicked] = useState<ReadonlySet<string>>(new Set())
+  const [shown, setShown] = useState<string | null>(null)
   const byUuid = new Map(episodes.map((episode) => [episode.uuid, episode]))
   const others = episodes.filter((episode) => !chosen.includes(episode.uuid))
+  const pickedOthers = others.filter((episode) => picked.has(episode.uuid))
+  const pickedChosen = chosen.filter((uuid) => picked.has(uuid))
+
+  const add = (uuids: string[]) => {
+    onChange(
+      addPicked(
+        episodes.map((episode) => episode.uuid),
+        chosen,
+        new Set(uuids),
+      ),
+    )
+    setPicked(withoutPicks(picked, uuids))
+  }
+  const remove = (uuids: string[]) => {
+    onChange(removePicked(chosen, new Set(uuids)))
+    setPicked(withoutPicks(picked, uuids))
+  }
+  const toggle = (uuid: string) => {
+    setPicked(togglePicked(picked, uuid))
+    setShown(uuid)
+  }
+
   return (
     <div className="flex flex-col gap-3">
-      {chosen.length === 0 ? (
-        <p className="text-sm text-muted-foreground">无：交给 agent 判断</p>
-      ) : (
-        <Reorder.Group
-          axis="y"
-          values={chosen}
-          onReorder={onChange}
-          className="flex flex-col gap-1.5"
-        >
-          {chosen.map((uuid, index) => {
-            const episode = byUuid.get(uuid)
-            return (
-              episode && (
-                <Reorder.Item
-                  key={uuid}
-                  value={uuid}
-                  whileDrag={{ scale: 1.02, boxShadow: '0 6px 16px rgb(0 0 0 / 0.15)' }}
-                  className="flex cursor-grab items-center gap-2 rounded-md border bg-card py-1 pr-1 pl-2.5 text-sm shadow-xs select-none active:cursor-grabbing"
-                >
-                  <span className="w-4 text-xs text-muted-foreground tabular-nums">
-                    {index + 1}
-                  </span>
-                  <EpisodeName episode={episode} />
-                  <button
-                    type="button"
-                    aria-label={`去掉${episode.title}`}
-                    className="ml-auto rounded-sm p-0.5 text-muted-foreground hover:bg-accent hover:text-foreground"
-                    // A press on × is not the start of a drag.
-                    onPointerDown={(event) => event.stopPropagation()}
-                    onClick={() => onChange(chosen.filter((u) => u !== uuid))}
-                  >
-                    <X className="size-3.5" />
-                  </button>
-                </Reorder.Item>
-              )
-            )
-          })}
-        </Reorder.Group>
-      )}
-      {others.length > 0 && (
-        <div className="flex flex-col gap-1">
-          <p className="text-xs text-muted-foreground">其他集</p>
-          <div className="flex max-h-48 flex-col gap-1 overflow-y-auto">
+      <div className="grid grid-cols-[1fr_auto_1fr] gap-3">
+        <EpisodeBox title="已有剧本" empty="无" isEmpty={others.length === 0}>
+          <ul role="listbox" aria-label="已有剧本" aria-multiselectable className={listClass}>
             {others.map((episode) => (
-              <button
+              <EpisodeOption
                 key={episode.uuid}
-                type="button"
-                className="flex items-center gap-2 rounded-md border border-dashed px-2.5 py-1 text-left text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
-                onClick={() => onChange([...chosen, episode.uuid])}
-              >
-                <Plus className="size-3.5 shrink-0" />
-                <EpisodeName episode={episode} />
-              </button>
+                episode={episode}
+                picked={picked.has(episode.uuid)}
+                reorderable={false}
+                onToggle={() => toggle(episode.uuid)}
+                onMove={() => {
+                  add([episode.uuid])
+                  setShown(episode.uuid)
+                }}
+              />
             ))}
-          </div>
+          </ul>
+        </EpisodeBox>
+        <div className="flex flex-col justify-center gap-2">
+          <Button
+            variant="outline"
+            size="icon-sm"
+            aria-label="加进前序剧本"
+            disabled={pickedOthers.length === 0}
+            onClick={() => add(pickedOthers.map((episode) => episode.uuid))}
+          >
+            <ChevronRight />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon-sm"
+            aria-label="移出前序剧本"
+            disabled={pickedChosen.length === 0}
+            onClick={() => remove(pickedChosen)}
+          >
+            <ChevronLeft />
+          </Button>
         </div>
-      )}
+        <EpisodeBox title="前序剧本" empty="不指定" isEmpty={chosen.length === 0}>
+          <Reorder.Group
+            axis="y"
+            values={chosen}
+            onReorder={onChange}
+            layoutScroll
+            role="listbox"
+            aria-label="前序剧本"
+            aria-multiselectable
+            className={listClass}
+          >
+            {chosen.map((uuid) => {
+              const episode = byUuid.get(uuid)
+              return (
+                episode && (
+                  <EpisodeOption
+                    key={uuid}
+                    episode={episode}
+                    picked={picked.has(uuid)}
+                    reorderable
+                    onToggle={() => toggle(uuid)}
+                    onMove={() => {
+                      remove([uuid])
+                      setShown(uuid)
+                    }}
+                  />
+                )
+              )
+            })}
+          </Reorder.Group>
+        </EpisodeBox>
+      </div>
+      <ShownEpisode episode={shown === null ? undefined : byUuid.get(shown)} />
     </div>
-  )
-}
-
-function EpisodeName({ episode }: { episode: EpisodeSummary }) {
-  return (
-    <span className="min-w-0 truncate">
-      <span className="mr-2 text-muted-foreground tabular-nums">
-        {episodeLabel(episode.number)}
-      </span>
-      {episode.title}
-    </span>
   )
 }

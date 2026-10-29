@@ -86,7 +86,7 @@ export function ImportScriptDialog({ target, title, onClose }: Props) {
               disabled={boxLocked || read.isPending}
               onClick={() => read.mutate()}
             >
-              打开文件…
+              打开
             </Button>
           </div>
           <Textarea

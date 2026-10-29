@@ -43,13 +43,13 @@ export function WorldDetail({ name, onDeleted }: Props) {
           <>
             <ImportScriptButton
               target={{ kind: 'newEpisode', world: name }}
-              label="导入剧本…"
+              label="导入"
               title={`导入剧本：${name}的新一集`}
             />
             <GenerateButton
               world={name}
               appending={null}
-              label="生成…"
+              label="生成"
               title={`生成：${name}的新一集`}
             />
           </>

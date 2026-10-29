@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
 import { nooChan } from '@/stores/no-chan'
+import { DrawPremiseButton } from '@/features/listening/generate/draw-premise-button'
 import { PreviousEpisodes } from '@/features/listening/generate/previous-episodes'
 import { scriptPrompt } from '@/features/listening/generate/script-prompt'
 
@@ -38,8 +39,7 @@ export function GenerateDialog({ world, appending, title }: Props) {
       <DialogHeader>
         <DialogTitle>{title}</DialogTitle>
       </DialogHeader>
-      <section className="flex flex-col gap-2">
-        <h3 className="text-sm font-medium">前序集</h3>
+      <section>
         {episodes.error ? (
           <ErrorText error={episodes.error} />
         ) : !episodes.data ? (
@@ -49,10 +49,13 @@ export function GenerateDialog({ world, appending, title }: Props) {
         )}
       </section>
       <section className="flex flex-col gap-2">
-        <h3 className="text-sm font-medium">引子</h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-medium">引子</h3>
+          <DrawPremiseButton />
+        </div>
         <Textarea
           aria-label="引子"
-          placeholder="空着：交给 agent 判断"
+          placeholder="不指定"
           value={premise}
           className="min-h-24"
           onChange={(event) => setPremise(event.target.value)}
@@ -64,7 +67,7 @@ export function GenerateDialog({ world, appending, title }: Props) {
         </Button>
         <CopyButton
           text={prompt}
-          label="复制给 agent"
+          label="复制 prompt"
           onCopied={nooChan.notifyRequest}
           onFailed={nooChan.notifyError}
         />
