@@ -8,12 +8,16 @@ type Props = {
   language: Language
   /** What is said in the reference, or `null` when the character has none. */
   text: string | null
+  /** The character's prompt; `null` if it has none. */
+  prompt: string | null
+  /** Where a missing reference's seed starts: the same for both languages. */
+  seed: number
 }
 
 /** A reference to listen to, or the way to add the missing one. */
-export function ReferenceRow({ name, language, text }: Props) {
+export function ReferenceRow({ name, language, text, prompt, seed }: Props) {
   if (text === null) {
-    return <AddReference name={name} language={language} />
+    return <AddReference name={name} language={language} prompt={prompt} initialSeed={seed} />
   }
   return (
     // Lined up with the label and the text's first line, however many lines it takes.

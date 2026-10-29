@@ -1,4 +1,5 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
+import type { Language } from '@/bindings'
 import { useListeningCreateCharacter } from '@/backend/listening/use-listening-create-character'
 import { ChoiceButton } from '@/components/choice-button'
 import { ErrorText } from '@/components/error-text'
@@ -10,19 +11,33 @@ import { genderNames, genders } from '@/features/listening/characters/gender-nam
 import { KanaField } from '@/features/listening/characters/kana-field'
 import { PromptField } from '@/features/listening/characters/prompt-field'
 import { ReferenceField } from '@/features/listening/characters/reference-field'
+import { SeedField } from '@/features/listening/characters/seed-field'
 import { useCharacterDraft } from '@/features/listening/characters/use-character-draft'
+import { parseSeed, randomSeed, voiceDesign } from '@/features/listening/characters/voice-design'
 
 type Props = {
   onCreated: (name: string) => void
 }
 
 /**
- * Creates a character, with the references uploaded or none: they can be
- * added later, and only synthesis needs them. A rejected form keeps what was
- * typed and lists every problem; while creating, it cannot be closed.
+ * Creates a character, with references uploaded, made up from the prompt,
+ * or none: they can be added later, and only synthesis needs them. Both
+ * languages start from one seed, drawn as the form opens, so they sound like
+ * one person; each language's seed can be typed or drawn again on its own.
+ * A rejected form keeps what was typed and lists every problem; while
+ * creating, it cannot be closed.
  */
 export function NewCharacterDialog({ onCreated }: Props) {
   const draft = useCharacterDraft()
+  const [seeds, setSeeds] = useState(() => {
+    const seed = String(randomSeed())
+    return { ja: seed, zh: seed }
+  })
+  const setSeed = (language: Language, seed: string) => setSeeds({ ...seeds, [language]: seed })
+  const designFor = (language: Language) => {
+    const seed = parseSeed(seeds[language])
+    return seed === null ? null : voiceDesign(draft.prompt, seed)
+  }
   const create = useListeningCreateCharacter()
   const busy = create.isPending
   const keepOpen = (event: Event) => {
@@ -103,11 +118,20 @@ export function NewCharacterDialog({ onCreated }: Props) {
         <FormRow label="参考音">
           <div className="grid grid-cols-2 gap-4">
             {languages.map((language) => (
-              <div key={language} className="flex min-w-0 flex-col gap-1">
-                <span className="text-xs text-muted-foreground">{languageNames[language]}</span>
+              <div key={language} className="flex min-w-0 flex-col gap-1.5">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm font-medium">{languageNames[language]}</span>
+                  <SeedField
+                    value={seeds[language]}
+                    disabled={busy}
+                    onChange={(seed) => setSeed(language, seed)}
+                    onRedraw={() => setSeed(language, String(randomSeed()))}
+                  />
+                </div>
                 <ReferenceField
                   language={language}
                   draft={draft.references[language]}
+                  design={designFor(language)}
                   disabled={busy}
                   onChange={(reference) => draft.setReference(language, reference)}
                 />

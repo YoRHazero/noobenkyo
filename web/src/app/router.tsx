@@ -1,14 +1,9 @@
-import {
-  createRootRoute,
-  createRoute,
-  createRouter,
-  Outlet,
-  redirect,
-} from '@tanstack/react-router'
+import { createRootRoute, createRoute, createRouter, redirect } from '@tanstack/react-router'
 import { endReview } from '@/backend/review/end-review'
 import { FocusLayout } from '@/app/focus-layout'
 import { HomePage } from '@/app/home-page'
 import { Layout } from '@/app/layout'
+import { Root } from '@/app/root'
 import { CharacterRoute, EpisodeRoute, TheaterRoute, WorldRoute } from '@/app/listening-routes'
 import { ReviewSessionRoute } from '@/app/study-routes'
 import { DictionaryPage } from '@/features/dictionary/dictionary-page'
@@ -19,7 +14,7 @@ import { LearnPage } from '@/features/study/learn/learn-page'
 import { ReviewPage } from '@/features/study/review/review-page'
 import type { ReviewMode } from '@/features/study/review/review-mode'
 
-const rootRoute = createRootRoute({ component: Outlet })
+const rootRoute = createRootRoute({ component: Root })
 
 /** The pages under the top navigation. */
 const appRoute = createRoute({ getParentRoute: () => rootRoute, id: 'app', component: Layout })

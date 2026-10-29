@@ -1,5 +1,5 @@
 import { useState, type MouseEvent } from 'react'
-import { Pencil, RefreshCw } from 'lucide-react'
+import { Pencil } from 'lucide-react'
 import type { LineView } from '@/bindings'
 import { loadListeningAudio } from '@/backend/listening/load-listening-audio'
 import { Button } from '@/components/ui/button'
@@ -8,8 +8,10 @@ import { ClipButton } from '@/features/listening/clip/clip-button'
 import { languageNames, languages } from '@/features/listening/language-names'
 import { RubyLine } from '@/features/listening/ruby-line'
 import { LineEditor } from '@/features/listening/episodes/line-editor'
+import { ResynthesizeButton } from '@/features/listening/episodes/resynthesize-button'
 
 type Props = {
+  episode: string
   line: LineView
   /** From 1, in the episode's order. */
   number: number
@@ -18,11 +20,10 @@ type Props = {
 }
 
 /**
- * A line with its audio to listen to. The voice is named when it is not the
- * speaker, since it decides who reads the line. Synthesizing again is not
- * there yet, so its button is reserved.
+ * A line with its audio to listen to and to synthesize again. The voice is
+ * named when it is not the speaker, since it decides who reads the line.
  */
-export function LineRow({ line, number, ticked, onTick }: Props) {
+export function LineRow({ episode, line, number, ticked, onTick }: Props) {
   const [editing, setEditing] = useState(false)
   return (
     <li className="grid grid-cols-[1.25rem_2rem_6rem_1fr_auto] items-start gap-x-3 py-2.5">
@@ -73,9 +74,7 @@ export function LineRow({ line, number, ticked, onTick }: Props) {
         >
           <Pencil />
         </Button>
-        <Button variant="ghost" size="icon-sm" aria-label="重新合成" disabled>
-          <RefreshCw />
-        </Button>
+        <ResynthesizeButton line={line} episode={episode} />
       </div>
     </li>
   )

@@ -7,6 +7,7 @@ import { LineRow } from '@/features/listening/episodes/line-row'
 import { clickLine, noSelection } from '@/features/listening/episodes/line-selection'
 
 type Props = {
+  episode: string
   lines: LineView[]
 }
 
@@ -14,7 +15,7 @@ type Props = {
  * The episode's lines, in order. Lines are ticked to be deleted together;
  * none can be inserted or moved.
  */
-export function LineList({ lines }: Props) {
+export function LineList({ episode, lines }: Props) {
   const [selection, setSelection] = useState(noSelection)
   const remove = useListeningDeleteLines()
   const order = lines.map((line) => line.id)
@@ -43,6 +44,7 @@ export function LineList({ lines }: Props) {
         {lines.map((line, index) => (
           <LineRow
             key={line.id}
+            episode={episode}
             line={line}
             number={index + 1}
             ticked={selection.ids.has(line.id)}

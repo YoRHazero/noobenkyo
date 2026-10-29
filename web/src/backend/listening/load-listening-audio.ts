@@ -1,5 +1,5 @@
 import { commands, type Language, type LineId } from '@/bindings'
-import { wavBlob } from '@/backend/listening/audio-bytes'
+import { wavBlob } from '@/backend/audio-bytes'
 import { unwrap } from '@/backend/unwrap'
 
 /**

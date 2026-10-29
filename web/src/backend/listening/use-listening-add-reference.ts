@@ -1,5 +1,5 @@
 import { commands } from '@/bindings'
-import { byteArray } from '@/backend/listening/audio-bytes'
+import { byteArray } from '@/backend/audio-bytes'
 import type { UploadedReference } from '@/backend/listening/uploaded-reference'
 import { unwrap } from '@/backend/unwrap'
 import { useChange } from '@/backend/use-change'

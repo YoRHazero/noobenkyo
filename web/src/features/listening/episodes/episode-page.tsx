@@ -9,6 +9,7 @@ import { ImportScriptButton } from '@/features/listening/script/import-script-bu
 import { DeleteEpisodeButton } from '@/features/listening/episodes/delete-episode-button'
 import { EpisodeHeader } from '@/features/listening/episodes/episode-header'
 import { LineList } from '@/features/listening/episodes/line-list'
+import { SynthesisControl } from '@/features/listening/episodes/synthesis-control'
 
 type Props = {
   uuid: string
@@ -16,7 +17,7 @@ type Props = {
 
 /**
  * An episode to edit: its header and its lines. Playing it opens the theater
- * there. Synthesizing is not there yet; its button is reserved.
+ * there; synthesizing fills the audio it lacks.
  */
 export function EpisodePage({ uuid }: Props) {
   const episode = useListeningEpisode(uuid)
@@ -65,9 +66,7 @@ export function EpisodePage({ uuid }: Props) {
           label="续写：生成…"
           title={`续写：${episodeLabel(detail.number)} ${detail.title}`}
         />
-        <Button variant="outline" size="sm" disabled>
-          合成
-        </Button>
+        <SynthesisControl episode={detail.uuid} />
         <div className="ml-auto">
           <DeleteEpisodeButton
             episode={detail.uuid}
@@ -77,7 +76,7 @@ export function EpisodePage({ uuid }: Props) {
           />
         </div>
       </div>
-      <LineList lines={detail.lines} />
+      <LineList episode={detail.uuid} lines={detail.lines} />
     </div>
   )
 }
