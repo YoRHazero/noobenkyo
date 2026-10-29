@@ -4,7 +4,7 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
-const features = ['dictionary', 'study', 'settings', 'listening']
+const features = ['dictionary', 'study', 'settings', 'listening', 'models']
 
 /** Imports outside the current directory go through `@/`, so paths can be checked. */
 const noParentImports = { regex: '^\\.\\./', message: '跨目录引用请用 @/ 路径' }

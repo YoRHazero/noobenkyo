@@ -4,7 +4,7 @@ use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
-use ai::{AiSettings, InvokerSettings, Machine, QwenTtsModel, Runtime, TtsOp};
+use ai::{AiSettings, InvokerSettings, Machine, ModelChoice, QwenTtsModel, Runtime, TtsOp};
 use dictionary::{ImportReport, SenseKey};
 use inbox::InboxSource;
 use listening::{Gender, Language, NewCharacter, NewReference, Role, Uuid};
@@ -128,7 +128,8 @@ impl TestApp {
     }
 
     /// Gives ai the GPU machines of ai-invoker's test settings: the
-    /// `InvokerSettings` JSON that `NOOBENKYO_INVOKER_TEST_SETTINGS` points at.
+    /// `InvokerSettings` JSON that `NOOBENKYO_INVOKER_TEST_SETTINGS` points at,
+    /// whose machines have the two models picked here.
     pub fn with_gpu_machines(&self) {
         let variable = "NOOBENKYO_INVOKER_TEST_SETTINGS";
         let path = std::env::var(variable).unwrap_or_else(|_| panic!("{variable} is not set"));
@@ -136,7 +137,13 @@ impl TestApp {
         let invoker: InvokerSettings = serde_json::from_str(&text).unwrap();
         self.state()
             .ai
-            .update_settings(AiSettings { invoker })
+            .update_settings(AiSettings {
+                invoker,
+                models: ModelChoice {
+                    speak: Some("qwen3-tts-1.7b-base".into()),
+                    design_voice: Some("qwen3-tts-1.7b-voicedesign".into()),
+                },
+            })
             .unwrap();
     }
 
@@ -236,8 +243,13 @@ fn hanging_machine(python: &Path) -> AiSettings {
                         path: "/nowhere/base".into(),
                     }],
                 }],
+                probe: None,
             }],
             ..InvokerSettings::default()
+        },
+        models: ModelChoice {
+            speak: Some("qwen3-tts-1.7b-base".into()),
+            design_voice: None,
         },
     }
 }

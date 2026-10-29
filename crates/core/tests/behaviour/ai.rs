@@ -1,6 +1,7 @@
 //! The ai commands: speaking an episode's lines as a task, cancelling it, and
-//! designing a voice. No GPU machine: the jobs fail for want of one, or wait
-//! on a machine that never answers. ai-pipeline tests the jobs themselves.
+//! designing a voice. No GPU machine: the jobs fail for want of a model
+//! picked, or wait on a machine that never answers. ai-pipeline tests the
+//! jobs themselves.
 
 use listening::{Language, Uuid};
 use noobenkyo_core::commands::ai::speak_lines::ai_start_speak_lines;
@@ -23,7 +24,7 @@ async fn missing(app: &TestApp, episode: Uuid) -> u32 {
 }
 
 #[tokio::test]
-async fn without_machines_synthesis_fails_and_lets_the_episode_go() {
+async fn without_a_model_synthesis_fails_and_lets_the_episode_go() {
     let (app, episode) = TestApp::with_world().await;
     let total = missing(&app, episode).await;
     assert!(total > 0);
@@ -42,7 +43,7 @@ async fn without_machines_synthesis_fails_and_lets_the_episode_go() {
         events.finished().await,
         AiTaskFinished {
             task,
-            outcome: failed("没有能运行 qwen3-tts-1.7b-base 的机器"),
+            outcome: failed("未选择合成台词模型"),
         }
     );
 
@@ -106,7 +107,7 @@ async fn an_episode_that_is_gone_fails_the_task() {
 }
 
 #[tokio::test]
-async fn designing_a_voice_needs_a_machine() {
+async fn designing_a_voice_needs_a_model_picked() {
     let app = TestApp::fresh().await;
     let designed = ai_design_voice(
         app.state(),
@@ -116,10 +117,7 @@ async fn designing_a_voice_needs_a_machine() {
         7,
     )
     .await;
-    assert_eq!(
-        designed.unwrap_err().message,
-        "没有能运行 qwen3-tts-1.7b-voicedesign 的机器"
-    );
+    assert_eq!(designed.unwrap_err().message, "未选择生成参考音模型");
 }
 
 /// Real synthesis on the machines in ai-invoker's test settings. Every

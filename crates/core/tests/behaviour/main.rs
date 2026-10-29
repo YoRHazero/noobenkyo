@@ -3,6 +3,7 @@
 //! dependency rules between crates.
 
 mod ai;
+mod ai_models;
 mod bindings;
 mod dependency_rules;
 mod dictionary;

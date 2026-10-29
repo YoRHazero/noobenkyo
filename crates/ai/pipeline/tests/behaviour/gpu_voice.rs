@@ -3,7 +3,7 @@
 use ai_pipeline::{Language, design_voice, speak_lines};
 use futures_util::StreamExt;
 
-use crate::support::{gpu_invoker, is_wav, item, sample};
+use crate::support::{DESIGN, SPEAK, gpu_invoker, is_wav, item, sample};
 
 const PROMPT: &str = "20岁的女性，声音明亮，语速适中。";
 const SAMPLE_TEXT: &str = "はじめまして。今日はいい天気ですね。一緒に散歩しませんか。";
@@ -12,7 +12,7 @@ const SAMPLE_TEXT: &str = "はじめまして。今日はいい天気ですね�
 #[ignore = "needs a GPU machine"]
 async fn designs_a_voice_and_speaks_in_it() {
     let invoker = gpu_invoker();
-    let reference = design_voice(&invoker, PROMPT, Language::Ja, SAMPLE_TEXT, 7)
+    let reference = design_voice(&invoker, DESIGN, PROMPT, Language::Ja, SAMPLE_TEXT, 7)
         .await
         .unwrap();
     assert!(is_wav(&reference));
@@ -22,7 +22,7 @@ async fn designs_a_voice_and_speaks_in_it() {
         item("美咲", Language::Ja, "またね。"),
     ];
     let samples = vec![sample("美咲", Language::Ja, reference, SAMPLE_TEXT)];
-    let spoken: Vec<_> = speak_lines(&invoker, items, samples)
+    let spoken: Vec<_> = speak_lines(&invoker, SPEAK, items, samples)
         .map(Result::unwrap)
         .collect()
         .await;
@@ -37,7 +37,7 @@ async fn designs_a_voice_and_speaks_in_it() {
 #[ignore = "needs a GPU machine"]
 async fn dropping_the_stream_stops_after_the_item_under_way() {
     let invoker = gpu_invoker();
-    let reference = design_voice(&invoker, PROMPT, Language::Ja, SAMPLE_TEXT, 7)
+    let reference = design_voice(&invoker, DESIGN, PROMPT, Language::Ja, SAMPLE_TEXT, 7)
         .await
         .unwrap();
     let items = vec![
@@ -46,7 +46,7 @@ async fn dropping_the_stream_stops_after_the_item_under_way() {
         item("美咲", Language::Ja, "おやすみ。"),
     ];
     let samples = vec![sample("美咲", Language::Ja, reference, SAMPLE_TEXT)];
-    let first: Vec<_> = speak_lines(&invoker, items, samples)
+    let first: Vec<_> = speak_lines(&invoker, SPEAK, items, samples)
         .take(1)
         .collect()
         .await;

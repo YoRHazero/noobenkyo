@@ -16,7 +16,7 @@ pub mod tasks;
 use tauri::Manager;
 
 use crate::app_state::AppState;
-use crate::events::inbox_changed;
+use crate::events::{ai_machines_probed, inbox_changed};
 
 pub fn run() {
     let builder = bindings::builder();
@@ -51,6 +51,10 @@ pub fn run() {
                 Ok(watcher) => {
                     app.manage(state);
                     app.manage(watcher);
+                    let handle = app.handle().clone();
+                    tauri::async_runtime::spawn(async move {
+                        ai_machines_probed::probe_all(&handle).await;
+                    });
                 }
                 Err(error) => startup_failure::report(app.handle(), &error, &data_dir),
             }

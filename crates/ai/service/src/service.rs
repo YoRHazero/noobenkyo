@@ -3,7 +3,7 @@ use std::sync::{Mutex, MutexGuard, PoisonError};
 
 use ai_invoker::Invoker;
 
-use crate::{AiError, AiSettings, settings_file};
+use crate::{AiError, AiSettings, MachineProbe, settings_file};
 
 /// The app's own use of models: its settings and the invoker built from
 /// them. Touches only its own data directory.
@@ -13,6 +13,8 @@ pub struct AiService {
     /// Every call holds the read lock from start to end, waiting for a
     /// machine included, so new settings never land under a running call.
     pub(crate) invoker: tokio::sync::RwLock<Invoker>,
+    /// What the last probe of all the machines found.
+    pub(crate) reports: Mutex<Vec<MachineProbe>>,
 }
 
 struct Loaded {
@@ -35,6 +37,7 @@ impl AiService {
             dir: dir.to_owned(),
             invoker: tokio::sync::RwLock::new(Invoker::new(settings.invoker.clone())),
             loaded: Mutex::new(Loaded { settings, problem }),
+            reports: Mutex::new(Vec::new()),
         })
     }
 

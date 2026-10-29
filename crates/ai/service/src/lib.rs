@@ -4,17 +4,19 @@
 //! types and stores what comes back. See dev_docs/Pipeline.md.
 
 mod error;
+mod probe;
 mod service;
 mod settings;
 mod settings_file;
 mod voice;
 
 pub use error::AiError;
+pub use probe::MachineProbe;
 pub use service::AiService;
-pub use settings::AiSettings;
+pub use settings::{AiSettings, ModelChoice};
 
 pub use ai_invoker::{
-    CommandLayer, InvokerSettings, InvokerSettingsError, LlamaCppModel, Machine, QwenTtsModel,
-    Runtime, TtsOp,
+    CommandLayer, FoundRuntime, InvokerSettings, InvokerSettingsError, LlamaCppModel, Machine,
+    MachineReport, ProbeDirs, QwenTtsModel, Runtime, TtsOp,
 };
 pub use ai_pipeline::{Language, PipelineError, SpeakItem, Spoken, VoiceSample};

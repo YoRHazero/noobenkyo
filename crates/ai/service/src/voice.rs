@@ -1,5 +1,5 @@
 //! Speaking lines and designing voices, handed on to ai-pipeline under the
-//! invoker's read lock.
+//! invoker's read lock, with the model the settings pick for each.
 
 use std::pin::pin;
 
@@ -21,8 +21,13 @@ impl AiService {
                 yield Err(error);
                 return;
             }
+            // Read under the lock, so the model matches the invoker's settings.
             let invoker = self.invoker.read().await;
-            let mut spoken = pin!(ai_pipeline::speak_lines(&invoker, items, samples));
+            let Some(model) = self.settings().models.speak else {
+                yield Err(AiError::NoModel("合成台词"));
+                return;
+            };
+            let mut spoken = pin!(ai_pipeline::speak_lines(&invoker, &model, items, samples));
             while let Some(result) = spoken.next().await {
                 yield result.map_err(AiError::from);
             }
@@ -41,6 +46,11 @@ impl AiService {
     ) -> Result<Vec<u8>, AiError> {
         self.ready()?;
         let invoker = self.invoker.read().await;
-        Ok(ai_pipeline::design_voice(&invoker, prompt, language, text, seed).await?)
+        let model = self
+            .settings()
+            .models
+            .design_voice
+            .ok_or(AiError::NoModel("生成参考音"))?;
+        Ok(ai_pipeline::design_voice(&invoker, &model, prompt, language, text, seed).await?)
     }
 }

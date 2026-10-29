@@ -15,7 +15,7 @@ pub(crate) struct CommandLine {
 
 impl CommandLine {
     /// `python -`, which runs the script sent on stdin.
-    pub(crate) fn install(machine: &Machine, python: &str, connect_timeout_secs: u64) -> Self {
+    pub(crate) fn script(machine: &Machine, python: &str, connect_timeout_secs: u64) -> Self {
         Self::on(machine, &[python, "-"], connect_timeout_secs)
     }
 
@@ -80,6 +80,7 @@ mod tests {
             ssh: ssh.map(str::to_owned),
             command_layers: layers.iter().map(|l| CommandLayer::parse(l)).collect(),
             runtimes: vec![],
+            probe: None,
         }
     }
 
@@ -102,15 +103,15 @@ mod tests {
                 "/home/zero/.cache/x"
             ]
         );
-        let install = CommandLine::install(&yorha, "/usr/bin/python3", 9);
-        assert_eq!(install.args[3], "ConnectTimeout=9");
-        assert_eq!(&install.args[7..], ["/usr/bin/python3", "-"]);
+        let script = CommandLine::script(&yorha, "/usr/bin/python3", 9);
+        assert_eq!(script.args[3], "ConnectTimeout=9");
+        assert_eq!(&script.args[7..], ["/usr/bin/python3", "-"]);
     }
 
     #[test]
     fn runs_here_without_ssh() {
         let local = machine(None, &[]);
-        let command = CommandLine::install(&local, "/usr/bin/python3", 5);
+        let command = CommandLine::script(&local, "/usr/bin/python3", 5);
         assert_eq!(
             command,
             CommandLine {
@@ -118,7 +119,7 @@ mod tests {
                 args: vec!["-".into()]
             }
         );
-        let wrapped = CommandLine::install(&machine(None, &["docker exec -i gpu"]), "/py", 5);
+        let wrapped = CommandLine::script(&machine(None, &["docker exec -i gpu"]), "/py", 5);
         assert_eq!(wrapped.program, "docker");
         assert_eq!(wrapped.args, ["exec", "-i", "gpu", "/py", "-"]);
     }

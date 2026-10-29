@@ -9,6 +9,7 @@ import { ReviewSessionRoute } from '@/app/study-routes'
 import { DictionaryPage } from '@/features/dictionary/dictionary-page'
 import { CharactersTab } from '@/features/listening/characters/characters-tab'
 import { WorldsTab } from '@/features/listening/worlds/worlds-tab'
+import { ModelsPage } from '@/features/models/models-page'
 import { SettingsPage } from '@/features/settings/settings-page'
 import { LearnPage } from '@/features/study/learn/learn-page'
 import { ReviewPage } from '@/features/study/review/review-page'
@@ -74,6 +75,7 @@ const routeTree = rootRoute.addChildren([
     createRoute({ getParentRoute: () => appRoute, path: '/', component: HomePage }),
     createRoute({ getParentRoute: () => appRoute, path: '/review', component: ReviewPage }),
     createRoute({ getParentRoute: () => appRoute, path: '/dictionary', component: DictionaryPage }),
+    createRoute({ getParentRoute: () => appRoute, path: '/models', component: ModelsPage }),
     createRoute({ getParentRoute: () => appRoute, path: '/settings', component: SettingsPage }),
     createRoute({
       getParentRoute: () => appRoute,

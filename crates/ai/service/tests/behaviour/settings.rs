@@ -51,10 +51,8 @@ async fn a_broken_file_is_named_by_every_call_until_settings_replace_it() {
     let designed = service
         .design_voice("明亮的声音。", Language::Ja, "おはよう。", 7)
         .await;
-    assert_eq!(
-        designed.unwrap_err().to_string(),
-        "没有能运行 qwen3-tts-1.7b-voicedesign 的机器"
-    );
+    // The file is no longer named: the call gets as far as picking a model.
+    assert_eq!(designed.unwrap_err().to_string(), "未选择生成参考音模型");
 }
 
 #[test]

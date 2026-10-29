@@ -5,4 +5,5 @@ mod gpu_lifecycle;
 mod gpu_llm;
 mod gpu_tts;
 mod no_machine;
+mod probe;
 mod support;

@@ -57,7 +57,8 @@ impl InvokerSettings {
     }
 }
 
-fn check_machine(machine: &Machine) -> Result<(), InvokerSettingsError> {
+/// One machine's checks, also run before probing one not saved yet.
+pub(crate) fn check_machine(machine: &Machine) -> Result<(), InvokerSettingsError> {
     let name = || machine.name.clone();
     if let Some(ssh) = &machine.ssh
         && (!is_safe_on_command_line(ssh) || ssh.starts_with('-'))
@@ -75,6 +76,7 @@ fn check_machine(machine: &Machine) -> Result<(), InvokerSettingsError> {
             check_command_line(machine, arg)?;
         }
     }
+    check_probe(machine)?;
     let mut models: Vec<&str> = Vec::new();
     for runtime in &machine.runtimes {
         check_absolute(machine, "python", runtime.python())?;
@@ -105,6 +107,27 @@ fn check_machine(machine: &Machine) -> Result<(), InvokerSettingsError> {
             models.push(model);
             check_absolute(machine, &format!("模型 {model} 的 path"), path)?;
         }
+    }
+    Ok(())
+}
+
+/// The probe's directories. qwen-tts's python and the one for llama.cpp go
+/// on the command line; the rest only goes over stdin.
+fn check_probe(machine: &Machine) -> Result<(), InvokerSettingsError> {
+    let Some(dirs) = &machine.probe else {
+        return Ok(());
+    };
+    check_absolute(machine, "模型文件夹", &dirs.models)?;
+    if let Some(dir) = &dirs.qwen_tts {
+        check_absolute(machine, "qwen-tts 目录", dir)?;
+        check_command_line(machine, dir)?;
+    }
+    if let Some(dir) = &dirs.llama_cpp {
+        check_absolute(machine, "llama.cpp 目录", dir)?;
+    }
+    if let Some(python) = &dirs.llama_python {
+        check_absolute(machine, "llama.cpp 的 python", python)?;
+        check_command_line(machine, python)?;
     }
     Ok(())
 }
@@ -143,7 +166,7 @@ pub(crate) fn is_safe_on_command_line(value: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::settings::{CommandLayer, LlamaCppModel, QwenTtsModel, TtsOp};
+    use crate::settings::{CommandLayer, LlamaCppModel, ProbeDirs, QwenTtsModel, TtsOp};
 
     fn yorha() -> Machine {
         Machine {
@@ -169,6 +192,12 @@ mod tests {
                     }],
                 },
             ],
+            probe: Some(ProbeDirs {
+                models: "/home/zero/models".into(),
+                qwen_tts: Some("/home/zero/opt/qwen-tts".into()),
+                llama_cpp: Some("/home/zero/opt/llama.cpp".into()),
+                llama_python: None,
+            }),
         }
     }
 
@@ -183,6 +212,32 @@ mod tests {
         let mut machine = yorha();
         change(&mut machine);
         with(vec![machine]).validate().unwrap_err()
+    }
+
+    #[test]
+    fn checks_the_probe_directories() {
+        let error = error_of(|m| m.probe.as_mut().unwrap().models = "models".into());
+        assert_eq!(
+            error,
+            InvokerSettingsError::NotAbsolute {
+                machine: "yorha".into(),
+                what: "模型文件夹".into(),
+                path: "models".into(),
+            }
+        );
+        let error = error_of(|m| m.probe.as_mut().unwrap().qwen_tts = Some("/opt/qwen tts".into()));
+        assert_eq!(
+            error,
+            InvokerSettingsError::UnsafeOnCommandLine {
+                machine: "yorha".into(),
+                value: "/opt/qwen tts".into(),
+            }
+        );
+        // The models only go over stdin, so they may have spaces.
+        let spaced = |m: &mut Machine| m.probe.as_mut().unwrap().models = "/My Models".into();
+        let mut machine = yorha();
+        spaced(&mut machine);
+        assert_eq!(with(vec![machine]).validate(), Ok(()));
     }
 
     #[test]

@@ -3,7 +3,7 @@
 use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 
-use ai::{AiSettings, InvokerSettings, Machine, QwenTtsModel, Runtime, TtsOp};
+use ai::{AiSettings, InvokerSettings, Machine, ModelChoice, QwenTtsModel, Runtime, TtsOp};
 
 /// Settings with one machine on this computer whose "python" never answers,
 /// so a call that reaches it waits until it is dropped. The script lives in
@@ -26,8 +26,13 @@ pub fn hanging_machine(dir: &Path) -> AiSettings {
                         path: "/nowhere/voicedesign".into(),
                     }],
                 }],
+                probe: None,
             }],
             ..InvokerSettings::default()
+        },
+        models: ModelChoice {
+            speak: None,
+            design_voice: Some("qwen3-tts-1.7b-voicedesign".into()),
         },
     }
 }

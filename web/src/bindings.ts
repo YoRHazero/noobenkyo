@@ -217,16 +217,49 @@ export const commands = {
 	 *  frontend's: one for both languages of a new character.
 	 */
 	aiDesignVoice: (prompt: string, language: Language, text: string, seed: number) => typedError<number[], CommandError>(__TAURI_INVOKE("ai_design_voice", { prompt, language, text, seed })),
+	aiSettings: () => __TAURI_INVOKE<AiSettings>("ai_settings"),
+	/**
+	 *  Invalid settings are rejected and the old ones kept; so are any while a
+	 *  model call runs or waits.
+	 */
+	aiUpdateSettings: (settings: AiSettings) => typedError<null, CommandError>(__TAURI_INVOKE("ai_update_settings", { settings })),
+	aiDefaultSettings: () => __TAURI_INVOKE<AiSettings>("ai_default_settings"),
+	/**
+	 *  What the last probe of every machine found. The first starts with the
+	 *  app; until it ends, there is nothing.
+	 */
+	aiMachineReports: () => __TAURI_INVOKE<MachineProbe[]>("ai_machine_reports"),
+	/**  Probes every machine in the settings again: the page's 刷新. */
+	aiProbeMachines: () => typedError<MachineProbe[], CommandError>(__TAURI_INVOKE("ai_probe_machines")),
+	/**
+	 *  Probes one machine as the form has it, saved or not: 检查. One that
+	 *  saving would refuse is refused, with the same reason. Nothing is kept.
+	 */
+	aiProbeMachine: (machine: Machine) => typedError<MachineReport, CommandError>(__TAURI_INVOKE("ai_probe_machine", { machine })),
 };
 
 /** Events */
 export const events = {
+	aiMachinesProbed: makeEvent<AiMachinesProbed>("ai-machines-probed"),
 	aiTaskFinished: makeEvent<AiTaskFinished>("ai-task-finished"),
 	aiTaskProgress: makeEvent<AiTaskProgress>("ai-task-progress"),
 	inboxChanged: makeEvent<InboxChanged>("inbox-changed"),
 };
 
 /* Types */
+/**
+ *  Every machine in the settings was probed again, as the app started or on
+ *  刷新: the frontend reads the reports again.
+ */
+export type AiMachinesProbed = null;
+
+/**  Everything the ai group is told, kept in ai/settings.json. */
+export type AiSettings = {
+	invoker: InvokerSettings,
+	/**  The model each use runs on, picked on the model page. */
+	models: ModelChoice,
+};
+
 /**
  *  A task has ended and left the table. What it stored before the end stays
  *  stored, whatever the outcome.
@@ -442,6 +475,16 @@ export type Exported = {
 	entries: number,
 };
 
+export type FoundRuntime = {
+	/**
+	 *  Its python and server by the layout, and every model found for it.
+	 *  The settings take it with only the models the user ticks.
+	 */
+	runtime: Runtime,
+	/**  Its python or llama-server is not where the layout puts it. */
+	problem: string | null,
+};
+
 /**  One piece of a rendered sentence, handed to the frontend as is. */
 export type Fragment = { kind: "text"; text: string } | { kind: "ruby"; base: string; ruby: string } | 
 /**  The target as one unit, made of pieces with or without ruby. */
@@ -534,6 +577,15 @@ export type InboxSource =
 /**  The app's own models. */
 "ai";
 
+export type InvokerSettings = {
+	/**  In order of preference. Empty means there is no backend. */
+	machines: Machine[],
+	/**  How long an executor may sit unused before it is closed. */
+	idle_timeout_secs: number,
+	/**  How long ssh may take to connect before the next machine is tried. */
+	connect_timeout_secs: number,
+};
+
 /**  Whether a submitted answer is right, as far as a fixed rule can tell. */
 export type Judgement = "Correct" | "Wrong" | 
 /**  The rule can tell neither; a model may judge it instead. */
@@ -579,6 +631,59 @@ export type LineView = {
 	audio: Language[],
 };
 
+/**  A GGUF model for llama-server; it only takes `llm_chat`. */
+export type LlamaCppModel = {
+	name: string,
+	path: string,
+	/**  llama-server's arguments that depend on the machine, such as `-c` and `-ngl`. */
+	args: string[],
+};
+
+export type Machine = {
+	/**  For display and logs. */
+	name: string,
+	/**
+	 *  What ssh takes as the destination: an alias from ~/.ssh/config or
+	 *  user@host. None runs the executor on this computer.
+	 */
+	ssh: string | null,
+	/**
+	 *  Commands wrapped around the executor once on the machine, outermost
+	 *  first, such as `wsl -e`. Each is one string in JSON.
+	 */
+	command_layers: string[],
+	runtimes: Runtime[],
+	/**  Where probing looks; calls never read it. None until it is set. */
+	probe?: ProbeDirs | null,
+};
+
+/**  One machine of the settings, as the last probe found it. */
+export type MachineProbe = {
+	machine: string,
+	report: MachineReport,
+};
+
+export type MachineReport = 
+/**  Could not be reached, or nothing on it could run the probe. */
+{ kind: "offline"; reason: string } | { kind: "online"; 
+/**  Whether the models folder is there; `None` when none is given. */
+models_dir: boolean | null; 
+/**  Only when a qwen-tts directory is given. */
+qwen_tts: FoundRuntime | null; 
+/**  Only when a llama.cpp directory is given. */
+llama_cpp: FoundRuntime | null };
+
+/**
+ *  The name of the model each use runs on: one the machines in the settings
+ *  list. None until the user picks one. See dev_docs/Pipeline.md「用途和模型」.
+ */
+export type ModelChoice = {
+	/**  Speaking lines: a TtsClone model. */
+	speak: string | null,
+	/**  Designing voices: a TtsDesign model. */
+	design_voice: string | null,
+};
+
 /**  A character to create. */
 export type NewCharacter = {
 	name: string,
@@ -612,6 +717,24 @@ export type PreviewLine = {
 	/**  `ja` split into text and ruby, for showing it. */
 	ja_ruby: RubySegment[],
 	zh: string,
+};
+
+/**
+ *  The directories a machine is probed in: what the model page needs to
+ *  find its runtimes and models.
+ */
+export type ProbeDirs = {
+	/**  Where the models are: qwen-tts ones a level down, GGUF files anywhere below. */
+	models: string,
+	/**  Where qwen-tts is installed; its python is `.venv/bin/python` in it. */
+	qwen_tts: string | null,
+	/**  Where llama.cpp is installed; its server is `bin/llama-server` in it. */
+	llama_cpp: string | null,
+	/**
+	 *  The python llama.cpp's executor runs on when there is no qwen-tts;
+	 *  `/usr/bin/python3` if left out.
+	 */
+	llama_python: string | null,
 };
 
 /**  Something taken out of an entry text, and why. */
@@ -679,6 +802,12 @@ export type QuizView = {
 	/**  The face of a comprehensive question. */
 	card: Card | null,
 	answer: AnswerInput,
+};
+
+export type QwenTtsModel = {
+	name: string,
+	op: TtsOp,
+	path: string,
 };
 
 /**  A self-rating. */
@@ -767,6 +896,12 @@ export type Role = { kind: "narrator" } | { kind: "main"; description: string } 
  *  shown as ruby.
  */
 export type RubySegment = { kind: "text"; text: string } | { kind: "ruby"; writing: string; reading: string };
+
+/**
+ *  An environment on a machine and the models it runs. A model's runtime
+ *  decides which python starts its executor and which calls it can take.
+ */
+export type Runtime = { kind: "LlamaCpp"; python: string; server: string; models: LlamaCppModel[] } | { kind: "QwenTts"; python: string; models: QwenTtsModel[] };
 
 /**  A script that passes, ready to show; or why it does not pass. */
 export type ScriptPreview = { kind: "passed"; title: string; summary: string; lines: PreviewLine[] } | 
@@ -933,6 +1068,9 @@ export type TaskId = number;
 export type TaskOutcome = { kind: "completed" } | { kind: "cancelled" } | 
 /**  With the message of what went wrong, as the feature wrote it. */
 { kind: "failed"; message: string };
+
+/**  Which TTS call a qwen-tts model takes. */
+export type TtsOp = "TtsClone" | "TtsDesign";
 
 /**  Natural key of a word. */
 export type WordKey = {

@@ -16,3 +16,7 @@ pub(crate) const HEARTBEAT_TIMEOUT_SECS: u64 = 30;
 
 /// How long a closing executor gets to exit before the local process is killed.
 pub(crate) const EXIT_GRACE: Duration = Duration::from_secs(10);
+
+/// From the start of a probe until its report. Probing loads nothing, but
+/// the first connection after the machine boots also starts WSL.
+pub(crate) const PROBE_TIMEOUT: Duration = Duration::from_secs(60);

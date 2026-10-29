@@ -11,6 +11,7 @@ const links = [
   { to: '/', label: '首页', section: null },
   { to: '/dictionary', label: '词库', section: null },
   { to: '/listening/worlds', label: '听力', section: '/listening/' },
+  { to: '/models', label: '模型', section: null },
   { to: '/settings', label: '设置', section: null },
 ] as const
 

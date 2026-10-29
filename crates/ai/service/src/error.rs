@@ -15,6 +15,9 @@ pub enum AiError {
     /// A model call is under way or waiting for a machine.
     #[error("还有模型调用在做或在等，现在改不了设置")]
     Busy,
+    /// No model is picked for this use; the argument names the use.
+    #[error("未选择{0}模型")]
+    NoModel(&'static str),
     #[error(transparent)]
     Pipeline(#[from] PipelineError),
 }

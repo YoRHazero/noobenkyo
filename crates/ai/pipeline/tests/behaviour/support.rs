@@ -2,7 +2,7 @@
 //!
 //! The GPU tests take the machines from the same file as ai-invoker's: the
 //! `InvokerSettings` JSON that `NOOBENKYO_INVOKER_TEST_SETTINGS` points at.
-//! Its machines must offer the models the pipeline names. Run them one at a
+//! Its machines must offer the two models named below. Run them one at a
 //! time:
 //!
 //! NOOBENKYO_INVOKER_TEST_SETTINGS=<file> cargo test -p ai-pipeline -- --ignored --test-threads=1
@@ -11,6 +11,8 @@ use ai_invoker::{Invoker, InvokerSettings};
 use ai_pipeline::{Language, SpeakItem, VoiceSample};
 
 const SETTINGS_VARIABLE: &str = "NOOBENKYO_INVOKER_TEST_SETTINGS";
+pub const SPEAK: &str = "qwen3-tts-1.7b-base";
+pub const DESIGN: &str = "qwen3-tts-1.7b-voicedesign";
 
 pub fn gpu_invoker() -> Invoker {
     let path = std::env::var(SETTINGS_VARIABLE)

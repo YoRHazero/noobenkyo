@@ -31,6 +31,7 @@ fn local(python: &str) -> InvokerSettings {
                     }],
                 },
             ],
+            probe: None,
         }],
         ..InvokerSettings::default()
     }

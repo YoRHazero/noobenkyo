@@ -18,7 +18,9 @@ async fn an_item_without_its_sample_fails_before_any_model_runs() {
     let invoker = Invoker::new(InvokerSettings::default());
     let items = vec![item("美咲", Language::Zh, "早上好。")];
     let samples = vec![sample("美咲", Language::Ja, vec![1], "おはよう。")];
-    let spoken: Vec<_> = speak_lines(&invoker, items, samples).collect().await;
+    let spoken: Vec<_> = speak_lines(&invoker, "Base", items, samples)
+        .collect()
+        .await;
     assert_eq!(
         spoken,
         vec![Err(PipelineError::NoSample {
@@ -36,20 +38,32 @@ async fn the_first_error_ends_the_stream() {
         item("美咲", Language::Ja, "またね。"),
     ];
     let samples = vec![sample("美咲", Language::Ja, vec![1], "はじめまして。")];
-    let spoken: Vec<_> = speak_lines(&invoker, items, samples).collect().await;
-    assert_eq!(spoken, vec![Err(no_machine("qwen3-tts-1.7b-base"))]);
+    let spoken: Vec<_> = speak_lines(&invoker, "Base", items, samples)
+        .collect()
+        .await;
+    assert_eq!(spoken, vec![Err(no_machine("Base"))]);
 }
 
 #[tokio::test]
 async fn no_items_need_no_machine() {
     let invoker = Invoker::new(InvokerSettings::default());
-    let spoken: Vec<_> = speak_lines(&invoker, vec![], vec![]).collect().await;
+    let spoken: Vec<_> = speak_lines(&invoker, "Base", vec![], vec![])
+        .collect()
+        .await;
     assert!(spoken.is_empty());
 }
 
 #[tokio::test]
-async fn designing_a_voice_needs_the_voice_design_model() {
+async fn designing_a_voice_asks_for_the_model_named() {
     let invoker = Invoker::new(InvokerSettings::default());
-    let designed = design_voice(&invoker, "明亮的声音。", Language::Ja, "おはよう。", 7).await;
-    assert_eq!(designed, Err(no_machine("qwen3-tts-1.7b-voicedesign")));
+    let designed = design_voice(
+        &invoker,
+        "VoiceDesign",
+        "明亮的声音。",
+        Language::Ja,
+        "おはよう。",
+        7,
+    )
+    .await;
+    assert_eq!(designed, Err(no_machine("VoiceDesign")));
 }

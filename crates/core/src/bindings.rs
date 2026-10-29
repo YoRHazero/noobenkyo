@@ -4,6 +4,7 @@ use specta_typescript::Typescript;
 use tauri_specta::{Builder, Events, collect_commands, collect_events};
 
 use crate::commands::{ai, dictionary, inbox, learn, listening, review, settings, stats};
+use crate::events::ai_machines_probed::AiMachinesProbed;
 use crate::events::ai_task_finished::AiTaskFinished;
 use crate::events::ai_task_progress::AiTaskProgress;
 use crate::events::inbox_changed::InboxChanged;
@@ -80,6 +81,12 @@ pub fn builder() -> Builder<tauri::Wry> {
             ai::speak_lines::ai_start_speak_lines::<tauri::Wry>,
             ai::tasks::ai_cancel,
             ai::voice::ai_design_voice,
+            ai::settings::ai_settings,
+            ai::settings::ai_update_settings,
+            ai::settings::ai_default_settings,
+            ai::probe::ai_machine_reports,
+            ai::probe::ai_probe_machines::<tauri::Wry>,
+            ai::probe::ai_probe_machine,
         ])
         .events(events())
 }
@@ -87,7 +94,12 @@ pub fn builder() -> Builder<tauri::Wry> {
 /// Every event core sends. Each has to be mounted on the app before it can
 /// be sent.
 pub fn events() -> Events {
-    collect_events![InboxChanged, AiTaskProgress, AiTaskFinished]
+    collect_events![
+        InboxChanged,
+        AiTaskProgress,
+        AiTaskFinished,
+        AiMachinesProbed
+    ]
 }
 
 /// Writes web/src/bindings.ts.

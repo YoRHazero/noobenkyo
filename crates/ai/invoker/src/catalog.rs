@@ -130,6 +130,7 @@ mod tests {
                         .collect(),
                 },
             ],
+            probe: None,
         }
     }
 
