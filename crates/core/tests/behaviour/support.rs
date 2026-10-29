@@ -1,11 +1,15 @@
 //! Test data and steps shared by the behaviour tests.
 
-use std::path::PathBuf;
+use std::os::unix::fs::PermissionsExt;
+use std::path::{Path, PathBuf};
+use std::time::Duration;
 
+use ai::{AiSettings, InvokerSettings, Machine, QwenTtsModel, Runtime, TtsOp};
 use dictionary::{ImportReport, SenseKey};
 use inbox::InboxSource;
 use listening::{Gender, Language, NewCharacter, NewReference, Role, Uuid};
 use noobenkyo_core::app_state::AppState;
+use noobenkyo_core::bindings;
 use noobenkyo_core::commands::dictionary::entries::{
     dictionary_default_import_options, dictionary_import,
 };
@@ -16,10 +20,14 @@ use noobenkyo_core::commands::listening::script::listening_import_script;
 use noobenkyo_core::commands::listening::worlds::{listening_add_cast, listening_create_world};
 use noobenkyo_core::commands::review::answering::{review_confirm_answer, review_submit_answer};
 use noobenkyo_core::commands::review::asking::review_next;
+use noobenkyo_core::events::ai_task_finished::AiTaskFinished;
+use noobenkyo_core::events::ai_task_progress::AiTaskProgress;
 use noobenkyo_core::payloads::RevealPayload;
 use study::Rating;
 use tauri::test::{MockRuntime, mock_app};
-use tauri::{App, Manager, State};
+use tauri::{App, AppHandle, Manager, State};
+use tauri_specta::Event;
+use tokio::sync::mpsc::{UnboundedReceiver, unbounded_channel};
 
 /// The sample word list, as the user would paste it.
 pub const SAMPLE: &str = include_str!("../../../../samples/basic.jsonl");
@@ -43,6 +51,9 @@ impl TestApp {
     pub async fn fresh() -> Self {
         let dir = tempfile::tempdir().unwrap();
         let app = mock_app();
+        tauri_specta::Builder::<MockRuntime>::new()
+            .events(bindings::events())
+            .mount_events(&app);
         app.manage(AppState::open(&dir.path().join("data")).await.unwrap());
         Self { dir, app }
     }
@@ -52,18 +63,33 @@ impl TestApp {
     /// is a minor one; all have references in both languages.
     pub async fn with_world() -> (Self, Uuid) {
         let app = Self::fresh().await;
+        let episode = app
+            .seed_world(|language| NewReference {
+                language,
+                audio: reference_audio(language),
+                text: "参考。".into(),
+            })
+            .await;
+        (app, episode)
+    }
+
+    /// Stores what `with_world` has, every character with the references
+    /// `reference` gives. Returns the episode.
+    pub async fn seed_world(&self, reference: impl Fn(Language) -> NewReference) -> Uuid {
         for (name, kana) in [
             ("老陈", "ろうちん"),
             ("美咲", "みさき"),
             ("健二", "けんじ"),
             ("店员", "てんいん"),
         ] {
-            let problems = listening_create_character(app.state(), new_character(name, kana))
+            let mut character = new_character_with(name, kana, &[]);
+            character.references = Language::ALL.map(&reference).to_vec();
+            let problems = listening_create_character(self.state(), character)
                 .await
                 .unwrap();
             assert!(problems.is_empty(), "{problems:?}");
         }
-        listening_create_world(app.state(), WORLD.into(), "海边的小镇。".into())
+        listening_create_world(self.state(), WORLD.into(), "海边的小镇。".into())
             .await
             .unwrap();
         for (name, role) in [
@@ -72,18 +98,59 @@ impl TestApp {
             ("健二", main_role("美咲的同学，田径部。")),
             ("店员", Role::Minor),
         ] {
-            listening_add_cast(app.state(), WORLD.into(), name.into(), role)
+            listening_add_cast(self.state(), WORLD.into(), name.into(), role)
                 .await
                 .unwrap();
         }
-        let episode = listening_import_script(app.state(), WORLD.into(), SAMPLE_SCRIPT.into())
+        listening_import_script(self.state(), WORLD.into(), SAMPLE_SCRIPT.into())
             .await
-            .unwrap();
-        (app, episode)
+            .unwrap()
     }
 
     pub fn data_dir(&self) -> PathBuf {
         self.dir.path().join("data")
+    }
+
+    pub fn handle(&self) -> AppHandle<MockRuntime> {
+        self.app.handle().clone()
+    }
+
+    /// Gives ai one machine on this computer whose "python" never answers,
+    /// so a synthesis that reaches it runs until it is cancelled.
+    pub fn with_hanging_machine(&self) {
+        let python = self.dir.path().join("python");
+        std::fs::write(&python, "#!/bin/sh\nexec sleep 30\n").unwrap();
+        std::fs::set_permissions(&python, std::fs::Permissions::from_mode(0o755)).unwrap();
+        self.state()
+            .ai
+            .update_settings(hanging_machine(&python))
+            .unwrap();
+    }
+
+    /// Gives ai the GPU machines of ai-invoker's test settings: the
+    /// `InvokerSettings` JSON that `NOOBENKYO_INVOKER_TEST_SETTINGS` points at.
+    pub fn with_gpu_machines(&self) {
+        let variable = "NOOBENKYO_INVOKER_TEST_SETTINGS";
+        let path = std::env::var(variable).unwrap_or_else(|_| panic!("{variable} is not set"));
+        let text = std::fs::read_to_string(path).unwrap();
+        let invoker: InvokerSettings = serde_json::from_str(&text).unwrap();
+        self.state()
+            .ai
+            .update_settings(AiSettings { invoker })
+            .unwrap();
+    }
+
+    /// Every ai-task event sent from now on.
+    pub fn task_events(&self) -> TaskEvents {
+        let (progress_sender, progress) = unbounded_channel();
+        AiTaskProgress::listen(&self.app, move |event| {
+            let _ = progress_sender.send(event.payload);
+        });
+        let (finished_sender, finished) = unbounded_channel();
+        AiTaskFinished::listen(&self.app, move |event| {
+            let _ = finished_sender.send(event.payload);
+        });
+        TaskEvents { progress, finished }
     }
 
     /// Leaves an item in the source's inbox folder as the command line
@@ -122,6 +189,59 @@ impl TestApp {
     }
 }
 
+pub struct TaskEvents {
+    progress: UnboundedReceiver<AiTaskProgress>,
+    finished: UnboundedReceiver<AiTaskFinished>,
+}
+
+impl TaskEvents {
+    /// The next progress event, within 10 seconds.
+    pub async fn progress(&mut self) -> AiTaskProgress {
+        self.progress_within(10).await
+    }
+
+    pub async fn progress_within(&mut self, seconds: u64) -> AiTaskProgress {
+        within(seconds, self.progress.recv()).await
+    }
+
+    /// The next end, within 10 seconds.
+    pub async fn finished(&mut self) -> AiTaskFinished {
+        self.finished_within(10).await
+    }
+
+    pub async fn finished_within(&mut self, seconds: u64) -> AiTaskFinished {
+        within(seconds, self.finished.recv()).await
+    }
+}
+
+async fn within<T>(seconds: u64, receiving: impl Future<Output = Option<T>>) -> T {
+    tokio::time::timeout(Duration::from_secs(seconds), receiving)
+        .await
+        .unwrap_or_else(|_| panic!("no event within {seconds} seconds"))
+        .expect("the app stopped sending events")
+}
+
+fn hanging_machine(python: &Path) -> AiSettings {
+    AiSettings {
+        invoker: InvokerSettings {
+            machines: vec![Machine {
+                name: "here".into(),
+                ssh: None,
+                command_layers: vec![],
+                runtimes: vec![Runtime::QwenTts {
+                    python: python.to_str().unwrap().into(),
+                    models: vec![QwenTtsModel {
+                        name: "qwen3-tts-1.7b-base".into(),
+                        op: TtsOp::TtsClone,
+                        path: "/nowhere/base".into(),
+                    }],
+                }],
+            }],
+            ..InvokerSettings::default()
+        },
+    }
+}
+
 pub fn main_role(description: &str) -> Role {
     Role::Main {
         description: description.into(),
@@ -146,10 +266,6 @@ pub fn new_character_with(name: &str, kana: &str, languages: &[Language]) -> New
             })
             .collect(),
     }
-}
-
-fn new_character(name: &str, kana: &str) -> NewCharacter {
-    new_character_with(name, kana, &Language::ALL)
 }
 
 /// Stands in for an uploaded WAV file; differs by language so a mix-up shows.

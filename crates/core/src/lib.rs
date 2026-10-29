@@ -11,6 +11,7 @@ pub mod events;
 pub mod payloads;
 mod startup_failure;
 mod steps;
+pub mod tasks;
 
 use tauri::Manager;
 
@@ -23,6 +24,13 @@ pub fn run() {
     bindings::export(&builder).expect("failed to export bindings");
 
     tauri::Builder::default()
+        // The ai group logs what the GPU machines do, their stderr included.
+        .plugin(
+            tauri_plugin_log::Builder::new()
+                .level(log::LevelFilter::Info)
+                .timezone_strategy(tauri_plugin_log::TimezoneStrategy::UseLocal)
+                .build(),
+        )
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .invoke_handler(builder.invoke_handler())

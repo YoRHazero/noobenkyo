@@ -17,6 +17,7 @@ path = "src/main.rs"
 tauri-build.workspace = true
 
 [dependencies]
+ai.workspace = true
 inbox.workspace = true
 dictionary.workspace = true
 listening.workspace = true
@@ -25,14 +26,18 @@ tauri.workspace = true
 tauri-specta.workspace = true
 tauri-plugin-dialog.workspace = true
 tauri-plugin-fs.workspace = true
+tauri-plugin-log.workspace = true
 specta.workspace = true
 specta-typescript.workspace = true
 serde.workspace = true
 thiserror.workspace = true
 tokio.workspace = true
+futures-util.workspace = true
+log.workspace = true
 
 [dev-dependencies]
 tauri = { workspace = true, features = ["test"] }
 cargo_metadata.workspace = true
 serde_json.workspace = true
 tempfile.workspace = true
+tokio = { workspace = true, features = ["time"] }

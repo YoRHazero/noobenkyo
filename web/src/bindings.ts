@@ -199,14 +199,53 @@ export const commands = {
 	 */
 	inboxSaveScript: (source: InboxSource, name: string, target: ScriptTarget, text: string) => typedError<string, CommandError>(__TAURI_INVOKE("inbox_save_script", { source, name, target, text })),
 	inboxDiscardScript: (source: InboxSource, name: string) => typedError<null, CommandError>(__TAURI_INVOKE("inbox_discard_script", { source, name })),
+	/**
+	 *  Starts speaking the lines the episode lacks audio for and returns the
+	 *  task at once. Each recording is stored as soon as it is made. Refused
+	 *  while this episode's lines are already being spoken. To speak lines
+	 *  again, clear their audio first.
+	 */
+	aiStartSpeakLines: (episode: string) => typedError<TaskId, CommandError>(__TAURI_INVOKE("ai_start_speak_lines", { episode })),
+	/**
+	 *  Stops a task; it ends as cancelled, and what it stored stays. A task that
+	 *  has already ended is left alone.
+	 */
+	aiCancel: (task: TaskId) => typedError<null, CommandError>(__TAURI_INVOKE("ai_cancel", { task })),
+	/**
+	 *  Makes up a voice from `prompt` saying `text` and returns the WAV, to be
+	 *  listened to before it is stored as a reference. The seed is the
+	 *  frontend's: one for both languages of a new character.
+	 */
+	aiDesignVoice: (prompt: string, language: Language, text: string, seed: number) => typedError<number[], CommandError>(__TAURI_INVOKE("ai_design_voice", { prompt, language, text, seed })),
 };
 
 /** Events */
 export const events = {
+	aiTaskFinished: makeEvent<AiTaskFinished>("ai-task-finished"),
+	aiTaskProgress: makeEvent<AiTaskProgress>("ai-task-progress"),
 	inboxChanged: makeEvent<InboxChanged>("inbox-changed"),
 };
 
 /* Types */
+/**
+ *  A task has ended and left the table. What it stored before the end stays
+ *  stored, whatever the outcome.
+ */
+export type AiTaskFinished = {
+	task: TaskId,
+	outcome: TaskOutcome,
+};
+
+/**
+ *  How far a task has got: `done` of `total` items. Sent once with `done`
+ *  0 when the total is known, then after every item.
+ */
+export type AiTaskProgress = {
+	task: TaskId,
+	done: number,
+	total: number,
+};
+
 /**  The input a quiz asks for. */
 export type AnswerInput = 
 /**  No input: self-rating only. */
@@ -884,6 +923,16 @@ export type StudySettings = {
 
 /**  A piece of a rendered target. */
 export type TargetPiece = { kind: "text"; text: string } | { kind: "ruby"; base: string; ruby: string };
+
+/**
+ *  Names a task in the events and to cancel it. Counts up from 1 while the
+ *  app runs.
+ */
+export type TaskId = number;
+
+export type TaskOutcome = { kind: "completed" } | { kind: "cancelled" } | 
+/**  With the message of what went wrong, as the feature wrote it. */
+{ kind: "failed"; message: string };
 
 /**  Natural key of a word. */
 export type WordKey = {

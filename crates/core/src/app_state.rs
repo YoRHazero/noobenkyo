@@ -3,11 +3,14 @@
 
 use std::path::Path;
 
+use ai::{AiError, AiService};
 use dictionary::{DictionaryError, DictionaryService};
 use inbox::InboxService;
 use listening::{ListeningError, ListeningService};
 use study::{StudyError, StudyService};
 use tokio::sync::Mutex;
+
+use crate::tasks::Tasks;
 
 pub struct AppState {
     /// Not locked: its state lives in SQLite, which handles concurrent use.
@@ -19,6 +22,10 @@ pub struct AppState {
     pub study: Mutex<StudyService>,
     /// Not locked: every inbox file is written whole and renamed into place.
     pub inbox: InboxService,
+    /// Not locked: it guards its own invoker.
+    pub ai: AiService,
+    /// The long jobs running in the background, core's own.
+    pub tasks: Tasks,
 }
 
 /// Why the data could not be opened, in the features' own words.
@@ -30,6 +37,8 @@ pub enum OpenError {
     Listening(#[from] ListeningError),
     #[error("{0}")]
     Study(#[from] StudyError),
+    #[error("{0}")]
+    Ai(#[from] AiError),
 }
 
 impl AppState {
@@ -39,6 +48,8 @@ impl AppState {
             listening: ListeningService::open(&data_dir.join("listening")).await?,
             study: Mutex::new(StudyService::open(&data_dir.join("study"))?),
             inbox: InboxService::new(data_dir),
+            ai: AiService::open(&data_dir.join("ai"))?,
+            tasks: Tasks::default(),
         })
     }
 }

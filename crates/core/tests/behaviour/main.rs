@@ -2,6 +2,7 @@
 //! real services in a temporary data directory. Also the bindings and the
 //! dependency rules between crates.
 
+mod ai;
 mod bindings;
 mod dependency_rules;
 mod dictionary;

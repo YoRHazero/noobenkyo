@@ -166,11 +166,6 @@ fn every_group_has_one_service_crate() {
             assert_eq!(count, 0, "group agent has {count} service crates");
             continue;
         }
-        // ai-invoker is the ai group's only crate until its service crate, ai,
-        // is added together with ai-pipeline. Drop this exemption then.
-        if group == AI && count == 0 {
-            continue;
-        }
         assert_eq!(count, 1, "group {group} has {count} service crates");
     }
 }

@@ -1,9 +1,11 @@
 //! The command and event lists, and bindings.ts generated from them.
 
 use specta_typescript::Typescript;
-use tauri_specta::{Builder, collect_commands, collect_events};
+use tauri_specta::{Builder, Events, collect_commands, collect_events};
 
-use crate::commands::{dictionary, inbox, learn, listening, review, settings, stats};
+use crate::commands::{ai, dictionary, inbox, learn, listening, review, settings, stats};
+use crate::events::ai_task_finished::AiTaskFinished;
+use crate::events::ai_task_progress::AiTaskProgress;
 use crate::events::inbox_changed::InboxChanged;
 
 const BINDINGS_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../web/src/bindings.ts");
@@ -75,8 +77,17 @@ pub fn builder() -> Builder<tauri::Wry> {
             inbox::scripts::inbox_replace_script,
             inbox::scripts::inbox_save_script,
             inbox::scripts::inbox_discard_script,
+            ai::speak_lines::ai_start_speak_lines::<tauri::Wry>,
+            ai::tasks::ai_cancel,
+            ai::voice::ai_design_voice,
         ])
-        .events(collect_events![InboxChanged])
+        .events(events())
+}
+
+/// Every event core sends. Each has to be mounted on the app before it can
+/// be sent.
+pub fn events() -> Events {
+    collect_events![InboxChanged, AiTaskProgress, AiTaskFinished]
 }
 
 /// Writes web/src/bindings.ts.

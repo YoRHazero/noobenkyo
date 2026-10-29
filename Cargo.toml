@@ -15,6 +15,8 @@ members = [
     "crates/agent/tools",
     "crates/agent/cli",
     "crates/ai/invoker",
+    "crates/ai/pipeline",
+    "crates/ai/service",
     "crates/core",
 ]
 
@@ -44,6 +46,8 @@ inbox = { path = "crates/inbox/service" }
 agent-tools = { path = "crates/agent/tools" }
 # ai group
 ai-invoker = { path = "crates/ai/invoker" }
+ai-pipeline = { path = "crates/ai/pipeline" }
+ai = { path = "crates/ai/service" }
 
 # external
 sea-orm = { version = "2.0.4", default-features = false, features = ["macros", "with-json", "with-chrono", "with-uuid", "sqlx-sqlite", "runtime-tokio"] }
@@ -63,6 +67,7 @@ tauri-specta = { version = "=2.0.0-rc.25", features = ["derive", "typescript"] }
 specta-typescript = "0.0.12"
 tauri-plugin-dialog = "2.8"
 tauri-plugin-fs = "2.7"
+tauri-plugin-log = "2.10"
 cargo_metadata = "0.23"
 clap = { version = "4", features = ["derive"] }
 dirs = "7"
@@ -70,3 +75,5 @@ notify = "8"
 base64 = "0.22"
 sha2 = "0.10"
 log = "0.4"
+async-stream = "0.3"
+futures-util = "0.3"

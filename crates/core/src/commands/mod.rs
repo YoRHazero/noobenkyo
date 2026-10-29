@@ -1,5 +1,6 @@
 //! Every command the frontend uses, by the part of the app it belongs to.
 
+pub mod ai;
 pub mod dictionary;
 pub mod inbox;
 pub mod learn;
