@@ -8,7 +8,7 @@ import { useInboxSaveScript } from '@/backend/inbox/use-inbox-save-script'
 import { ErrorText } from '@/components/error-text'
 import { Button } from '@/components/ui/button'
 import { DialogContent, DialogTitle } from '@/components/ui/dialog'
-import { petFailed } from '@/stores/pet'
+import { nooChan } from '@/stores/no-chan'
 import { ScriptPreview } from '@/features/listening/script/script-preview'
 import { ScriptTargetText } from '@/features/listening/script/script-target-text'
 import { useScriptEditor } from '@/features/listening/script/use-script-editor'
@@ -116,7 +116,7 @@ function InboxScriptPreview({ source, name, opened, latest, onClose }: PreviewPr
     try {
       const problems = await replace.mutateAsync(
         { source, name, target: script.target, text },
-        { onError: petFailed },
+        { onError: nooChan.notifyError },
       )
       if (problems.length === 0) {
         setScript({ target: script.target, text })
@@ -133,7 +133,7 @@ function InboxScriptPreview({ source, name, opened, latest, onClose }: PreviewPr
   const save = async (text: string) => {
     const uuid = await saveScript.mutateAsync(
       { source, name, target: script.target, text },
-      { onError: petFailed },
+      { onError: nooChan.notifyError },
     )
     onClose()
     if (script.target.kind === 'newEpisode') {
@@ -142,7 +142,7 @@ function InboxScriptPreview({ source, name, opened, latest, onClose }: PreviewPr
   }
 
   const discard = async () => {
-    await discardScript.mutateAsync({ source, name }, { onError: petFailed })
+    await discardScript.mutateAsync({ source, name }, { onError: nooChan.notifyError })
     onClose()
   }
 

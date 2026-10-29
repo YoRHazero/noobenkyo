@@ -1,18 +1,11 @@
-import { lazy, Suspense, useState } from 'react'
 import { Link, Outlet, useLocation } from '@tanstack/react-router'
 import { cn } from '@/components/ui/cn'
-import { InboxMenu } from '@/app/inbox/inbox-menu'
-
-/**
- * Loaded apart from the pages, frames and all. The theater, learning and
- * review sessions are outside this layout, so they never load her.
- */
-const Pet = lazy(() => import('@/features/pet/pet').then((module) => ({ default: module.Pet })))
+import { AppNooChan } from '@/app/no-chan/app-no-chan'
 
 /**
  * Learning and review are entered from the home page, so they are not here.
  * 听力 opens on the worlds and stays marked on every page under it. The
- * inbox sits at the far end.
+ * inbox is not here either: it is on no-chan's phone.
  */
 const links = [
   { to: '/', label: '首页', section: null },
@@ -24,10 +17,13 @@ const links = [
 const itemClass =
   'rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground'
 
-/** The top navigation, always shown, above the current page; the pet at the bottom. */
+/**
+ * The top navigation, always shown, above the current page; no-chan at the
+ * bottom. The theater, learning and review sessions are outside this
+ * layout, so she is not there.
+ */
 export function Layout() {
   const pathname = useLocation({ select: (location) => location.pathname })
-  const [inboxOpen, setInboxOpen] = useState(false)
   return (
     <div className="flex min-h-screen flex-col">
       <header className="border-b bg-card">
@@ -46,17 +42,12 @@ export function Layout() {
               </Link>
             )
           })}
-          <div className="ml-auto">
-            <InboxMenu className={itemClass} open={inboxOpen} onOpenChange={setInboxOpen} />
-          </div>
         </nav>
       </header>
       <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-8">
         <Outlet />
       </main>
-      <Suspense fallback={null}>
-        <Pet onOpenInbox={() => setInboxOpen(true)} />
-      </Suspense>
+      <AppNooChan />
     </div>
   )
 }

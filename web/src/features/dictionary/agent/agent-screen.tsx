@@ -1,5 +1,4 @@
 import type { ContentFilter } from '@/bindings'
-import { DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { FillSentencesForm } from '@/features/dictionary/agent/fill-sentences-form'
 import { WordListForm } from '@/features/dictionary/agent/word-list-form'
@@ -9,16 +8,14 @@ type Props = {
 }
 
 /**
- * Work for an agent on the dictionary: each task copies its starting
- * prompt. What the agent writes comes back through the inbox, into the
- * import dialog.
+ * Work for an agent on the dictionary, on no-chan's phone: each task copies
+ * its starting prompt. What the agent writes comes back through the inbox,
+ * into the import dialog.
  */
-export function AgentDialog({ filter }: Props) {
+export function AgentScreen({ filter }: Props) {
   return (
-    <DialogContent aria-describedby={undefined}>
-      <DialogHeader>
-        <DialogTitle>交给 agent</DialogTitle>
-      </DialogHeader>
+    <div className="flex flex-col gap-3">
+      <h2 className="text-sm font-semibold">交给 agent</h2>
       <Tabs defaultValue="fill">
         <TabsList>
           <TabsTrigger value="fill">补例句</TabsTrigger>
@@ -31,6 +28,6 @@ export function AgentDialog({ filter }: Props) {
           <WordListForm />
         </TabsContent>
       </Tabs>
-    </DialogContent>
+    </div>
   )
 }

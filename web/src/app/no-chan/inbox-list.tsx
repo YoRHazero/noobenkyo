@@ -1,7 +1,7 @@
 import type { InboxItem } from '@/bindings'
 import { ErrorText } from '@/components/error-text'
 import { ScriptTargetText } from '@/features/listening/script/script-target-text'
-import { inboxSourceName } from '@/app/inbox/inbox-source-name'
+import { inboxSourceName } from '@/app/no-chan/inbox-source-name'
 
 type Props = {
   /** Oldest first; `undefined` while loading. */

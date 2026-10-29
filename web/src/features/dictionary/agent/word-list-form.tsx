@@ -2,7 +2,7 @@ import { useId, useState } from 'react'
 import { CopyButton } from '@/components/copy-button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { petFailed, petRequested } from '@/stores/pet'
+import { nooChan } from '@/stores/no-chan'
 import { CountField } from '@/features/dictionary/agent/count-field'
 import { parsePositiveInteger } from '@/features/dictionary/agent/positive-integer'
 import { wordListPrompt } from '@/features/dictionary/agent/word-list-prompt'
@@ -29,21 +29,21 @@ export function WordListForm() {
           </Label>
           <Input
             id={topicId}
-            placeholder="空着：交给 agent 判断"
+            placeholder="不指定"
             value={topic}
             className="h-8 flex-1"
             onChange={(event) => setTopic(event.target.value)}
           />
         </div>
-        <CountField label="个数" value={count} onChange={setCount} />
-        <CountField label="每个义项几条" value={perSense} onChange={setPerSense} />
+        <CountField label="词数" value={count} onChange={setCount} />
+        <CountField label="每义项例句数" value={perSense} onChange={setPerSense} />
       </div>
       <div className="flex items-center justify-end gap-3">
         <CopyButton
           text={prompt}
-          label="复制给 agent"
-          onCopied={petRequested}
-          onFailed={petFailed}
+          label="复制 prompt"
+          onCopied={nooChan.notifyRequest}
+          onFailed={nooChan.notifyError}
         />
       </div>
     </div>

@@ -5,7 +5,7 @@ import { ErrorText } from '@/components/error-text'
 import { Button } from '@/components/ui/button'
 import { DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
-import { petFailed, petRequested } from '@/stores/pet'
+import { nooChan } from '@/stores/no-chan'
 import { PreviousEpisodes } from '@/features/listening/generate/previous-episodes'
 import { scriptPrompt } from '@/features/listening/generate/script-prompt'
 
@@ -65,8 +65,8 @@ export function GenerateDialog({ world, appending, title }: Props) {
         <CopyButton
           text={prompt}
           label="复制给 agent"
-          onCopied={petRequested}
-          onFailed={petFailed}
+          onCopied={nooChan.notifyRequest}
+          onFailed={nooChan.notifyError}
         />
       </DialogFooter>
     </DialogContent>

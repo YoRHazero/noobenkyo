@@ -9,6 +9,9 @@ export default defineConfig({
   resolve: {
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
   },
+  // no-chan ships TypeScript source that uses import.meta.glob, so Vite
+  // compiles it with the app instead of pre-bundling it.
+  optimizeDeps: { exclude: ['no-chan'] },
   clearScreen: false,
   server: {
     port: 5173,

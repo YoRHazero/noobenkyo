@@ -3,7 +3,7 @@ import type { ContentFilter } from '@/bindings'
 import { useDictionarySearch } from '@/backend/dictionary/use-dictionary-search'
 import { CopyButton } from '@/components/copy-button'
 import { ErrorText } from '@/components/error-text'
-import { petFailed, petRequested } from '@/stores/pet'
+import { nooChan } from '@/stores/no-chan'
 import { CountField } from '@/features/dictionary/agent/count-field'
 import { fillRangeText } from '@/features/dictionary/agent/fill-range-text'
 import { fillSentencesPrompt } from '@/features/dictionary/agent/fill-sentences-prompt'
@@ -46,8 +46,8 @@ export function FillSentencesForm({ filter }: Props) {
         {total === undefined ? '范围：…' : fillRangeText(filter.text, filter.progress, total)}
       </p>
       <div className="flex flex-col gap-2">
-        <CountField label="取几行" value={limit} onChange={setLimit} />
-        <CountField label="每个义项几条" value={perSense} onChange={setPerSense} />
+        <CountField label="行数" value={limit} onChange={setLimit} />
+        <CountField label="每义项例句数" value={perSense} onChange={setPerSense} />
       </div>
       <div className="flex items-center justify-end gap-3">
         <div className="mr-auto">
@@ -55,9 +55,9 @@ export function FillSentencesForm({ filter }: Props) {
         </div>
         <CopyButton
           text={prompt}
-          label="复制给 agent"
-          onCopied={petRequested}
-          onFailed={petFailed}
+          label="复制 prompt"
+          onCopied={nooChan.notifyRequest}
+          onFailed={nooChan.notifyError}
         />
       </div>
     </div>
